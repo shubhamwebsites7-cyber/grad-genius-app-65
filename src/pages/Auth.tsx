@@ -321,10 +321,6 @@ export default function Auth() {
                 {isSubmitting ? "Please wait..." : "Continue with Google"}
               </Button>
             </div>
-            
-            <div className="text-center text-sm text-muted-foreground mt-4">
-              Demo Account: shubhamchoudhary7225@gmail.com
-            </div>
           </CardContent>
         </Card>
       </div>
