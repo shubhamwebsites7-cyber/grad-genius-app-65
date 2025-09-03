@@ -1,18 +1,37 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Home, Calendar, BarChart3, Weight, Menu, X } from 'lucide-react';
+import { Home, Calendar, BarChart3, Weight, Menu, X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { usePWA } from '@/hooks/usePWA';
 import { NavigationLink } from '@/components/NavigationLink';
+import { toast } from '@/hooks/use-toast';
 
 export function Layout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { canInstall, installApp } = usePWA();
   const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleInstallClick = async () => {
+    try {
+      await installApp();
+      toast({
+        title: "Success",
+        description: "App installed successfully! You can now access it from your home screen.",
+      });
+    } catch (error) {
+      toast({
+        title: "Installation Failed",
+        description: "Unable to install the app. Please try again later.",
+        variant: "destructive"
+      });
+    }
   };
 
   const navigationItems = [
@@ -44,6 +63,18 @@ export function Layout() {
           </div>
 
           <div className="flex items-center space-x-4">
+            {canInstall && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleInstallClick}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Install App
+              </Button>
+            )}
+            
             {user && (
               <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
@@ -84,12 +115,12 @@ export function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 pb-20">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation - Desktop/Mobile */}
-      <footer className="border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      {/* Bottom Navigation - Fixed Sticky Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <nav className="flex items-center justify-around h-16 px-4 max-w-md mx-auto md:max-w-2xl">
           {navigationItems.map((item) => (
             <NavigationLink
