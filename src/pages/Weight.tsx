@@ -48,37 +48,58 @@ export default function Weight() {
   }, [user]);
 
   const fetchWeightData = async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Fetch weights
-      const { data: weightData } = await supabase
+      const { data: weightData, error: weightError } = await supabase
         .from('weights')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
-      if (weightData) {
+      if (weightError) {
+        console.error('Error fetching weights:', weightError);
+      } else if (weightData) {
         setWeights(weightData);
       }
 
-      // Fetch goal
-      const { data: goalData } = await supabase
+      // Fetch goal - use maybeSingle() instead of single() to avoid errors when no goal exists
+      const { data: goalData, error: goalError } = await supabase
         .from('goals')
         .select('weight_goal')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (goalData) {
+      if (goalError) {
+        console.error('Error fetching goal:', goalError);
+      } else if (goalData) {
         setGoal(goalData);
       }
     } catch (error) {
       console.error('Error fetching weight data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load weight data.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const addWeight = async () => {
-    if (!weightInput || !selectedDate) return;
+    if (!weightInput || !selectedDate || !user?.id) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid weight and date.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -89,6 +110,7 @@ export default function Weight() {
           .from('weights')
           .update({ weight: parseFloat(weightInput), date: dateStr })
           .eq('id', editingWeight.id)
+          .eq('user_id', user.id)
           .select()
           .single();
 
@@ -104,7 +126,7 @@ export default function Weight() {
         const { data, error } = await supabase
           .from('weights')
           .upsert({ 
-            user_id: user?.id,
+            user_id: user.id,
             date: dateStr,
             weight: parseFloat(weightInput)
           })
@@ -128,6 +150,7 @@ export default function Weight() {
       setWeightInput('');
       setEditingWeight(null);
     } catch (error) {
+      console.error('Error saving weight:', error);
       toast({
         title: "Error",
         description: "Failed to save weight entry.",
@@ -137,11 +160,14 @@ export default function Weight() {
   };
 
   const deleteWeight = async (id: string) => {
+    if (!user?.id) return;
+
     try {
       const { error } = await supabase
         .from('weights')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -151,6 +177,7 @@ export default function Weight() {
         description: "Weight entry deleted.",
       });
     } catch (error) {
+      console.error('Error deleting weight:', error);
       toast({
         title: "Error",
         description: "Failed to delete weight entry.",
@@ -160,13 +187,20 @@ export default function Weight() {
   };
 
   const updateGoal = async () => {
-    if (!goalInput) return;
+    if (!goalInput || !user?.id) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid goal weight.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       const { data, error } = await supabase
         .from('goals')
         .upsert({
-          user_id: user?.id,
+          user_id: user.id,
           weight_goal: parseFloat(goalInput)
         })
         .select()
@@ -182,6 +216,7 @@ export default function Weight() {
         description: "Weight goal updated!",
       });
     } catch (error) {
+      console.error('Error updating goal:', error);
       toast({
         title: "Error",
         description: "Failed to update goal.",
