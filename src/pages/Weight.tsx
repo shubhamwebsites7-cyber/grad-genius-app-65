@@ -92,7 +92,10 @@ export default function Weight() {
   };
 
   const addWeight = async () => {
+    console.log('addWeight called with:', { weightInput, selectedDate, userId: user?.id });
+    
     if (!weightInput || !selectedDate || !user?.id) {
+      console.log('Validation failed:', { weightInput: !!weightInput, selectedDate: !!selectedDate, userId: !!user?.id });
       toast({
         title: "Error",
         description: "Please enter a valid weight and date.",
@@ -103,8 +106,10 @@ export default function Weight() {
 
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      console.log('Formatted date:', dateStr);
       
       if (editingWeight) {
+        console.log('Updating existing weight entry:', editingWeight.id);
         // Update existing entry
         const { data, error } = await supabase
           .from('weights')
