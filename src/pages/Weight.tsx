@@ -104,6 +104,16 @@ export default function Weight() {
       return;
     }
 
+    const weightValue = parseFloat(weightInput);
+    if (weightValue > 999.99 || weightValue <= 0) {
+      toast({
+        title: "Error",
+        description: "Weight must be between 0.1 and 999.99 kg.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       console.log('Formatted date:', dateStr);
@@ -113,7 +123,7 @@ export default function Weight() {
         // Update existing entry
         const { data, error } = await supabase
           .from('weights')
-          .update({ weight: parseFloat(weightInput), date: dateStr })
+          .update({ weight: weightValue, date: dateStr })
           .eq('id', editingWeight.id)
           .eq('user_id', user.id)
           .select()
@@ -133,7 +143,7 @@ export default function Weight() {
           .upsert({ 
             user_id: user.id,
             date: dateStr,
-            weight: parseFloat(weightInput)
+            weight: weightValue
           })
           .select()
           .single();
@@ -201,13 +211,28 @@ export default function Weight() {
       return;
     }
 
+    const goalValue = parseFloat(goalInput);
+    if (goalValue > 999.99) {
+      toast({
+        title: "Error",
+        description: "Goal weight must be less than 1000 kg.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('goals')
-        .upsert({
-          user_id: user.id,
-          weight_goal: parseFloat(goalInput)
-        })
+        .upsert(
+          {
+            user_id: user.id,
+            weight_goal: goalValue
+          },
+          {
+            onConflict: 'user_id'
+          }
+        )
         .select()
         .single();
 
