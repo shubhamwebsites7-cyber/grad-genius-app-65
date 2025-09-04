@@ -202,7 +202,10 @@ export default function Weight() {
   };
 
   const updateGoal = async () => {
+    console.log('updateGoal called with:', { goalInput, userId: user?.id });
+    
     if (!goalInput || !user?.id) {
+      console.log('Validation failed:', { goalInput: !!goalInput, userId: !!user?.id });
       toast({
         title: "Error",
         description: "Please enter a valid goal weight.",
@@ -212,16 +215,21 @@ export default function Weight() {
     }
 
     const goalValue = parseFloat(goalInput);
-    if (goalValue > 999.99) {
+    console.log('Parsed goal value:', goalValue);
+    
+    if (isNaN(goalValue) || goalValue > 999.99 || goalValue <= 0) {
+      console.log('Goal value validation failed:', { goalValue, isNaN: isNaN(goalValue) });
       toast({
         title: "Error",
-        description: "Goal weight must be less than 1000 kg.",
+        description: "Goal weight must be between 0.1 and 999.99 kg.",
         variant: "destructive"
       });
       return;
     }
 
     try {
+      console.log('Attempting to upsert goal:', { user_id: user.id, weight_goal: goalValue });
+      
       const { data, error } = await supabase
         .from('goals')
         .upsert(
@@ -236,8 +244,14 @@ export default function Weight() {
         .select()
         .single();
 
-      if (error) throw error;
+      console.log('Supabase response:', { data, error });
 
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
+
+      console.log('Goal updated successfully:', data);
       setGoal(data);
       setIsGoalDialogOpen(false);
       setGoalInput('');
@@ -249,7 +263,7 @@ export default function Weight() {
       console.error('Error updating goal:', error);
       toast({
         title: "Error",
-        description: "Failed to update goal.",
+        description: `Failed to update goal: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }
