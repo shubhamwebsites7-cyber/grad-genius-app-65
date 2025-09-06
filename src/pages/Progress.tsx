@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartLegend } from '@/components/ui/chart-simple';
 import { useAuth } from '@/hooks/useAuth';
@@ -104,10 +105,10 @@ export default function Progress() {
   const avgGoal = data.length ? Math.round(data.reduce((sum, item) => sum + item.daily_goal, 0) / data.length) : 0;
   const consistency = data.length ? Math.round((data.filter(item => item.total >= item.daily_goal * 0.8 && item.total <= item.daily_goal * 1.2).length / data.length) * 100) : 0;
 
-  const goalVsActual = [
+  const goalVsActual = avgGoal > 0 && avgCalories > 0 ? [
     { name: 'Goal', value: avgGoal, color: '#8884d8' },
     { name: 'Actual', value: avgCalories, color: avgCalories >= avgGoal ? '#82ca9d' : '#ff7300' }
-  ];
+  ] : [];
 
   if (isLoading) {
     return (
@@ -213,19 +214,21 @@ export default function Progress() {
               </CardHeader>
               <CardContent>
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
-                      <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
-                      <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
-                      <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <ScrollArea className="h-[250px] w-full">
+                    <ResponsiveContainer width={Math.max(600, chartData.length * 60)} height={250}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
+                        <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
+                        <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
+                        <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ScrollArea>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     No meal data available
@@ -239,7 +242,7 @@ export default function Progress() {
                 <CardTitle>Goal vs Actual</CardTitle>
               </CardHeader>
               <CardContent>
-                {goalVsActual.length > 0 && avgCalories > 0 ? (
+                {goalVsActual.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
@@ -251,10 +254,12 @@ export default function Progress() {
                         dataKey="value"
                         label={({ name, value }) => `${name}: ${value} kcal`}
                       >
-                        <Cell fill="hsl(var(--primary))" />
-                        <Cell fill="hsl(var(--success))" />
+                        {goalVsActual.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--success))"} />
+                        ))}
                       </Pie>
                       <Tooltip />
+                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
