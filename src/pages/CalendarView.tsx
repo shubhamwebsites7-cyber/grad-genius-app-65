@@ -171,15 +171,15 @@ export default function CalendarView() {
                 <div className="flex gap-2">
                   {isEditing ? (
                     <>
-                      <Button size="sm" onClick={handleSave} className="h-8">
+                      <Button size="sm" onClick={handleSave} className="h-10 min-w-[44px] touch-manipulation">
                         <Save className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-8">
+                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 min-w-[44px] touch-manipulation">
                         <X className="h-4 w-4" />
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-8">
+                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 min-w-[44px] touch-manipulation">
                       <Edit2 className="h-4 w-4" />
                     </Button>
                   )}
@@ -272,7 +272,7 @@ export default function CalendarView() {
               <p className="text-sm text-muted-foreground mt-1 mb-4">
                 {isToday ? "Start logging your meals for today!" : "No data available for this date"}
               </p>
-              <Button onClick={handleEdit} size="sm">
+              <Button onClick={handleEdit} size="sm" className="h-10 min-w-[120px] touch-manipulation">
                 <Edit2 className="h-4 w-4 mr-2" />
                 Add Entry
               </Button>
