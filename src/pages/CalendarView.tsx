@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { Edit2, Save, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CalorieEntry {
   morning: number;
@@ -15,9 +19,12 @@ interface CalorieEntry {
 
 export default function CalendarView() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calorieData, setCalorieData] = useState<CalorieEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState<CalorieEntry | null>(null);
 
   const mealEmojis = {
     morning: '☀️',
@@ -34,6 +41,7 @@ export default function CalendarView() {
 
   const fetchCalorieData = async (date: Date) => {
     setIsLoading(true);
+    setIsEditing(false);
     try {
       const dateStr = format(date, 'yyyy-MM-dd');
       const { data } = await supabase
@@ -41,19 +49,88 @@ export default function CalendarView() {
         .select('morning, afternoon, evening, dinner, daily_goal')
         .eq('user_id', user?.id)
         .eq('date', dateStr)
-        .single();
+        .maybeSingle();
 
       setCalorieData(data);
+      setEditedData(data);
     } catch (error) {
       console.error('Error fetching calorie data:', error);
       setCalorieData(null);
+      setEditedData(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const totalCalories = calorieData
-    ? calorieData.morning + calorieData.afternoon + calorieData.evening + calorieData.dinner
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedData(calorieData || {
+      morning: 0,
+      afternoon: 0,
+      evening: 0,
+      dinner: 0,
+      daily_goal: 2400
+    });
+  };
+
+  const handleSave = async () => {
+    if (!editedData || !user) return;
+
+    try {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      
+      if (calorieData) {
+        // Update existing entry
+        await supabase
+          .from('calories')
+          .update(editedData)
+          .eq('user_id', user.id)
+          .eq('date', dateStr);
+      } else {
+        // Create new entry
+        await supabase
+          .from('calories')
+          .insert({
+            ...editedData,
+            user_id: user.id,
+            date: dateStr
+          });
+      }
+
+      setCalorieData(editedData);
+      setIsEditing(false);
+      toast({
+        title: "Success",
+        description: "Calories updated successfully!"
+      });
+    } catch (error) {
+      console.error('Error saving calorie data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update calories. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedData(calorieData);
+  };
+
+  const updateMealCalories = (meal: keyof CalorieEntry, value: string) => {
+    if (!editedData) return;
+    
+    const numValue = parseInt(value) || 0;
+    setEditedData({
+      ...editedData,
+      [meal]: numValue
+    });
+  };
+
+  const displayData = isEditing ? editedData : calorieData;
+  const totalCalories = displayData
+    ? displayData.morning + displayData.afternoon + displayData.evening + displayData.dinner
     : 0;
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
@@ -88,7 +165,27 @@ export default function CalendarView() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
-            {isToday && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
+            <div className="flex items-center gap-2">
+              {isToday && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
+              {(calorieData || !isEditing) && !isLoading && (
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button size="sm" onClick={handleSave} className="h-8">
+                        <Save className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-8">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-8">
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -96,7 +193,7 @@ export default function CalendarView() {
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
             </div>
-          ) : calorieData ? (
+          ) : displayData || isEditing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 {Object.entries(mealEmojis).map(([meal, emoji]) => (
@@ -105,9 +202,22 @@ export default function CalendarView() {
                       <span className="text-xl">{emoji}</span>
                       <span className="capitalize font-medium">{meal}</span>
                     </div>
-                    <span className="font-bold">
-                      {calorieData[meal as keyof CalorieEntry]} kcal
-                    </span>
+                    {isEditing ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={editedData?.[meal as keyof CalorieEntry] || 0}
+                          onChange={(e) => updateMealCalories(meal as keyof CalorieEntry, e.target.value)}
+                          className="w-20 h-8 text-right"
+                          min="0"
+                        />
+                        <span className="text-sm">kcal</span>
+                      </div>
+                    ) : (
+                      <span className="font-bold">
+                        {displayData?.[meal as keyof CalorieEntry] || 0} kcal
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -119,25 +229,38 @@ export default function CalendarView() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Daily Goal</span>
-                  <span className="text-muted-foreground">{calorieData.daily_goal} kcal</span>
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={editedData?.daily_goal || 2400}
+                        onChange={(e) => updateMealCalories('daily_goal', e.target.value)}
+                        className="w-20 h-8 text-right"
+                        min="0"
+                      />
+                      <span className="text-sm">kcal</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">{displayData?.daily_goal || 2400} kcal</span>
+                  )}
                 </div>
                 <div className="mt-2">
                   <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className="bg-primary h-2 rounded-full transition-all"
                       style={{ 
-                        width: `${Math.min((totalCalories / calorieData.daily_goal) * 100, 100)}%` 
+                        width: `${Math.min((totalCalories / (displayData?.daily_goal || 2400)) * 100, 100)}%` 
                       }}
                     ></div>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground mt-1">
                     <span>
-                      {totalCalories < calorieData.daily_goal 
-                        ? `${calorieData.daily_goal - totalCalories} kcal remaining`
-                        : `${totalCalories - calorieData.daily_goal} kcal over goal`
+                      {totalCalories < (displayData?.daily_goal || 2400)
+                        ? `${(displayData?.daily_goal || 2400) - totalCalories} kcal remaining`
+                        : `${totalCalories - (displayData?.daily_goal || 2400)} kcal over goal`
                       }
                     </span>
-                    <span>{Math.round((totalCalories / calorieData.daily_goal) * 100)}%</span>
+                    <span>{Math.round((totalCalories / (displayData?.daily_goal || 2400)) * 100)}%</span>
                   </div>
                 </div>
               </div>
@@ -146,9 +269,13 @@ export default function CalendarView() {
             <div className="text-center py-8">
               <div className="text-4xl mb-2">🍽️</div>
               <p className="text-muted-foreground">No entries for this date</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-1 mb-4">
                 {isToday ? "Start logging your meals for today!" : "No data available for this date"}
               </p>
+              <Button onClick={handleEdit} size="sm">
+                <Edit2 className="h-4 w-4 mr-2" />
+                Add Entry
+              </Button>
             </div>
           )}
         </CardContent>
