@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import CalendarView from "./pages/CalendarView";
 import Progress from "./pages/Progress";
 import Weight from "./pages/Weight";
+import Todo from "./pages/Todo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="calendar" element={<CalendarView />} />
             <Route path="progress" element={<Progress />} />
             <Route path="weight" element={<Weight />} />
+            <Route path="todo" element={<Todo />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
