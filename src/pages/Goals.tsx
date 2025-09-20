@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -56,8 +56,42 @@ export default function Goals() {
       fetchGoals();
       fetchTips();
       fetchStreaks();
+      checkAutoUpdateStreak();
     }
   }, [user]);
+
+  // Check and auto-update streak daily
+  const checkAutoUpdateStreak = async () => {
+    if (!user) return;
+
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const activeStreak = streaks.find(s => s.is_active);
+
+      // Auto-update if there's an active streak and it hasn't been updated today
+      if (activeStreak && activeStreak.last_updated !== today) {
+        const newCount = activeStreak.current_count + 1;
+        const { error } = await supabase
+          .from('streaks')
+          .update({
+            current_count: newCount,
+            max_count: Math.max(newCount, activeStreak.max_count),
+            last_updated: today
+          })
+          .eq('id', activeStreak.id);
+
+        if (!error) {
+          fetchStreaks();
+          toast({
+            title: "Auto-updated!",
+            description: `Strike ${activeStreak.streak_number} - Day ${newCount}`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error auto-updating streak:', error);
+    }
+  };
 
   const fetchGoals = async () => {
     if (!user) return;
@@ -638,24 +672,43 @@ export default function Goals() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {/* Line Chart */}
+            {/* Current Active Strike Info */}
+            {streaks.some(s => s.is_active) && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-green-800">
+                      Strike {streaks.find(s => s.is_active)?.streak_number} - Active
+                    </h3>
+                    <p className="text-green-600">
+                      Day {streaks.find(s => s.is_active)?.current_count} - Keep going!
+                    </p>
+                  </div>
+                  <div className="w-16 h-16 bg-green-500 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl font-bold text-white">
+                      {streaks.find(s => s.is_active)?.current_count}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Bar Chart */}
             <div className="h-96 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={generateChartData()}
+                <BarChart
+                  data={generateChartData().filter(d => d.days > 0 || d.isActive)}
                   margin={{
                     top: 20,
                     right: 30,
                     left: 20,
-                    bottom: 20,
+                    bottom: 60,
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis 
                     dataKey="strike" 
-                    domain={[1, 20]}
-                    type="number"
-                    label={{ value: 'Strike Number', position: 'insideBottom', offset: -10 }}
+                    label={{ value: 'Strike Number', position: 'insideBottom', offset: -40 }}
                   />
                   <YAxis 
                     domain={[0, 150]}
@@ -673,30 +726,19 @@ export default function Goals() {
                     labelFormatter={(label) => `Strike ${label}`}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
+                  <Bar 
                     dataKey="days" 
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={3}
-                    dot={(props) => {
-                      const { cx, cy, payload } = props;
-                      if (payload.days === 0) return null;
-                      
-                      return (
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={6}
-                          fill={payload.isActive ? '#10b981' : payload.isCompleted ? '#3b82f6' : '#6b7280'}
-                          stroke={payload.isActive ? '#059669' : payload.isCompleted ? '#2563eb' : '#4b5563'}
-                          strokeWidth={2}
-                          className={payload.isActive ? 'animate-pulse' : ''}
-                        />
-                      );
-                    }}
                     name="Strike Progress"
-                  />
-                </LineChart>
+                  >
+                    {generateChartData().filter(d => d.days > 0 || d.isActive).map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.isActive ? '#10b981' : entry.isCompleted ? '#3b82f6' : '#6b7280'}
+                        className={entry.isActive ? 'animate-pulse' : ''}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
             
