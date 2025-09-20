@@ -114,30 +114,36 @@ export type Database = {
         Row: {
           created_at: string
           current_count: number
+          final_count: number | null
           id: string
           is_active: boolean
           last_updated: string
           max_count: number
+          streak_number: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           current_count?: number
+          final_count?: number | null
           id?: string
           is_active?: boolean
           last_updated?: string
           max_count?: number
+          streak_number?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           current_count?: number
+          final_count?: number | null
           id?: string
           is_active?: boolean
           last_updated?: string
           max_count?: number
+          streak_number?: number | null
           updated_at?: string
           user_id?: string
         }

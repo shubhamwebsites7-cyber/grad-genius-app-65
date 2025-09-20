@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -32,6 +33,8 @@ interface Streak {
   is_active: boolean;
   last_updated: string;
   created_at: string;
+  streak_number: number;
+  final_count: number;
 }
 
 export default function Goals() {
@@ -108,7 +111,7 @@ export default function Goals() {
         .from('streaks')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('streak_number', { ascending: true });
 
       if (error) throw error;
       setStreaks((data || []) as Streak[]);
@@ -310,7 +313,7 @@ export default function Goals() {
       }
 
       if (activeStreak) {
-        // Update existing streak
+        // Update existing active streak
         const newCount = activeStreak.current_count + 1;
         const { error } = await supabase
           .from('streaks')
@@ -323,14 +326,18 @@ export default function Goals() {
 
         if (error) throw error;
       } else {
-        // Create new streak
+        // Create new streak with next streak number
+        const maxStreakNumber = Math.max(...streaks.map(s => s.streak_number), 0);
         const { error } = await supabase
           .from('streaks')
           .insert([{
             user_id: user.id,
             current_count: 1,
             max_count: 1,
-            last_updated: today
+            last_updated: today,
+            streak_number: maxStreakNumber + 1,
+            final_count: 0,
+            is_active: true
           }]);
 
         if (error) throw error;
@@ -353,17 +360,23 @@ export default function Goals() {
 
   const breakStreak = async (streakId: string) => {
     try {
+      const streakToBreak = streaks.find(s => s.id === streakId);
+      if (!streakToBreak) return;
+
       const { error } = await supabase
         .from('streaks')
-        .update({ is_active: false })
+        .update({ 
+          is_active: false,
+          final_count: streakToBreak.current_count
+        })
         .eq('id', streakId);
 
       if (error) throw error;
 
       fetchStreaks();
       toast({
-        title: "Streak broken",
-        description: "Your streak has been reset. Start a new one!",
+        title: "Streak completed",
+        description: `Streak ${streakToBreak.streak_number} completed with ${streakToBreak.current_count} days!`,
       });
     } catch (error) {
       console.error('Error breaking streak:', error);
@@ -375,105 +388,34 @@ export default function Goals() {
     }
   };
 
-  const renderStreakColumns = () => {
-    const activeStreak = streaks.find(s => s.is_active);
-    const currentCount = activeStreak?.current_count || 0;
-    const maxCount = activeStreak?.max_count || 0;
+  const generateChartData = () => {
+    const chartData = [];
     
-    // Define the three milestone columns
-    const columns = [
-      { 
-        id: 1, 
-        title: "First Goal", 
-        target: 3, 
-        completed: maxCount >= 3,
-        description: "3 Days"
-      },
-      { 
-        id: 2, 
-        title: "Second Goal", 
-        target: 7, 
-        completed: maxCount >= 7,
-        description: "7 Days"
-      },
-      { 
-        id: 3, 
-        title: "Current Streak", 
-        target: currentCount || 1, 
-        completed: false,
-        description: "Active",
-        isCurrent: true
+    // Generate chart data for strikes 1-20 and days 1-150
+    for (let strike = 1; strike <= 20; strike++) {
+      const streakData = streaks.find(s => s.streak_number === strike);
+      
+      if (streakData) {
+        // Use final_count for completed streaks, current_count for active streak
+        const days = streakData.is_active ? streakData.current_count : streakData.final_count;
+        chartData.push({
+          strike,
+          days,
+          isActive: streakData.is_active,
+          isCompleted: !streakData.is_active && streakData.final_count > 0
+        });
+      } else {
+        // Future strikes that haven't been started
+        chartData.push({
+          strike,
+          days: 0,
+          isActive: false,
+          isCompleted: false
+        });
       }
-    ];
-
-    return (
-      <div className="grid grid-cols-3 gap-6">
-        {columns.map((column) => {
-          const barHeight = column.isCurrent 
-            ? Math.min(200, Math.max(40, currentCount * 8)) 
-            : Math.min(200, Math.max(40, column.target * 8));
-          
-          const progressPercentage = column.isCurrent 
-            ? 100 
-            : column.completed ? 100 : 0;
-
-          return (
-            <div key={column.id} className="flex flex-col items-center">
-              {/* Column Header */}
-              <div className="text-center mb-4">
-                <h4 className="font-semibold text-sm">{column.title}</h4>
-                <p className="text-xs text-muted-foreground">{column.description}</p>
-              </div>
-
-              {/* Vertical Progress Bar */}
-              <div className="relative">
-                <div 
-                  className="w-16 bg-muted rounded-lg border-2 border-yellow-400 overflow-hidden transition-all duration-500"
-                  style={{ height: `${barHeight}px` }}
-                >
-                  {/* Animated fill */}
-                  <div 
-                    className={`w-full bg-gradient-to-t from-green-500 to-green-400 transition-all duration-1000 ease-out ${
-                      column.isCurrent ? 'animate-pulse' : ''
-                    }`}
-                    style={{ 
-                      height: `${progressPercentage}%`,
-                      animation: column.isCurrent ? 'pulse 2s infinite' : 'none'
-                    }}
-                  />
-                </div>
-                
-                {/* Day counter inside bar */}
-                <div className="absolute inset-0 flex items-end justify-center pb-2">
-                  <span className="text-white font-bold text-sm drop-shadow-lg">
-                    {column.isCurrent ? currentCount : column.target}
-                  </span>
-                </div>
-              </div>
-
-              {/* Status indicators */}
-              <div className="mt-3 text-center">
-                {column.completed && !column.isCurrent && (
-                  <div className="flex items-center justify-center text-green-600">
-                    <span className="text-lg">✓</span>
-                    <span className="text-xs ml-1">Complete</span>
-                  </div>
-                )}
-                {column.isCurrent && (
-                  <div className="flex flex-col items-center">
-                    <span className="text-sm font-bold text-blue-600">{currentCount} days</span>
-                    <span className="text-xs text-muted-foreground">In progress</span>
-                  </div>
-                )}
-                {!column.completed && !column.isCurrent && (
-                  <span className="text-xs text-gray-400">Not reached</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
+    }
+    
+    return chartData;
   };
 
   return (
@@ -674,7 +616,7 @@ export default function Goals() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Daily Streak Tracker</span>
+            <span>Strike Progress Chart</span>
             <div className="flex gap-2">
               <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700">
                 Update Daily +1
@@ -695,44 +637,113 @@ export default function Goals() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="p-6 bg-gradient-to-r from-background to-muted/20 rounded-lg">
-            {streaks.length > 0 ? (
-              <>
-                {/* Column-based streak visualization */}
-                <div className="mb-8">
-                  <h5 className="text-lg font-semibold mb-6 text-center">Streak Progress</h5>
-                  {renderStreakColumns()}
-                </div>
-                
-                {/* Stats Summary */}
-                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t">
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {streaks.find(s => s.is_active)?.current_count || 0}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Current Streak</div>
+          <div className="space-y-6">
+            {/* Line Chart */}
+            <div className="h-96 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={generateChartData()}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 20,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="strike" 
+                    domain={[1, 20]}
+                    type="number"
+                    label={{ value: 'Strike Number', position: 'insideBottom', offset: -10 }}
+                  />
+                  <YAxis 
+                    domain={[0, 150]}
+                    label={{ value: 'Days', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip 
+                    formatter={(value, name, props) => [
+                      `${value} days`,
+                      props.payload.isActive 
+                        ? 'Current Strike (Active)' 
+                        : props.payload.isCompleted 
+                          ? 'Completed Strike'
+                          : 'Future Strike'
+                    ]}
+                    labelFormatter={(label) => `Strike ${label}`}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="days" 
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={(props) => {
+                      const { cx, cy, payload } = props;
+                      if (payload.days === 0) return null;
+                      
+                      return (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={6}
+                          fill={payload.isActive ? '#10b981' : payload.isCompleted ? '#3b82f6' : '#6b7280'}
+                          stroke={payload.isActive ? '#059669' : payload.isCompleted ? '#2563eb' : '#4b5563'}
+                          strokeWidth={2}
+                          className={payload.isActive ? 'animate-pulse' : ''}
+                        />
+                      );
+                    }}
+                    name="Strike Progress"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Legend and Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg border">
+                <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
+                <span className="text-sm font-medium">Completed Strikes</span>
+                <p className="text-xs text-muted-foreground">Finished streaks</p>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg border">
+                <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2 animate-pulse"></div>
+                <span className="text-sm font-medium">Active Strike</span>
+                <p className="text-xs text-muted-foreground">Currently growing</p>
+              </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg border">
+                <div className="w-4 h-4 bg-gray-400 rounded-full mx-auto mb-2"></div>
+                <span className="text-sm font-medium">Future Strikes</span>
+                <p className="text-xs text-muted-foreground">Not started yet</p>
+              </div>
+            </div>
+
+            {/* Current Stats */}
+            {streaks.length > 0 && (
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                <div className="text-center p-4 bg-muted/30 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {streaks.find(s => s.is_active)?.current_count || 0}
                   </div>
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {Math.max(...streaks.map(s => s.max_count), 0)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Best Record</div>
-                  </div>
+                  <div className="text-sm text-muted-foreground">Current Strike Days</div>
                 </div>
-                
-                {streaks.find(s => s.is_active) && (
-                  <p className="text-xs text-muted-foreground mt-4 text-center">
-                    Last updated: {format(new Date(streaks.find(s => s.is_active)?.last_updated || new Date()), 'MMM dd, yyyy')}
-                  </p>
-                )}
-              </>
-            ) : (
+                <div className="text-center p-4 bg-muted/30 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {streaks.filter(s => s.final_count > 0).length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Completed Strikes</div>
+                </div>
+              </div>
+            )}
+
+            {streaks.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🎯</div>
-                <h3 className="text-lg font-semibold mb-2">Ready to start your journey?</h3>
-                <p className="text-muted-foreground mb-6">Build consistency with daily streak tracking</p>
+                <h3 className="text-lg font-semibold mb-2">Start Your First Strike!</h3>
+                <p className="text-muted-foreground mb-6">Begin tracking your daily consistency</p>
                 <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 px-8">
-                  Start Your First Streak
+                  Start Strike 1
                 </Button>
               </div>
             )}
