@@ -698,12 +698,12 @@ export default function Goals() {
               <h3 className="text-lg font-semibold">All Strikes Progress</h3>
               
               {/* Horizontal Strike Bars */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="flex gap-3 flex-wrap">
                 {streaks
                   .sort((a, b) => a.streak_number - b.streak_number)
                   .map((streak) => (
-                    <div key={streak.id} className="bg-card border rounded-lg p-4">
-                      <div className="text-center mb-3">
+                    <div key={streak.id} className="bg-card border rounded-lg p-3 min-w-[80px]">
+                      <div className="text-center mb-2">
                         <h4 className="font-semibold text-sm">Strike {streak.streak_number}</h4>
                         <p className={`text-xs ${streak.is_active ? 'text-green-600' : 'text-blue-600'}`}>
                           {streak.is_active ? 'Active' : 'Completed'}
@@ -712,7 +712,7 @@ export default function Goals() {
                       
                       <div className="space-y-2">
                         {/* Vertical Bar */}
-                        <div className="h-32 w-8 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
+                        <div className="h-24 w-6 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
                           <div 
                             className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all duration-500 ${
                               streak.is_active 
@@ -720,7 +720,7 @@ export default function Goals() {
                                 : 'bg-blue-500'
                             }`}
                             style={{ 
-                              height: `${Math.min((streak.is_active ? streak.current_count : streak.final_count) / 150 * 100, 100)}%` 
+                              height: `${Math.min((streak.is_active ? streak.current_count : streak.final_count) / 30 * 100, 100)}%` 
                             }}
                           />
                           
@@ -740,30 +740,6 @@ export default function Goals() {
                       </div>
                     </div>
                   ))}
-                
-                {/* Show next strike placeholder if there's an active one */}
-                {streaks.some(s => s.is_active) && (
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4">
-                    <div className="text-center mb-3">
-                      <h4 className="font-semibold text-sm text-gray-500">
-                        Strike {Math.max(...streaks.map(s => s.streak_number), 0) + 1}
-                      </h4>
-                      <p className="text-xs text-gray-400">Next Strike</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="h-32 w-8 mx-auto bg-gray-200 rounded-lg relative">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xs text-gray-400">0</span>
-                        </div>
-                      </div>
-                      
-                      <div className="text-center">
-                        <p className="text-xs text-gray-400">0 days</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
             
