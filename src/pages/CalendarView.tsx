@@ -470,65 +470,29 @@ export default function CalendarView() {
                   </CardContent>
                 </Card>
 
-                {/* Meal Breakdown */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Meal-wise Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[250px] w-full">
-                        <ResponsiveContainer width={Math.max(600, chartData.length * 60)} height={250}>
-                          <BarChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
-                            <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
-                            <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
-                            <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
-                            <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Goal vs Actual</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {goalVsActual.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={250}>
-                          <PieChart>
-                            <Pie
-                              data={goalVsActual}
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                              label={({ name, value }) => `${name}: ${value} kcal`}
-                            >
-                              {goalVsActual.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--success))"} />
-                              ))}
-                            </Pie>
-                            <Tooltip />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="text-center py-12 text-muted-foreground">
-                          <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                          <p>Set calorie goal to see comparison</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                {/* Meal Breakdown - Full Width */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Meal-wise Breakdown</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] w-full">
+                      <ResponsiveContainer width={Math.max(800, chartData.length * 80)} height={300}>
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
+                          <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
+                          <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
+                          <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
               </>
             ) : (
               <Card>

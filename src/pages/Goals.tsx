@@ -375,37 +375,51 @@ export default function Goals() {
     }
   };
 
-  const renderStreakBars = (count: number) => {
-    const fullWeeks = Math.floor(count / 7);
-    const remainingDays = count % 7;
-    const bars = [];
-
-    // Full weeks (7 days each)
-    for (let i = 0; i < fullWeeks; i++) {
-      bars.push(
-        <div key={`week-${i}`} className="flex gap-1">
-          {Array.from({ length: 7 }, (_, j) => (
-            <div key={j} className="w-4 h-8 bg-green-500 rounded-sm" />
-          ))}
+  const renderVerticalStreakBars = (count: number) => {
+    const milestones = [3, 7, 14, 21, 30, 60, 90, 180, 365];
+    const maxHeight = 120;
+    
+    return (
+      <div className="flex items-end justify-center space-x-2 h-32">
+        {milestones.map((milestone, index) => {
+          const isCompleted = count >= milestone;
+          const height = Math.min(maxHeight, (milestone / 30) * 60 + 20); // Dynamic height based on milestone
+          
+          return (
+            <div key={milestone} className="flex flex-col items-center">
+              <div
+                className={`w-6 rounded-t-md transition-all duration-300 ${
+                  isCompleted 
+                    ? 'bg-green-500 animate-pulse' 
+                    : count >= milestone * 0.8 
+                      ? 'bg-yellow-400' 
+                      : 'bg-gray-200'
+                }`}
+                style={{ height: `${height}px` }}
+              />
+              <span className={`text-xs mt-1 font-medium ${
+                isCompleted ? 'text-green-600' : 'text-gray-400'
+              }`}>
+                {milestone}d
+              </span>
+              {isCompleted && (
+                <span className="text-green-500 text-xs">✓</span>
+              )}
+            </div>
+          );
+        })}
+        
+        {/* Current progress indicator */}
+        <div className="ml-4 flex flex-col items-center">
+          <div 
+            className="w-8 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t-md"
+            style={{ height: `${Math.min(maxHeight, count * 2 + 20)}px` }}
+          />
+          <span className="text-sm font-bold text-blue-600 mt-1">{count}</span>
+          <span className="text-xs text-blue-500">current</span>
         </div>
-      );
-    }
-
-    // Remaining days
-    if (remainingDays > 0) {
-      bars.push(
-        <div key="remaining" className="flex gap-1">
-          {Array.from({ length: remainingDays }, (_, j) => (
-            <div key={j} className="w-4 h-8 bg-green-500 rounded-sm" />
-          ))}
-          {Array.from({ length: 7 - remainingDays }, (_, j) => (
-            <div key={`empty-${j}`} className="w-4 h-8 bg-gray-200 rounded-sm" />
-          ))}
-        </div>
-      );
-    }
-
-    return bars;
+      </div>
+    );
   };
 
   return (
@@ -613,16 +627,16 @@ export default function Goals() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {streaks.map((streak, index) => (
-              <div key={streak.id} className="p-4 rounded-lg border">
-                <div className="flex justify-between items-center mb-3">
+              <div key={streak.id} className="p-6 rounded-lg border bg-gradient-to-r from-background to-muted/20">
+                <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h4 className="font-medium">
+                    <h4 className="text-lg font-semibold">
                       {streak.is_active ? 'Current Streak' : `Streak #${streaks.length - index}`}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {streak.current_count} days • Best: {streak.max_count} days
+                      {streak.current_count} days completed • Personal best: {streak.max_count} days
                     </p>
                   </div>
                   {streak.is_active && (
@@ -636,27 +650,43 @@ export default function Goals() {
                   )}
                 </div>
                 
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {renderStreakBars(streak.current_count)}
+                {/* Vertical milestone progress */}
+                <div className="mb-6">
+                  <h5 className="text-sm font-medium mb-4 text-center">Milestone Progress</h5>
+                  {renderVerticalStreakBars(streak.current_count)}
                 </div>
                 
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((streak.current_count % 7) / 7 * 100, 100)}%` }}
-                  />
+                {/* Achievement stats */}
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xl font-bold text-green-600">{streak.current_count}</div>
+                    <div className="text-xs text-muted-foreground">Current Days</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xl font-bold text-blue-600">{streak.max_count}</div>
+                    <div className="text-xs text-muted-foreground">Best Streak</div>
+                  </div>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xl font-bold text-purple-600">
+                      {streak.current_count >= 7 ? Math.floor(streak.current_count / 7) : 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Weeks</div>
+                  </div>
                 </div>
                 
-                <p className="text-xs text-muted-foreground mt-1">
-                  Started: {format(new Date(streak.created_at), 'MMM dd, yyyy')}
+                <p className="text-xs text-muted-foreground mt-4 text-center">
+                  Started: {format(new Date(streak.created_at), 'MMM dd, yyyy')} • 
+                  Last updated: {format(new Date(streak.last_updated), 'MMM dd, yyyy')}
                 </p>
               </div>
             ))}
             
             {streaks.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No streaks yet!</p>
-                <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700">
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎯</div>
+                <h3 className="text-lg font-semibold mb-2">Ready to start your journey?</h3>
+                <p className="text-muted-foreground mb-6">Build consistency with daily streak tracking</p>
+                <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 px-8">
                   Start Your First Streak
                 </Button>
               </div>
