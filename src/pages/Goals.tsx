@@ -712,7 +712,7 @@ export default function Goals() {
                       
                       <div className="space-y-2">
                         {/* Vertical Bar */}
-                        <div className="h-24 w-6 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
+                        <div className="h-[80vh] w-6 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
                           <div 
                             className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all duration-500 ${
                               streak.is_active 
@@ -725,8 +725,8 @@ export default function Goals() {
                           />
                           
                           {/* Day count label */}
-                          <div className="absolute inset-0 flex items-end justify-center pb-1">
-                            <span className="text-xs font-bold text-white drop-shadow-sm">
+                          <div className="absolute inset-0 flex items-end justify-center pb-2">
+                            <span className="text-sm font-bold text-white drop-shadow-sm">
                               {streak.is_active ? streak.current_count : streak.final_count}
                             </span>
                           </div>
@@ -748,7 +748,9 @@ export default function Goals() {
               <div className="text-center p-4 bg-blue-50 rounded-lg border">
                 <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
                 <span className="text-sm font-medium">Completed Strikes</span>
-                <p className="text-xs text-muted-foreground">Finished streaks</p>
+                <p className="text-xs text-muted-foreground">
+                  {streaks.filter(s => s.final_count > 0).length} finished streaks
+                </p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg border">
                 <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2 animate-pulse"></div>
@@ -764,13 +766,7 @@ export default function Goals() {
 
             {/* Current Stats */}
             {streaks.length > 0 && (
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                <div className="text-center p-4 bg-muted/30 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {streaks.find(s => s.is_active)?.current_count || 0}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Current Strike Days</div>
-                </div>
+              <div className="flex justify-center pt-4 border-t">
                 <div className="text-center p-4 bg-muted/30 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
                     {streaks.filter(s => s.final_count > 0).length}
