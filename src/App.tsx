@@ -6,9 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./pages/ProtectedRoute";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import CalendarView from "./pages/CalendarView";
-import Progress from "./pages/Progress";
 import Weight from "./pages/Weight";
 import Todo from "./pages/Todo";
 import Goals from "./pages/Goals";
@@ -29,10 +27,8 @@ const App = () => (
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="calendar" element={<CalendarView />} />
-            <Route path="progress" element={<Progress />} />
+            <Route index element={<CalendarView />} />
+            <Route path="calories" element={<CalendarView />} />
             <Route path="weight" element={<Weight />} />
             <Route path="todo" element={<Todo />} />
             <Route path="goals" element={<Goals />} />

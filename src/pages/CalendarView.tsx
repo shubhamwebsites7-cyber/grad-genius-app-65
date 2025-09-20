@@ -3,10 +3,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
-import { Edit2, Save, X } from 'lucide-react';
+import { format, subDays, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { Edit2, Save, X, TrendingUp, TrendingDown, Target, Activity, PlusCircle, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CalorieEntry {
@@ -17,6 +20,26 @@ interface CalorieEntry {
   daily_goal: number;
 }
 
+interface CalorieData {
+  date: string;
+  morning: number;
+  afternoon: number;
+  evening: number;
+  dinner: number;
+  daily_goal: number;
+  total: number;
+}
+
+interface ChartData {
+  date: string;
+  calories: number;
+  goal: number;
+  morning: number;
+  afternoon: number;
+  evening: number;
+  dinner: number;
+}
+
 export default function CalendarView() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -25,6 +48,11 @@ export default function CalendarView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<CalorieEntry | null>(null);
+  
+  // Progress data
+  const [activeTab, setActiveTab] = useState('weekly');
+  const [progressData, setProgressData] = useState<CalorieData[]>([]);
+  const [isProgressLoading, setIsProgressLoading] = useState(true);
 
   const mealEmojis = {
     morning: '☀️',
@@ -38,6 +66,12 @@ export default function CalendarView() {
       fetchCalorieData(selectedDate);
     }
   }, [selectedDate, user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchProgressData();
+    }
+  }, [user, activeTab]);
 
   const fetchCalorieData = async (date: Date) => {
     setIsLoading(true);
@@ -59,6 +93,48 @@ export default function CalendarView() {
       setEditedData(null);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchProgressData = async () => {
+    setIsProgressLoading(true);
+    try {
+      const today = new Date();
+      let startDate: Date;
+      
+      switch (activeTab) {
+        case 'weekly':
+          startDate = startOfWeek(today);
+          break;
+        case 'monthly':
+          startDate = subDays(today, 30);
+          break;
+        case 'quarter':
+          startDate = subMonths(today, 3);
+          break;
+        default:
+          startDate = subDays(today, 7);
+      }
+
+      const { data: calorieProgressData } = await supabase
+        .from('calories')
+        .select('*')
+        .eq('user_id', user?.id)
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .lte('date', format(today, 'yyyy-MM-dd'))
+        .order('date');
+
+      if (calorieProgressData) {
+        const processedData = calorieProgressData.map(item => ({
+          ...item,
+          total: item.morning + item.afternoon + item.evening + item.dinner
+        }));
+        setProgressData(processedData);
+      }
+    } catch (error) {
+      console.error('Error fetching progress data:', error);
+    } finally {
+      setIsProgressLoading(false);
     }
   };
 
@@ -135,151 +211,343 @@ export default function CalendarView() {
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
+  // Progress calculations
+  const chartData: ChartData[] = progressData.map(item => ({
+    date: format(new Date(item.date), 'MMM dd'),
+    calories: item.total,
+    goal: item.daily_goal,
+    morning: item.morning,
+    afternoon: item.afternoon,
+    evening: item.evening,
+    dinner: item.dinner
+  }));
+
+  const hasMeaningfulData = progressData.some(item => item.total > 0);
+  const hasAnyData = progressData.length > 0;
+  const hasGoalData = progressData.some(item => item.daily_goal > 0);
+
+  const avgCalories = hasMeaningfulData ? Math.round(progressData.reduce((sum, item) => sum + item.total, 0) / progressData.length) : 0;
+  const avgGoal = hasGoalData ? Math.round(progressData.reduce((sum, item) => sum + item.daily_goal, 0) / progressData.length) : 0;
+  const consistency = hasMeaningfulData && hasGoalData ? Math.round((progressData.filter(item => item.total >= item.daily_goal * 0.8 && item.total <= item.daily_goal * 1.2).length / progressData.length) * 100) : 0;
+
+  const goalVsActual = avgGoal > 0 && avgCalories > 0 ? [
+    { name: 'Goal', value: avgGoal, color: '#8884d8' },
+    { name: 'Actual', value: avgCalories, color: avgCalories >= avgGoal ? '#82ca9d' : '#ff7300' }
+  ] : [];
+
   return (
-    <div className="container mx-auto p-4 pb-20 max-w-2xl">
+    <div className="container mx-auto p-4 pb-20 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Calendar View</h1>
+        <h1 className="text-2xl font-bold mb-2">Calories</h1>
         <p className="text-muted-foreground">
-          Select a date to view your calorie intake
+          Track your daily calorie intake and view progress over time
         </p>
       </div>
 
-      {/* Calendar */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Select Date</CardTitle>
-        </CardHeader>
-        <CardContent className="flex justify-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            className="rounded-md border"
-            disabled={(date) => date > new Date()}
-          />
-        </CardContent>
-      </Card>
+      {/* Daily Entry Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
-      {/* Selected Date Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
-            <div className="flex items-center gap-2">
-              {isToday && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
-              {(calorieData || !isEditing) && !isLoading && (
-                <div className="flex gap-2">
-                  {isEditing ? (
-                    <>
-                      <Button size="sm" onClick={handleSave} className="h-10 min-w-[44px] touch-manipulation">
-                        <Save className="h-4 w-4" />
+        {/* Calendar */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Date</CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className="rounded-md border"
+              disabled={(date) => date > new Date()}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Selected Date Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
+              <div className="flex items-center gap-2">
+                {isToday && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
+                {(calorieData || !isEditing) && !isLoading && (
+                  <div className="flex gap-2">
+                    {isEditing ? (
+                      <>
+                        <Button size="sm" onClick={handleSave} className="h-10 min-w-[44px] touch-manipulation">
+                          <Save className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 min-w-[44px] touch-manipulation">
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 min-w-[44px] touch-manipulation">
+                        <Edit2 className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 min-w-[44px] touch-manipulation">
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 min-w-[44px] touch-manipulation">
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-            </div>
-          ) : displayData || isEditing ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(mealEmojis).map(([meal, emoji]) => (
-                  <div key={meal} className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl">{emoji}</span>
-                      <span className="capitalize font-medium">{meal}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            ) : displayData || isEditing ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(mealEmojis).map(([meal, emoji]) => (
+                    <div key={meal} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">{emoji}</span>
+                        <span className="capitalize font-medium">{meal}</span>
+                      </div>
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={editedData?.[meal as keyof CalorieEntry] || 0}
+                            onChange={(e) => updateMealCalories(meal as keyof CalorieEntry, e.target.value)}
+                            className="w-20 h-8 text-right"
+                            min="0"
+                          />
+                          <span className="text-sm">kcal</span>
+                        </div>
+                      ) : (
+                        <span className="font-bold">
+                          {displayData?.[meal as keyof CalorieEntry] || 0} kcal
+                        </span>
+                      )}
                     </div>
+                  ))}
+                </div>
+                
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">Total Calories</span>
+                    <span className="text-lg font-bold">{totalCalories} kcal</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Daily Goal</span>
                     {isEditing ? (
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          value={editedData?.[meal as keyof CalorieEntry] || 0}
-                          onChange={(e) => updateMealCalories(meal as keyof CalorieEntry, e.target.value)}
+                          value={editedData?.daily_goal || 2400}
+                          onChange={(e) => updateMealCalories('daily_goal', e.target.value)}
                           className="w-20 h-8 text-right"
                           min="0"
                         />
                         <span className="text-sm">kcal</span>
                       </div>
                     ) : (
-                      <span className="font-bold">
-                        {displayData?.[meal as keyof CalorieEntry] || 0} kcal
-                      </span>
+                      <span className="text-muted-foreground">{displayData?.daily_goal || 2400} kcal</span>
                     )}
                   </div>
-                ))}
-              </div>
-              
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium">Total Calories</span>
-                  <span className="text-lg font-bold">{totalCalories} kcal</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Daily Goal</span>
-                  {isEditing ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        value={editedData?.daily_goal || 2400}
-                        onChange={(e) => updateMealCalories('daily_goal', e.target.value)}
-                        className="w-20 h-8 text-right"
-                        min="0"
-                      />
-                      <span className="text-sm">kcal</span>
+                  <div className="mt-2">
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{ 
+                          width: `${Math.min((totalCalories / (displayData?.daily_goal || 2400)) * 100, 100)}%` 
+                        }}
+                      ></div>
                     </div>
-                  ) : (
-                    <span className="text-muted-foreground">{displayData?.daily_goal || 2400} kcal</span>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full transition-all"
-                      style={{ 
-                        width: `${Math.min((totalCalories / (displayData?.daily_goal || 2400)) * 100, 100)}%` 
-                      }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                    <span>
-                      {totalCalories < (displayData?.daily_goal || 2400)
-                        ? `${(displayData?.daily_goal || 2400) - totalCalories} kcal remaining`
-                        : `${totalCalories - (displayData?.daily_goal || 2400)} kcal over goal`
-                      }
-                    </span>
-                    <span>{Math.round((totalCalories / (displayData?.daily_goal || 2400)) * 100)}%</span>
+                    <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                      <span>
+                        {totalCalories < (displayData?.daily_goal || 2400)
+                          ? `${(displayData?.daily_goal || 2400) - totalCalories} kcal remaining`
+                          : `${totalCalories - (displayData?.daily_goal || 2400)} kcal over goal`
+                        }
+                      </span>
+                      <span>{Math.round((totalCalories / (displayData?.daily_goal || 2400)) * 100)}%</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-2">🍽️</div>
-              <p className="text-muted-foreground">No entries for this date</p>
-              <p className="text-sm text-muted-foreground mt-1 mb-4">
-                {isToday ? "Start logging your meals for today!" : "No data available for this date"}
-              </p>
-              <Button onClick={handleEdit} size="sm" className="h-10 min-w-[120px] touch-manipulation">
-                <Edit2 className="h-4 w-4 mr-2" />
-                Add Entry
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">🍽️</div>
+                <p className="text-muted-foreground">No entries for this date</p>
+                <p className="text-sm text-muted-foreground mt-1 mb-4">
+                  {isToday ? "Start logging your meals for today!" : "No data available for this date"}
+                </p>
+                <Button onClick={handleEdit} size="sm" className="h-10 min-w-[120px] touch-manipulation">
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Add Entry
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Progress Section */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-4">Progress Overview</h2>
+        
+        {/* Time Period Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            <TabsTrigger value="quarter">3 Months</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={activeTab} className="space-y-6">
+            {isProgressLoading ? (
+              <div className="flex items-center justify-center min-h-[200px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : hasMeaningfulData ? (
+              <>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <Activity className="h-5 w-5 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Avg Daily Calories</p>
+                          <p className="text-2xl font-bold">{avgCalories}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-5 w-5 text-accent" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Goal Achievement</p>
+                          <p className="text-2xl font-bold">
+                            {hasGoalData ? `${consistency}%` : 'Set Goal'}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        {avgCalories >= avgGoal ? 
+                          <TrendingUp className="h-5 w-5 text-success" /> : 
+                          <TrendingDown className="h-5 w-5 text-warning" />
+                        }
+                        <div>
+                          <p className="text-sm text-muted-foreground">Trend</p>
+                          <p className="text-2xl font-bold">
+                            {hasGoalData ? `${avgCalories >= avgGoal ? '+' : ''}${avgCalories - avgGoal}` : '--'}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Daily Calorie Trend */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Daily Calorie Intake vs Goal</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} name="Actual Calories" />
+                        <Line type="monotone" dataKey="goal" stroke="hsl(var(--success))" strokeWidth={2} strokeDasharray="5 5" name="Daily Goal" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Meal Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Meal-wise Breakdown</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[250px] w-full">
+                        <ResponsiveContainer width={Math.max(600, chartData.length * 60)} height={250}>
+                          <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
+                            <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
+                            <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
+                            <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Goal vs Actual</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {goalVsActual.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                              data={goalVsActual}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, value }) => `${name}: ${value} kcal`}
+                            >
+                              {goalVsActual.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={index === 0 ? "hsl(var(--primary))" : "hsl(var(--success))"} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>Set calorie goal to see comparison</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-8">
+                  <div className="text-center py-8">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Start Tracking Your Progress</h3>
+                    <p className="text-muted-foreground mb-4 max-w-md mx-auto">Begin logging your daily calorie intake to see detailed progress charts, meal breakdowns, and achievement trends.</p>
+                    <Button onClick={handleEdit}>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Log Today's Calories
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

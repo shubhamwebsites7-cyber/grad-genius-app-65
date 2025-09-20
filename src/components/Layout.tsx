@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Home, Calendar, BarChart3, Weight, Menu, X, Download, CheckSquare, Target } from 'lucide-react';
+import { Utensils, Weight, Menu, X, Download, CheckSquare, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,9 +35,7 @@ export function Layout() {
   };
 
   const navigationItems = [
-    { href: '/dashboard', icon: Home, label: 'Home' },
-    { href: '/calendar', icon: Calendar, label: 'Calendar' },
-    { href: '/progress', icon: BarChart3, label: 'Progress' },
+    { href: '/', icon: Utensils, label: 'Calories' },
     { href: '/weight', icon: Weight, label: 'Weight' },
     { href: '/todo', icon: CheckSquare, label: 'Todo' },
     { href: '/goals', icon: Target, label: 'Goals' },
