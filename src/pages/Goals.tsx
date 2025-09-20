@@ -375,49 +375,103 @@ export default function Goals() {
     }
   };
 
-  const renderVerticalStreakBars = (count: number) => {
-    const milestones = [3, 7, 14, 21, 30, 60, 90, 180, 365];
-    const maxHeight = 120;
+  const renderStreakColumns = () => {
+    const activeStreak = streaks.find(s => s.is_active);
+    const currentCount = activeStreak?.current_count || 0;
+    const maxCount = activeStreak?.max_count || 0;
     
+    // Define the three milestone columns
+    const columns = [
+      { 
+        id: 1, 
+        title: "First Goal", 
+        target: 3, 
+        completed: maxCount >= 3,
+        description: "3 Days"
+      },
+      { 
+        id: 2, 
+        title: "Second Goal", 
+        target: 7, 
+        completed: maxCount >= 7,
+        description: "7 Days"
+      },
+      { 
+        id: 3, 
+        title: "Current Streak", 
+        target: currentCount || 1, 
+        completed: false,
+        description: "Active",
+        isCurrent: true
+      }
+    ];
+
     return (
-      <div className="flex items-end justify-center space-x-2 h-32">
-        {milestones.map((milestone, index) => {
-          const isCompleted = count >= milestone;
-          const height = Math.min(maxHeight, (milestone / 30) * 60 + 20); // Dynamic height based on milestone
+      <div className="grid grid-cols-3 gap-6">
+        {columns.map((column) => {
+          const barHeight = column.isCurrent 
+            ? Math.min(200, Math.max(40, currentCount * 8)) 
+            : Math.min(200, Math.max(40, column.target * 8));
           
+          const progressPercentage = column.isCurrent 
+            ? 100 
+            : column.completed ? 100 : 0;
+
           return (
-            <div key={milestone} className="flex flex-col items-center">
-              <div
-                className={`w-6 rounded-t-md transition-all duration-300 ${
-                  isCompleted 
-                    ? 'bg-green-500 animate-pulse' 
-                    : count >= milestone * 0.8 
-                      ? 'bg-yellow-400' 
-                      : 'bg-gray-200'
-                }`}
-                style={{ height: `${height}px` }}
-              />
-              <span className={`text-xs mt-1 font-medium ${
-                isCompleted ? 'text-green-600' : 'text-gray-400'
-              }`}>
-                {milestone}d
-              </span>
-              {isCompleted && (
-                <span className="text-green-500 text-xs">✓</span>
-              )}
+            <div key={column.id} className="flex flex-col items-center">
+              {/* Column Header */}
+              <div className="text-center mb-4">
+                <h4 className="font-semibold text-sm">{column.title}</h4>
+                <p className="text-xs text-muted-foreground">{column.description}</p>
+              </div>
+
+              {/* Vertical Progress Bar */}
+              <div className="relative">
+                <div 
+                  className="w-16 bg-muted rounded-lg border-2 border-yellow-400 overflow-hidden transition-all duration-500"
+                  style={{ height: `${barHeight}px` }}
+                >
+                  {/* Animated fill */}
+                  <div 
+                    className={`w-full bg-gradient-to-t from-green-500 to-green-400 transition-all duration-1000 ease-out ${
+                      column.isCurrent ? 'animate-pulse' : ''
+                    }`}
+                    style={{ 
+                      height: `${progressPercentage}%`,
+                      animation: column.isCurrent ? 'pulse 2s infinite' : 'none'
+                    }}
+                  />
+                </div>
+                
+                {/* Day counter inside bar */}
+                <div className="absolute inset-0 flex items-end justify-center pb-2">
+                  <span className="text-white font-bold text-sm drop-shadow-lg">
+                    {column.isCurrent ? currentCount : column.target}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status indicators */}
+              <div className="mt-3 text-center">
+                {column.completed && !column.isCurrent && (
+                  <div className="flex items-center justify-center text-green-600">
+                    <span className="text-lg">✓</span>
+                    <span className="text-xs ml-1">Complete</span>
+                  </div>
+                )}
+                {column.isCurrent && (
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm font-bold text-blue-600">{currentCount} days</span>
+                    <span className="text-xs text-muted-foreground">In progress</span>
+                  </div>
+                )}
+                {!column.completed && !column.isCurrent && (
+                  <span className="text-xs text-gray-400">Not reached</span>
+                )}
+              </div>
             </div>
           );
         })}
-        
-        {/* Current progress indicator */}
-        <div className="ml-4 flex flex-col items-center">
-          <div 
-            className="w-8 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t-md"
-            style={{ height: `${Math.min(maxHeight, count * 2 + 20)}px` }}
-          />
-          <span className="text-sm font-bold text-blue-600 mt-1">{count}</span>
-          <span className="text-xs text-blue-500">current</span>
-        </div>
       </div>
     );
   };
@@ -621,67 +675,58 @@ export default function Goals() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Daily Streak Tracker</span>
-            <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700">
-              Update Daily +1
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700">
+                Update Daily +1
+              </Button>
+              {streaks.some(s => s.is_active) && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    const activeStreak = streaks.find(s => s.is_active);
+                    if (activeStreak) breakStreak(activeStreak.id);
+                  }}
+                >
+                  Break Streak
+                </Button>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {streaks.map((streak, index) => (
-              <div key={streak.id} className="p-6 rounded-lg border bg-gradient-to-r from-background to-muted/20">
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h4 className="text-lg font-semibold">
-                      {streak.is_active ? 'Current Streak' : `Streak #${streaks.length - index}`}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {streak.current_count} days completed • Personal best: {streak.max_count} days
-                    </p>
-                  </div>
-                  {streak.is_active && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => breakStreak(streak.id)}
-                    >
-                      Break Streak
-                    </Button>
-                  )}
+          <div className="p-6 bg-gradient-to-r from-background to-muted/20 rounded-lg">
+            {streaks.length > 0 ? (
+              <>
+                {/* Column-based streak visualization */}
+                <div className="mb-8">
+                  <h5 className="text-lg font-semibold mb-6 text-center">Streak Progress</h5>
+                  {renderStreakColumns()}
                 </div>
                 
-                {/* Vertical milestone progress */}
-                <div className="mb-6">
-                  <h5 className="text-sm font-medium mb-4 text-center">Milestone Progress</h5>
-                  {renderVerticalStreakBars(streak.current_count)}
-                </div>
-                
-                {/* Achievement stats */}
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="text-xl font-bold text-green-600">{streak.current_count}</div>
-                    <div className="text-xs text-muted-foreground">Current Days</div>
-                  </div>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="text-xl font-bold text-blue-600">{streak.max_count}</div>
-                    <div className="text-xs text-muted-foreground">Best Streak</div>
-                  </div>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="text-xl font-bold text-purple-600">
-                      {streak.current_count >= 7 ? Math.floor(streak.current_count / 7) : 0}
+                {/* Stats Summary */}
+                <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t">
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {streaks.find(s => s.is_active)?.current_count || 0}
                     </div>
-                    <div className="text-xs text-muted-foreground">Weeks</div>
+                    <div className="text-sm text-muted-foreground">Current Streak</div>
+                  </div>
+                  <div className="text-center p-4 bg-muted/30 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {Math.max(...streaks.map(s => s.max_count), 0)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Best Record</div>
                   </div>
                 </div>
                 
-                <p className="text-xs text-muted-foreground mt-4 text-center">
-                  Started: {format(new Date(streak.created_at), 'MMM dd, yyyy')} • 
-                  Last updated: {format(new Date(streak.last_updated), 'MMM dd, yyyy')}
-                </p>
-              </div>
-            ))}
-            
-            {streaks.length === 0 && (
+                {streaks.find(s => s.is_active) && (
+                  <p className="text-xs text-muted-foreground mt-4 text-center">
+                    Last updated: {format(new Date(streaks.find(s => s.is_active)?.last_updated || new Date()), 'MMM dd, yyyy')}
+                  </p>
+                )}
+              </>
+            ) : (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🎯</div>
                 <h3 className="text-lg font-semibold mb-2">Ready to start your journey?</h3>
