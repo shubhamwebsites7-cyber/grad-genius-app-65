@@ -693,53 +693,78 @@ export default function Goals() {
               </div>
             )}
             
-            {/* Bar Chart */}
-            <div className="h-96 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={generateChartData().filter(d => d.days > 0 || d.isActive)}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 60,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis 
-                    dataKey="strike" 
-                    label={{ value: 'Strike Number', position: 'insideBottom', offset: -40 }}
-                  />
-                  <YAxis 
-                    domain={[0, 150]}
-                    label={{ value: 'Days', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    formatter={(value, name, props) => [
-                      `${value} days`,
-                      props.payload.isActive 
-                        ? 'Current Strike (Active)' 
-                        : props.payload.isCompleted 
-                          ? 'Completed Strike'
-                          : 'Future Strike'
-                    ]}
-                    labelFormatter={(label) => `Strike ${label}`}
-                  />
-                  <Legend />
-                  <Bar 
-                    dataKey="days" 
-                    name="Strike Progress"
-                  >
-                    {generateChartData().filter(d => d.days > 0 || d.isActive).map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.isActive ? '#10b981' : entry.isCompleted ? '#3b82f6' : '#6b7280'}
-                        className={entry.isActive ? 'animate-pulse' : ''}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            {/* Strike Bars Row */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">All Strikes Progress</h3>
+              
+              {/* Horizontal Strike Bars */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {streaks
+                  .sort((a, b) => a.streak_number - b.streak_number)
+                  .map((streak) => (
+                    <div key={streak.id} className="bg-card border rounded-lg p-4">
+                      <div className="text-center mb-3">
+                        <h4 className="font-semibold text-sm">Strike {streak.streak_number}</h4>
+                        <p className={`text-xs ${streak.is_active ? 'text-green-600' : 'text-blue-600'}`}>
+                          {streak.is_active ? 'Active' : 'Completed'}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {/* Vertical Bar */}
+                        <div className="h-32 w-8 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
+                          <div 
+                            className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all duration-500 ${
+                              streak.is_active 
+                                ? 'bg-green-500 animate-pulse' 
+                                : 'bg-blue-500'
+                            }`}
+                            style={{ 
+                              height: `${Math.min((streak.is_active ? streak.current_count : streak.final_count) / 150 * 100, 100)}%` 
+                            }}
+                          />
+                          
+                          {/* Day count label */}
+                          <div className="absolute inset-0 flex items-end justify-center pb-1">
+                            <span className="text-xs font-bold text-white drop-shadow-sm">
+                              {streak.is_active ? streak.current_count : streak.final_count}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground">
+                            {streak.is_active ? streak.current_count : streak.final_count} days
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                
+                {/* Show next strike placeholder if there's an active one */}
+                {streaks.some(s => s.is_active) && (
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <div className="text-center mb-3">
+                      <h4 className="font-semibold text-sm text-gray-500">
+                        Strike {Math.max(...streaks.map(s => s.streak_number), 0) + 1}
+                      </h4>
+                      <p className="text-xs text-gray-400">Next Strike</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="h-32 w-8 mx-auto bg-gray-200 rounded-lg relative">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-xs text-gray-400">0</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-center">
+                        <p className="text-xs text-gray-400">0 days</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Legend and Stats */}
