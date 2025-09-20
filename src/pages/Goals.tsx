@@ -744,7 +744,7 @@ export default function Goals() {
             </div>
             
             {/* Legend and Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg border">
                 <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
                 <span className="text-sm font-medium">Completed Strikes</span>
@@ -757,24 +757,7 @@ export default function Goals() {
                 <span className="text-sm font-medium">Active Strike</span>
                 <p className="text-xs text-muted-foreground">Currently growing</p>
               </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                <div className="w-4 h-4 bg-gray-400 rounded-full mx-auto mb-2"></div>
-                <span className="text-sm font-medium">Future Strikes</span>
-                <p className="text-xs text-muted-foreground">Not started yet</p>
-              </div>
             </div>
-
-            {/* Current Stats */}
-            {streaks.length > 0 && (
-              <div className="flex justify-center pt-4 border-t">
-                <div className="text-center p-4 bg-muted/30 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {streaks.filter(s => s.final_count > 0).length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Completed Strikes</div>
-                </div>
-              </div>
-            )}
 
             {streaks.length === 0 && (
               <div className="text-center py-12">
