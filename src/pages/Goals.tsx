@@ -467,6 +467,72 @@ export default function Goals() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        {/* Progress Overview */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Progress Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(() => {
+              const completedGoals = goals.filter(g => g.completed).length;
+              const progressPercentage = Math.min((completedGoals / 10) * 100, 100); // Always calculate against 10 tasks
+              
+              return (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Goals Completed</span>
+                      <span>{completedGoals} / 10</span>
+                    </div>
+                    <Progress value={progressPercentage} className="w-full" />
+                    <p className="text-xs text-muted-foreground">
+                      {progressPercentage.toFixed(0)}% of target achieved
+                    </p>
+                  </div>
+                  
+                  {/* Goal completion chart dot visualization */}
+                  <div className="h-32 border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-green-50">
+                    <div className="relative h-full w-full">
+                      <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-300"></div>
+                      <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-300"></div>
+                      
+                      {/* Grid lines */}
+                      {[2, 4, 6, 8].map(line => (
+                        <div 
+                          key={line}
+                          className="absolute w-full h-px bg-gray-200"
+                          style={{ bottom: `${(line/10) * 100}%` }}
+                        />
+                      ))}
+                      
+                      {/* Progress dot */}
+                      <div
+                        className="absolute w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-lg transition-all duration-500"
+                        style={{ 
+                          bottom: `${progressPercentage}%`,
+                          left: '50%',
+                          transform: 'translateX(-50%)'
+                        }}
+                      />
+                      
+                      {/* Y-axis labels */}
+                      <div className="absolute -left-8 bottom-0 text-xs text-gray-500">0</div>
+                      <div className="absolute -left-8 top-0 text-xs text-gray-500">10</div>
+                      
+                      {/* X-axis label */}
+                      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
+                        Progress
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
         {/* Goals Section */}
         <Card>
           <CardHeader>
