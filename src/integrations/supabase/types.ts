@@ -55,22 +55,28 @@ export type Database = {
       }
       goals: {
         Row: {
+          completed: boolean | null
           created_at: string
           id: string
+          title: string | null
           updated_at: string
           user_id: string
           weight_goal: number | null
         }
         Insert: {
+          completed?: boolean | null
           created_at?: string
           id?: string
+          title?: string | null
           updated_at?: string
           user_id: string
           weight_goal?: number | null
         }
         Update: {
+          completed?: boolean | null
           created_at?: string
           id?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
           weight_goal?: number | null
@@ -104,6 +110,39 @@ export type Database = {
         }
         Relationships: []
       }
+      streaks: {
+        Row: {
+          created_at: string
+          current_count: number
+          id: string
+          is_active: boolean
+          last_updated: string
+          max_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_count?: number
+          id?: string
+          is_active?: boolean
+          last_updated?: string
+          max_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_count?: number
+          id?: string
+          is_active?: boolean
+          last_updated?: string
+          max_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           completed: boolean
@@ -131,6 +170,33 @@ export type Database = {
           date?: string
           id?: string
           priority?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tips: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
           title?: string
           updated_at?: string
           user_id?: string

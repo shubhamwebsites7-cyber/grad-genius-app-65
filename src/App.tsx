@@ -11,6 +11,7 @@ import CalendarView from "./pages/CalendarView";
 import Progress from "./pages/Progress";
 import Weight from "./pages/Weight";
 import Todo from "./pages/Todo";
+import Goals from "./pages/Goals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="progress" element={<Progress />} />
             <Route path="weight" element={<Weight />} />
             <Route path="todo" element={<Todo />} />
+            <Route path="goals" element={<Goals />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

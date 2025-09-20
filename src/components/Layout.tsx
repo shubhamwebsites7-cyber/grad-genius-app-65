@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Home, Calendar, BarChart3, Weight, Menu, X, Download, CheckSquare } from 'lucide-react';
+import { Home, Calendar, BarChart3, Weight, Menu, X, Download, CheckSquare, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -40,6 +40,7 @@ export function Layout() {
     { href: '/progress', icon: BarChart3, label: 'Progress' },
     { href: '/weight', icon: Weight, label: 'Weight' },
     { href: '/todo', icon: CheckSquare, label: 'Todo' },
+    { href: '/goals', icon: Target, label: 'Goals' },
   ];
 
   const currentPage = navigationItems.find(item => item.href === location.pathname);
