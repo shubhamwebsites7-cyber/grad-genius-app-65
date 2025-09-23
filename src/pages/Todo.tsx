@@ -297,9 +297,9 @@ export default function Todo() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-2">{completedTasks}/10 tasks</h2>
+            <h2 className="text-2xl font-bold mb-2">{Math.min(completedTasks, 10)}/10 tasks</h2>
             <p className="text-muted-foreground">
-              {Math.round((completedTasks / 10) * 100)}% completed
+              {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
             </p>
           </div>
         </CardContent>
