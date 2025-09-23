@@ -67,20 +67,22 @@ export default function CalendarView() {
     }
   }, [selectedDate, user]);
 
-  // Auto-enable editing for today if no data exists
+  // Auto-enable editing for today
   useEffect(() => {
     const isTodaySelected = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-    if (isTodaySelected && !calorieData && !isLoading && !isEditing) {
+    if (isTodaySelected && !isLoading) {
       setIsEditing(true);
-      setEditedData({
+      setEditedData(calorieData || {
         morning: 0,
         afternoon: 0,
         evening: 0,
         dinner: 0,
         daily_goal: 2400
       });
+    } else if (!isTodaySelected) {
+      setIsEditing(false);
     }
-  }, [selectedDate, calorieData, isLoading, isEditing]);
+  }, [selectedDate, calorieData, isLoading]);
 
   useEffect(() => {
     if (user) {
@@ -292,16 +294,20 @@ export default function CalendarView() {
                         <Save className="h-4 w-4 mr-1" />
                         <span className="hidden sm:inline">Save</span>
                       </Button>
-                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 px-3 touch-manipulation">
-                        <X className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Cancel</span>
-                      </Button>
+                      {!isToday && (
+                        <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 px-3 touch-manipulation">
+                          <X className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Cancel</span>
+                        </Button>
+                      )}
                     </>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 px-3 touch-manipulation" disabled={isLoading}>
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </Button>
+                    !isToday && (
+                      <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 px-3 touch-manipulation" disabled={isLoading}>
+                        <Edit2 className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Edit</span>
+                      </Button>
+                    )
                   )}
                 </div>
               </div>
