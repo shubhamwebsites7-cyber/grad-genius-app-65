@@ -257,8 +257,8 @@ export default function CalendarView() {
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border"
               disabled={(date) => date > new Date()}
+              className="rounded-md border"
             />
           </CardContent>
         </Card>
