@@ -67,6 +67,21 @@ export default function CalendarView() {
     }
   }, [selectedDate, user]);
 
+  // Auto-enable editing for today if no data exists
+  useEffect(() => {
+    const isTodaySelected = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+    if (isTodaySelected && !calorieData && !isLoading && !isEditing) {
+      setIsEditing(true);
+      setEditedData({
+        morning: 0,
+        afternoon: 0,
+        evening: 0,
+        dinner: 0,
+        daily_goal: 2400
+      });
+    }
+  }, [selectedDate, calorieData, isLoading, isEditing]);
+
   useEffect(() => {
     if (user) {
       fetchProgressData();
@@ -297,7 +312,7 @@ export default function CalendarView() {
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
-            ) : displayData || isEditing ? (
+            ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-2">
                   {Object.entries(mealEmojis).map(([meal, emoji]) => (
@@ -306,7 +321,7 @@ export default function CalendarView() {
                         <span className="text-2xl">{emoji}</span>
                         <span className="capitalize font-medium text-base">{meal}</span>
                       </div>
-                      {isEditing ? (
+                      {isToday && !displayData ? (
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
@@ -318,9 +333,7 @@ export default function CalendarView() {
                           <span className="text-sm font-medium">kcal</span>
                         </div>
                       ) : (
-                        <span className="font-bold text-base">
-                          {displayData?.[meal as keyof CalorieEntry] || 0} kcal
-                        </span>
+                        <span className="font-bold text-base">0 kcal</span>
                       )}
                     </div>
                   ))}
@@ -329,11 +342,11 @@ export default function CalendarView() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium">Total Calories</span>
-                    <span className="text-lg font-bold">{totalCalories} kcal</span>
+                    <span className="text-lg font-bold">0 kcal</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Daily Goal</span>
-                    {isEditing ? (
+                    {isToday && !displayData ? (
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
@@ -345,41 +358,30 @@ export default function CalendarView() {
                         <span className="text-sm">kcal</span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">{displayData?.daily_goal || 2400} kcal</span>
+                      <span className="text-muted-foreground">2400 kcal</span>
                     )}
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-muted rounded-full h-2">
                       <div 
                         className="bg-primary h-2 rounded-full transition-all"
-                        style={{ 
-                          width: `${Math.min((totalCalories / (displayData?.daily_goal || 2400)) * 100, 100)}%` 
-                        }}
+                        style={{ width: '0%' }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                      <span>
-                        {totalCalories < (displayData?.daily_goal || 2400)
-                          ? `${(displayData?.daily_goal || 2400) - totalCalories} kcal remaining`
-                          : `${totalCalories - (displayData?.daily_goal || 2400)} kcal over goal`
-                        }
-                      </span>
-                      <span>{Math.round((totalCalories / (displayData?.daily_goal || 2400)) * 100)}%</span>
+                      <span>2400 kcal remaining</span>
+                      <span>0%</span>
                     </div>
                   </div>
+                  {isToday && !displayData && (
+                    <div className="mt-4 flex justify-center">
+                      <Button onClick={handleSave} size="sm" className="h-10 min-w-[120px] touch-manipulation">
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Entry
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">🍽️</div>
-                <p className="text-muted-foreground">No entries for this date</p>
-                <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  {isToday ? "Start logging your meals for today!" : "No data available for this date"}
-                </p>
-                <Button onClick={handleEdit} size="sm" className="h-10 min-w-[120px] touch-manipulation">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Add Entry
-                </Button>
               </div>
             )}
           </CardContent>
@@ -392,11 +394,13 @@ export default function CalendarView() {
         
         {/* Time Period Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-12">
-            <TabsTrigger value="weekly" className="text-sm">Weekly</TabsTrigger>
-            <TabsTrigger value="monthly" className="text-sm">Monthly</TabsTrigger>
-            <TabsTrigger value="quarter" className="text-sm">3 Months</TabsTrigger>
-          </TabsList>
+          <ScrollArea className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-12 min-w-[300px]">
+              <TabsTrigger value="weekly" className="text-sm">Weekly</TabsTrigger>
+              <TabsTrigger value="monthly" className="text-sm">Monthly</TabsTrigger>
+              <TabsTrigger value="quarter" className="text-sm">3 Months</TabsTrigger>
+            </TabsList>
+          </ScrollArea>
 
           <TabsContent value={activeTab} className="space-y-6">
             {isProgressLoading ? (
