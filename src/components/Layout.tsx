@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Utensils, Weight, Menu, X, Download, CheckSquare, Target } from 'lucide-react';
+import { Utensils, Weight, Download, CheckSquare, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,7 +8,6 @@ import { NavigationLink } from '@/components/NavigationLink';
 import { toast } from '@/hooks/use-toast';
 
 export function Layout() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { canInstall, installApp } = usePWA();
   const location = useLocation();
@@ -49,14 +47,6 @@ export function Layout() {
       <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
             <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               TrackMyCalories
             </h1>
@@ -96,22 +86,7 @@ export function Layout() {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden border-t bg-card/95 backdrop-blur">
-            <nav className="px-4 py-2 space-y-1">
-              {navigationItems.map((item) => (
-                <NavigationLink
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  onClick={() => setIsMenuOpen(false)}
-                />
-              ))}
-            </nav>
-          </div>
-        )}
+        {/* Mobile Navigation Menu - Removed since bottom nav is available */}
       </header>
 
       {/* Main Content */}

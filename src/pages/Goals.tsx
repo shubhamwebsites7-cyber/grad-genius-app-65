@@ -649,10 +649,10 @@ export default function Goals() {
       {/* Streak Tracking */}
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          <CardTitle className="flex flex-col gap-4">
             <span className="text-lg sm:text-xl">Strike Progress Chart</span>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 text-sm sm:text-base">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
+              <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 text-sm sm:text-base w-full sm:w-auto h-12 sm:h-10">
                 Update Daily +1
               </Button>
               {streaks.some(s => s.is_active) && (
@@ -663,7 +663,7 @@ export default function Goals() {
                     const activeStreak = streaks.find(s => s.is_active);
                     if (activeStreak) breakStreak(activeStreak.id);
                   }}
-                  className="text-sm"
+                  className="text-sm w-full sm:w-auto h-12 sm:h-10"
                 >
                   Break Streak
                 </Button>
@@ -698,49 +698,51 @@ export default function Goals() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">All Strikes Progress</h3>
               
-              {/* Horizontal Strike Bars */}
-              <div className="flex gap-3 flex-wrap">
-                {streaks
-                  .sort((a, b) => a.streak_number - b.streak_number)
-                  .map((streak) => (
-                    <div key={streak.id} className="bg-card border rounded-lg p-3 min-w-[80px]">
-                      <div className="text-center mb-2">
-                        <h4 className="font-semibold text-sm">Strike {streak.streak_number}</h4>
-                        <p className={`text-xs ${streak.is_active ? 'text-green-600' : 'text-blue-600'}`}>
-                          {streak.is_active ? 'Active' : 'Completed'}
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        {/* Vertical Bar */}
-                        <div className="h-[80vh] w-6 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
-                          <div 
-                            className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all duration-500 ${
-                              streak.is_active 
-                                ? 'bg-green-500 animate-pulse' 
-                                : 'bg-blue-500'
-                            }`}
-                            style={{ 
-                              height: `${Math.min((streak.is_active ? streak.current_count : streak.final_count) / 30 * 100, 100)}%` 
-                            }}
-                          />
-                          
-                          {/* Day count label */}
-                          <div className="absolute inset-0 flex items-end justify-center pb-2">
-                            <span className="text-sm font-bold text-white drop-shadow-sm">
-                              {streak.is_active ? streak.current_count : streak.final_count}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="text-center">
-                          <p className="text-xs text-muted-foreground">
-                            {streak.is_active ? streak.current_count : streak.final_count} days
+              {/* Horizontal Strike Bars with responsive scroll */}
+              <div className="overflow-x-auto pb-4">
+                <div className="flex gap-3 min-w-max">
+                  {streaks
+                    .sort((a, b) => a.streak_number - b.streak_number)
+                    .map((streak) => (
+                      <div key={streak.id} className="bg-card border rounded-lg p-3 min-w-[80px] flex-shrink-0">
+                        <div className="text-center mb-2">
+                          <h4 className="font-semibold text-sm">Strike {streak.streak_number}</h4>
+                          <p className={`text-xs ${streak.is_active ? 'text-green-600' : 'text-blue-600'}`}>
+                            {streak.is_active ? 'Active' : 'Completed'}
                           </p>
                         </div>
+                        
+                        <div className="space-y-2">
+                          {/* Vertical Bar - Responsive height */}
+                          <div className="h-32 sm:h-48 md:h-64 w-6 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
+                            <div 
+                              className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all duration-500 ${
+                                streak.is_active 
+                                  ? 'bg-green-500 animate-pulse' 
+                                  : 'bg-blue-500'
+                              }`}
+                              style={{ 
+                                height: `${Math.min((streak.is_active ? streak.current_count : streak.final_count) / 30 * 100, 100)}%` 
+                              }}
+                            />
+                            
+                            {/* Day count label */}
+                            <div className="absolute inset-0 flex items-end justify-center pb-2">
+                              <span className="text-xs sm:text-sm font-bold text-white drop-shadow-sm">
+                                {streak.is_active ? streak.current_count : streak.final_count}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground">
+                              {streak.is_active ? streak.current_count : streak.final_count} days
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
             </div>
             
