@@ -273,16 +273,19 @@ export default function CalendarView() {
                 <div className="flex gap-2">
                   {isEditing ? (
                     <>
-                      <Button size="sm" onClick={handleSave} className="h-8 sm:h-10 min-w-[36px] sm:min-w-[44px] touch-manipulation">
-                        <Save className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Button size="sm" onClick={handleSave} className="h-10 px-3 touch-manipulation">
+                        <Save className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Save</span>
                       </Button>
-                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-8 sm:h-10 min-w-[36px] sm:min-w-[44px] touch-manipulation">
-                        <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 px-3 touch-manipulation">
+                        <X className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Cancel</span>
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-8 sm:h-10 min-w-[36px] sm:min-w-[44px] touch-manipulation" disabled={isLoading}>
-                      <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 px-3 touch-manipulation" disabled={isLoading}>
+                      <Edit2 className="h-4 w-4 mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
                     </Button>
                   )}
                 </div>
