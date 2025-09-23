@@ -245,49 +245,47 @@ export default function CalendarView() {
       </div>
 
       {/* Daily Entry Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
 
         {/* Calendar */}
         <Card>
-          <CardHeader>
-            <CardTitle>Select Date</CardTitle>
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="text-lg sm:text-xl">Select Date</CardTitle>
           </CardHeader>
-          <CardContent className="flex justify-center">
+          <CardContent className="flex justify-center px-2 sm:px-6">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               disabled={(date) => date > new Date()}
-              className="rounded-md border"
+              className="rounded-md border scale-90 sm:scale-100"
             />
           </CardContent>
         </Card>
 
         {/* Selected Date Info */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
-              <div className="flex items-center gap-2">
-                {isToday && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
-                {!isLoading && (
-                  <div className="flex gap-2">
-                    {isEditing ? (
-                      <>
-                        <Button size="sm" onClick={handleSave} className="h-10 min-w-[44px] touch-manipulation">
-                          <Save className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 min-w-[44px] touch-manipulation">
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={handleEdit} className="h-10 min-w-[44px] touch-manipulation">
-                        <Edit2 className="h-4 w-4" />
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="flex items-center justify-between text-sm sm:text-lg flex-wrap gap-2">
+              <span className="text-sm sm:text-base">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {isToday && <span className="text-xs sm:text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button size="sm" onClick={handleSave} className="h-8 sm:h-10 min-w-[36px] sm:min-w-[44px] touch-manipulation">
+                        <Save className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
-                    )}
-                  </div>
-                )}
+                      <Button size="sm" variant="outline" onClick={handleCancel} className="h-8 sm:h-10 min-w-[36px] sm:min-w-[44px] touch-manipulation">
+                        <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={handleEdit} className="h-8 sm:h-10 min-w-[36px] sm:min-w-[44px] touch-manipulation" disabled={isLoading}>
+                      <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardTitle>
           </CardHeader>
@@ -298,26 +296,26 @@ export default function CalendarView() {
               </div>
             ) : displayData || isEditing ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                   {Object.entries(mealEmojis).map(([meal, emoji]) => (
-                    <div key={meal} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                    <div key={meal} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-muted">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xl">{emoji}</span>
-                        <span className="capitalize font-medium">{meal}</span>
+                        <span className="text-lg sm:text-xl">{emoji}</span>
+                        <span className="capitalize font-medium text-sm sm:text-base">{meal}</span>
                       </div>
                       {isEditing ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Input
                             type="number"
                             value={editedData?.[meal as keyof CalorieEntry] || 0}
                             onChange={(e) => updateMealCalories(meal as keyof CalorieEntry, e.target.value)}
-                            className="w-20 h-8 text-right"
+                            className="w-16 sm:w-20 h-7 sm:h-8 text-right text-sm"
                             min="0"
                           />
-                          <span className="text-sm">kcal</span>
+                          <span className="text-xs sm:text-sm">kcal</span>
                         </div>
                       ) : (
-                        <span className="font-bold">
+                        <span className="font-bold text-sm sm:text-base">
                           {displayData?.[meal as keyof CalorieEntry] || 0} kcal
                         </span>
                       )}
@@ -450,19 +448,26 @@ export default function CalendarView() {
                   </Card>
                 </div>
 
-                {/* Daily Calorie Trend */}
+                 {/* Daily Calorie Trend */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Daily Calorie Intake vs Goal</CardTitle>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="text-base sm:text-lg">Daily Calorie Intake vs Goal</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
+                  <CardContent className="px-2 sm:px-6">
+                    <ResponsiveContainer width="100%" height={250}>
                       <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
+                        <XAxis 
+                          dataKey="date" 
+                          fontSize={10}
+                          angle={-45}
+                          textAnchor="end"
+                          height={50}
+                          interval={0}
+                        />
+                        <YAxis fontSize={10} />
                         <Tooltip />
-                        <Legend />
+                        <Legend fontSize={10} />
                         <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} name="Actual Calories" />
                         <Line type="monotone" dataKey="goal" stroke="hsl(var(--success))" strokeWidth={2} strokeDasharray="5 5" name="Daily Goal" />
                       </LineChart>
@@ -472,18 +477,25 @@ export default function CalendarView() {
 
                 {/* Meal Breakdown - Full Width */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Meal-wise Breakdown</CardTitle>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="text-base sm:text-lg">Meal-wise Breakdown</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[300px] w-full">
-                      <ResponsiveContainer width={Math.max(800, chartData.length * 80)} height={300}>
+                  <CardContent className="px-2 sm:px-6">
+                    <ScrollArea className="h-[250px] w-full">
+                      <ResponsiveContainer width={Math.max(320, chartData.length * 60)} height={250}>
                         <BarChart data={chartData}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis />
+                          <XAxis 
+                            dataKey="date" 
+                            fontSize={10}
+                            angle={-45}
+                            textAnchor="end"
+                            height={50}
+                            interval={0}
+                          />
+                          <YAxis fontSize={10} />
                           <Tooltip />
-                          <Legend />
+                          <Legend fontSize={10} />
                           <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
                           <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
                           <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />

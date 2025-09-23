@@ -307,21 +307,21 @@ export default function Weight() {
   const isGainGoal = currentWeight && goalWeight ? currentWeight < goalWeight : false;
 
   return (
-    <div className="container mx-auto p-4 pb-20 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Weight Tracker</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto p-2 sm:p-4 pb-20 max-w-2xl">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold mb-2">Weight Tracker</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Monitor your weight progress and achieve your goals
         </p>
       </div>
 
       {/* Current Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Current Weight</p>
-              <p className="text-3xl font-bold">{currentWeight || '---'} kg</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Current Weight</p>
+              <p className="text-2xl sm:text-3xl font-bold">{currentWeight || '---'} kg</p>
               {weights.length > 0 && (
                 <p className="text-xs text-muted-foreground">
                   Last updated: {format(new Date(weights[0].date), 'MMM dd, yyyy')}
@@ -332,8 +332,8 @@ export default function Weight() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Weight Goal</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Weight Goal</CardTitle>
             <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -341,7 +341,7 @@ export default function Weight() {
                   size="sm"
                   onClick={() => setGoalInput(goalWeight?.toString() || '')}
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </DialogTrigger>
               <DialogContent>

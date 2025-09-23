@@ -278,62 +278,62 @@ export default function Todo() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background p-2 sm:p-4 max-w-4xl mx-auto pb-20">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-bold">My ToDo</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold">My ToDo</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             {format(selectedDate, 'MMMM do, yyyy')}
           </p>
         </div>
-        <Button variant="ghost" onClick={() => signOut()}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+        <Button variant="ghost" onClick={() => signOut()} size="sm">
+          <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Sign Out</span>
         </Button>
       </div>
 
       {/* Progress Overview */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="pt-4 sm:pt-6">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-2">{Math.min(completedTasks, 10)}/10 tasks</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">{Math.min(completedTasks, 10)}/10 tasks</h2>
+            <p className="text-muted-foreground text-sm sm:text-base">
               {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Calendar */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 flex justify-center">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border"
+              className="rounded-md border scale-90 sm:scale-100"
             />
           </CardContent>
         </Card>
 
         {/* Add New Task */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
               Add New Todo
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">What needs to be done?</label>
               <Input
                 placeholder="Enter your task..."
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
-                className="mb-4"
+                className="mb-3 sm:mb-4"
               />
             </div>
             
@@ -359,7 +359,7 @@ export default function Todo() {
       </div>
 
       {/* Tasks by Priority */}
-      <div className="grid md:grid-cols-3 gap-4 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
         {(['high', 'medium', 'low'] as const).map((priority) => (
           <Card key={priority} className="h-fit">
             <CardHeader className="pb-3">
@@ -410,39 +410,42 @@ export default function Todo() {
       </div>
 
       {/* Progress Chart */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Progress Overview</CardTitle>
+      <Card className="mt-4 sm:mt-6">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Progress Overview</CardTitle>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-3 text-xs sm:text-sm">
               <TabsTrigger value="weekly">Weekly</TabsTrigger>
               <TabsTrigger value="monthly">Monthly</TabsTrigger>
               <TabsTrigger value="3months">3 Months</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
-        <CardContent>
-          <ChartContainer className="h-64">
+        <CardContent className="px-2 sm:px-6">
+          <ChartContainer className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={progressData}>
                 <XAxis 
                   dataKey="day" 
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={40}
                 />
                 <YAxis 
                   domain={[0, 100]}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="percentage" 
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>

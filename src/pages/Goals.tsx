@@ -453,20 +453,20 @@ export default function Goals() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto pb-20">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Goals & Lifestyle</h1>
-          <p className="text-muted-foreground mt-1">Track your goals, tips, and daily streaks</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Goals & Lifestyle</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Track your goals, tips, and daily streaks</p>
         </div>
-        <Button variant="ghost" onClick={() => signOut()}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+        <Button variant="ghost" onClick={() => signOut()} size="sm">
+          <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Sign Out</span>
         </Button>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Goals Section */}
         <Card>
           <CardHeader>
@@ -648,11 +648,11 @@ export default function Goals() {
 
       {/* Streak Tracking */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Strike Progress Chart</span>
-            <div className="flex gap-2">
-              <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+            <span className="text-lg sm:text-xl">Strike Progress Chart</span>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 text-sm sm:text-base">
                 Update Daily +1
               </Button>
               {streaks.some(s => s.is_active) && (
@@ -663,6 +663,7 @@ export default function Goals() {
                     const activeStreak = streaks.find(s => s.is_active);
                     if (activeStreak) breakStreak(activeStreak.id);
                   }}
+                  className="text-sm"
                 >
                   Break Streak
                 </Button>
@@ -670,7 +671,7 @@ export default function Goals() {
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-2 sm:px-6">
           <div className="space-y-6">
             {/* Current Active Strike Info */}
             {streaks.some(s => s.is_active) && (
