@@ -145,7 +145,7 @@ export default function Goals() {
         .from('streaks')
         .select('*')
         .eq('user_id', user.id)
-        .order('streak_number', { ascending: true });
+        .order('streak_number', { ascending: false });
 
       if (error) throw error;
       setStreaks((data || []) as Streak[]);

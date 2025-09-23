@@ -299,26 +299,26 @@ export default function CalendarView() {
               </div>
             ) : displayData || isEditing ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                <div className="grid grid-cols-1 gap-2">
                   {Object.entries(mealEmojis).map(([meal, emoji]) => (
-                    <div key={meal} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-muted">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg sm:text-xl">{emoji}</span>
-                        <span className="capitalize font-medium text-sm sm:text-base">{meal}</span>
+                    <div key={meal} className="flex items-center justify-between p-3 rounded-lg bg-muted min-h-[50px]">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{emoji}</span>
+                        <span className="capitalize font-medium text-base">{meal}</span>
                       </div>
                       {isEditing ? (
-                        <div className="flex items-center gap-1 sm:gap-2">
+                        <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             value={editedData?.[meal as keyof CalorieEntry] || 0}
                             onChange={(e) => updateMealCalories(meal as keyof CalorieEntry, e.target.value)}
-                            className="w-16 sm:w-20 h-7 sm:h-8 text-right text-sm"
+                            className="w-20 h-10 text-right text-base"
                             min="0"
                           />
-                          <span className="text-xs sm:text-sm">kcal</span>
+                          <span className="text-sm font-medium">kcal</span>
                         </div>
                       ) : (
-                        <span className="font-bold text-sm sm:text-base">
+                        <span className="font-bold text-base">
                           {displayData?.[meal as keyof CalorieEntry] || 0} kcal
                         </span>
                       )}
@@ -392,10 +392,10 @@ export default function CalendarView() {
         
         {/* Time Period Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="weekly">Weekly</TabsTrigger>
-            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-            <TabsTrigger value="quarter">3 Months</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-12">
+            <TabsTrigger value="weekly" className="text-sm">Weekly</TabsTrigger>
+            <TabsTrigger value="monthly" className="text-sm">Monthly</TabsTrigger>
+            <TabsTrigger value="quarter" className="text-sm">3 Months</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-6">
@@ -456,25 +456,29 @@ export default function CalendarView() {
                   <CardHeader className="pb-3 sm:pb-6">
                     <CardTitle className="text-base sm:text-lg">Daily Calorie Intake vs Goal</CardTitle>
                   </CardHeader>
-                  <CardContent className="px-2 sm:px-6">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
-                          fontSize={10}
-                          angle={-45}
-                          textAnchor="end"
-                          height={50}
-                          interval={0}
-                        />
-                        <YAxis fontSize={10} />
-                        <Tooltip />
-                        <Legend fontSize={10} />
-                        <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} name="Actual Calories" />
-                        <Line type="monotone" dataKey="goal" stroke="hsl(var(--success))" strokeWidth={2} strokeDasharray="5 5" name="Daily Goal" />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <CardContent className="p-2 sm:px-6">
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[600px]">
+                        <ResponsiveContainer width="100%" height={250}>
+                          <LineChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis 
+                              dataKey="date" 
+                              fontSize={10}
+                              angle={-45}
+                              textAnchor="end"
+                              height={50}
+                              interval={0}
+                            />
+                            <YAxis fontSize={10} />
+                            <Tooltip />
+                            <Legend fontSize={10} />
+                            <Line type="monotone" dataKey="calories" stroke="hsl(var(--primary))" strokeWidth={2} name="Actual Calories" />
+                            <Line type="monotone" dataKey="goal" stroke="hsl(var(--success))" strokeWidth={2} strokeDasharray="5 5" name="Daily Goal" />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -483,29 +487,31 @@ export default function CalendarView() {
                   <CardHeader className="pb-3 sm:pb-6">
                     <CardTitle className="text-base sm:text-lg">Meal-wise Breakdown</CardTitle>
                   </CardHeader>
-                  <CardContent className="px-2 sm:px-6">
-                    <ScrollArea className="h-[250px] w-full">
-                      <ResponsiveContainer width={Math.max(320, chartData.length * 60)} height={250}>
-                        <BarChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis 
-                            dataKey="date" 
-                            fontSize={10}
-                            angle={-45}
-                            textAnchor="end"
-                            height={50}
-                            interval={0}
-                          />
-                          <YAxis fontSize={10} />
-                          <Tooltip />
-                          <Legend fontSize={10} />
-                          <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
-                          <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
-                          <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
-                          <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ScrollArea>
+                  <CardContent className="p-2 sm:px-6">
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[600px]">
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis 
+                              dataKey="date" 
+                              fontSize={10}
+                              angle={-45}
+                              textAnchor="end"
+                              height={50}
+                              interval={0}
+                            />
+                            <YAxis fontSize={10} />
+                            <Tooltip />
+                            <Legend fontSize={10} />
+                            <Bar dataKey="morning" stackId="a" fill="hsl(var(--primary))" name="Morning" />
+                            <Bar dataKey="afternoon" stackId="a" fill="hsl(var(--success))" name="Afternoon" />
+                            <Bar dataKey="evening" stackId="a" fill="hsl(var(--accent))" name="Evening" />
+                            <Bar dataKey="dinner" stackId="a" fill="hsl(var(--warning))" name="Dinner" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </>
