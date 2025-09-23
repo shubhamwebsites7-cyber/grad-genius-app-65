@@ -43,7 +43,7 @@ interface ChartData {
 export default function CalendarView() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date('2025-09-18'));
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calorieData, setCalorieData] = useState<CalorieEntry | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
