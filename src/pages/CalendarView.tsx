@@ -270,7 +270,7 @@ export default function CalendarView() {
               <span>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</span>
               <div className="flex items-center gap-2">
                 {isToday && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded">Today</span>}
-                {(calorieData || !isEditing) && !isLoading && (
+                {!isLoading && (
                   <div className="flex gap-2">
                     {isEditing ? (
                       <>
