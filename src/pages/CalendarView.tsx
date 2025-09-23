@@ -321,7 +321,7 @@ export default function CalendarView() {
                         <span className="text-2xl">{emoji}</span>
                         <span className="capitalize font-medium text-base">{meal}</span>
                       </div>
-                      {isToday && !displayData ? (
+                      {isEditing ? (
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
@@ -333,7 +333,9 @@ export default function CalendarView() {
                           <span className="text-sm font-medium">kcal</span>
                         </div>
                       ) : (
-                        <span className="font-bold text-base">0 kcal</span>
+                        <span className="font-bold text-base">
+                          {displayData?.[meal as keyof CalorieEntry] || 0} kcal
+                        </span>
                       )}
                     </div>
                   ))}
@@ -342,11 +344,11 @@ export default function CalendarView() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium">Total Calories</span>
-                    <span className="text-lg font-bold">0 kcal</span>
+                    <span className="text-lg font-bold">{totalCalories} kcal</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Daily Goal</span>
-                    {isToday && !displayData ? (
+                    {isEditing ? (
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
@@ -358,22 +360,28 @@ export default function CalendarView() {
                         <span className="text-sm">kcal</span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">2400 kcal</span>
+                      <span className="text-muted-foreground">{displayData?.daily_goal || 2400} kcal</span>
                     )}
                   </div>
                   <div className="mt-2">
                     <div className="w-full bg-muted rounded-full h-2">
                       <div 
                         className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: '0%' }}
+                        style={{ 
+                          width: `${Math.min(100, Math.max(0, (totalCalories / (displayData?.daily_goal || 2400)) * 100))}%` 
+                        }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-sm text-muted-foreground mt-1">
-                      <span>2400 kcal remaining</span>
-                      <span>0%</span>
+                      <span>
+                        {Math.max(0, (displayData?.daily_goal || 2400) - totalCalories)} kcal remaining
+                      </span>
+                      <span>
+                        {Math.round((totalCalories / (displayData?.daily_goal || 2400)) * 100)}%
+                      </span>
                     </div>
                   </div>
-                  {isToday && !displayData && (
+                  {isEditing && (
                     <div className="mt-4 flex justify-center">
                       <Button onClick={handleSave} size="sm" className="h-10 min-w-[120px] touch-manipulation">
                         <Save className="h-4 w-4 mr-2" />
