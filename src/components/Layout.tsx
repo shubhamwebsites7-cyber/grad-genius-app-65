@@ -8,6 +8,7 @@ import { NavigationLink } from '@/components/NavigationLink';
 import { toast } from '@/hooks/use-toast';
 
 export function Layout() {
+  console.log("Layout component is rendering - changes are working!");
   const { user, signOut } = useAuth();
   const { canInstall, installApp } = usePWA();
   const location = useLocation();
@@ -48,7 +49,7 @@ export function Layout() {
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center space-x-2">
             <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              TrackMyCalories
+              TrackMyCalories - UPDATED
             </h1>
           </div>
 
