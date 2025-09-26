@@ -2,14 +2,19 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Use Next.js-style public environment variables (compatible with Vercel)
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL as string | undefined;
-const SUPABASE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string | undefined;
+// Support both Next.js (process.env.NEXT_PUBLIC_*) and Vite (import.meta.env.VITE_*)
+const SUPABASE_URL =
+  (process.env.NEXT_PUBLIC_SUPABASE_URL as string | undefined) ||
+  (typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined : undefined);
+
+const SUPABASE_PUBLISHABLE_KEY =
+  (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string | undefined) ||
+  (typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string | undefined : undefined);
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   // Fail fast in non-configured environments
   // eslint-disable-next-line no-console
-  console.error('Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  console.error('Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY (Next.js) or VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY (Vite).');
 }
 
 // Import the supabase client like this:
