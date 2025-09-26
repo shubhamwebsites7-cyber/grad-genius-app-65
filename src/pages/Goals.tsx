@@ -164,14 +164,20 @@ export default function Goals() {
     if (!newGoal.trim() || !user) return;
 
     try {
+      console.log('Adding goal:', { title: newGoal, user_id: user.id });
+      
       const { data, error } = await supabase
         .from('goal')
-        .insert([{ title: newGoal, user_id: user.id }])
+        .insert([{ title: newGoal.trim(), user_id: user.id }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Goal added successfully:', data);
       setGoals([data as Goal, ...goals]);
       setNewGoal('');
       
@@ -183,7 +189,7 @@ export default function Goals() {
       console.error('Error adding goal:', error);
       toast({
         title: "Error",
-        description: "Failed to add goal",
+        description: `Failed to add goal: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
