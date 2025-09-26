@@ -1,3 +1,4 @@
+// Updated types for goal table (renamed from goals)
 export type Json =
   | string
   | number
@@ -53,7 +54,7 @@ export type Database = {
         }
         Relationships: []
       }
-      goals: {
+      goal: {
         Row: {
           completed: boolean | null
           created_at: string
@@ -61,7 +62,6 @@ export type Database = {
           title: string | null
           updated_at: string
           user_id: string
-          weight_goal: number | null
         }
         Insert: {
           completed?: boolean | null
@@ -70,7 +70,6 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id: string
-          weight_goal?: number | null
         }
         Update: {
           completed?: boolean | null
@@ -79,7 +78,6 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id?: string
-          weight_goal?: number | null
         }
         Relationships: []
       }
