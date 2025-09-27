@@ -12,8 +12,12 @@ export default function AuthCallback() {
         console.log('Current URL:', window.location.href);
         console.log('URL hash:', window.location.hash);
         
+        // Clear hash from URL immediately to prevent loops
+        const hash = window.location.hash;
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
         // Check if there's an auth code in the URL hash first
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashParams = new URLSearchParams(hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         
@@ -26,11 +30,9 @@ export default function AuthCallback() {
           
           if (sessionError) {
             console.error('Error setting session:', sessionError);
-            navigate('/auth?error=session_failed');
+            navigate('/auth?error=session_failed', { replace: true });
           } else if (sessionData.session) {
             console.log('Session set successfully, user:', sessionData.session.user.email);
-            // Clear the hash from URL and redirect to dashboard
-            window.history.replaceState({}, document.title, window.location.pathname);
             navigate('/', { replace: true });
           } else {
             console.log('No session after setting tokens, redirecting to auth');
@@ -45,13 +47,12 @@ export default function AuthCallback() {
           
           if (error) {
             console.error('Auth callback error:', error);
-            navigate('/auth?error=auth_failed');
+            navigate('/auth?error=auth_failed', { replace: true });
             return;
           }
 
           if (data.session && data.session.user) {
             console.log('Auth successful, user:', data.session.user.email);
-            // Successfully authenticated, redirect to dashboard
             navigate('/', { replace: true });
           } else {
             console.log('No session found, redirecting to auth');
@@ -64,10 +65,8 @@ export default function AuthCallback() {
       }
     };
 
-    // Add a small delay to ensure the session is properly set
-    const timer = setTimeout(handleAuthCallback, 100);
-    
-    return () => clearTimeout(timer);
+    // Process callback immediately
+    handleAuthCallback();
   }, [navigate]);
 
   return (
