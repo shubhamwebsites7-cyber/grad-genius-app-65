@@ -1,73 +1,84 @@
-# Welcome to your Lovable project
+# Track My Gain - Personal Health Tracker
 
-## Project info
+A comprehensive health and fitness tracking application built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/a3696057-f850-4d34-8203-3a62a9111367
+## Features
 
-## How can I edit this code?
+- **Calorie Tracking**: Monitor daily calorie intake with meal breakdowns
+- **Weight Management**: Track weight progress over time
+- **Goal Setting**: Set and track personal health goals
+- **Todo Lists**: Organize daily tasks and habits
+- **Streak Tracking**: Build consistency with daily streaks
+- **Google Authentication**: Secure login with Google OAuth
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: Radix UI, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
+- **Deployment**: Vercel
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a3696057-f850-4d34-8203-3a62a9111367) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository
+```bash
+git clone <your-repo-url>
+cd track-my-gain
+```
 
-Follow these steps:
+2. Install dependencies
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Set up environment variables
+Create a `.env.local` file with:
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Run the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Vercel
 
-**Use GitHub Codespaces**
+1. Connect your repository to Vercel
+2. Set environment variables in Vercel dashboard:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+3. Deploy
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Database Setup
 
-## What technologies are used for this project?
+Run the SQL migrations in your Supabase project to set up the required tables:
 
-This project is built with:
+- `goals` table for goal tracking
+- `tips` table for health tips
+- `streaks` table for streak tracking
+- `calories` table for calorie tracking
+- `weights` table for weight tracking
+- `tasks` table for todo items
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Contributing
 
-## How can I deploy this project?
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-Simply open [Lovable](https://lovable.dev/projects/a3696057-f850-4d34-8203-3a62a9111367) and click on Share -> Publish.
+## License
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT License
