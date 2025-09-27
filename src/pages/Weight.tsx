@@ -20,7 +20,13 @@ interface WeightEntry {
 }
 
 interface Goal {
-  weight_goal: number;
+  id: string;
+  user_id: string;
+  weight_goal: number | null;
+  created_at: string;
+  updated_at: string;
+  completed: boolean | null;
+  title: string | null;
 }
 
 interface ChartData {
@@ -69,15 +75,15 @@ export default function Weight() {
 
       // Fetch goal - use maybeSingle() instead of single() to avoid errors when no goal exists
       const { data: goalData, error: goalError } = await supabase
-        .from('goals')
-        .select('weight_goal')
+        .from('goals' as any)
+        .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (goalError) {
         console.error('Error fetching goal:', goalError);
       } else if (goalData) {
-        setGoal(goalData);
+        setGoal(goalData as unknown as Goal);
       }
     } catch (error) {
       console.error('Error fetching weight data:', error);
@@ -233,7 +239,7 @@ export default function Weight() {
 
     try {
       const { data, error } = await supabase
-        .from('goals')
+        .from('goals' as any)
         .upsert(
           {
             user_id: user.id,
@@ -243,7 +249,7 @@ export default function Weight() {
             onConflict: 'user_id'
           }
         )
-        .select()
+        .select('*')
         .maybeSingle();
 
       if (error) {
@@ -251,7 +257,7 @@ export default function Weight() {
       }
 
       if (data) {
-        setGoal(data);
+        setGoal(data as unknown as Goal);
         setIsGoalDialogOpen(false);
         setGoalInput('');
         toast({
