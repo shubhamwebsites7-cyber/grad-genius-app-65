@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./pages/ProtectedRoute";
+import { EnvCheck } from "./components/EnvCheck";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import CalendarView from "./pages/CalendarView";
@@ -20,6 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <EnvCheck />
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />

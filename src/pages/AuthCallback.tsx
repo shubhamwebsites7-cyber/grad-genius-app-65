@@ -8,6 +8,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -17,19 +18,24 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
+          console.log('Auth successful, redirecting to dashboard');
           // Successfully authenticated, redirect to dashboard
-          navigate('/');
+          navigate('/', { replace: true });
         } else {
+          console.log('No session found, redirecting to auth');
           // No session, redirect to auth page
-          navigate('/auth');
+          navigate('/auth', { replace: true });
         }
       } catch (error) {
         console.error('Auth callback error:', error);
-        navigate('/auth?error=auth_failed');
+        navigate('/auth?error=auth_failed', { replace: true });
       }
     };
 
-    handleAuthCallback();
+    // Add a small delay to ensure the session is properly set
+    const timer = setTimeout(handleAuthCallback, 100);
+    
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
