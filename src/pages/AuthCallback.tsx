@@ -9,49 +9,52 @@ export default function AuthCallback() {
     const handleAuthCallback = async () => {
       try {
         console.log('Handling OAuth callback...');
+        console.log('Current URL:', window.location.href);
+        console.log('URL hash:', window.location.hash);
         
-        // Handle the OAuth callback by getting the session from URL
-        const { data, error } = await supabase.auth.getSession();
+        // Check if there's an auth code in the URL hash first
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
         
-        console.log('Session data:', { session: data.session, error });
-        
-        if (error) {
-          console.error('Auth callback error:', error);
-          navigate('/auth?error=auth_failed');
-          return;
-        }
-
-        if (data.session && data.session.user) {
-          console.log('Auth successful, user:', data.session.user.email);
-          // Successfully authenticated, redirect to dashboard
-          navigate('/', { replace: true });
-        } else {
-          console.log('No session found, checking URL hash...');
+        if (accessToken) {
+          console.log('Found tokens in URL hash, setting session...');
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || ''
+          });
           
-          // Check if there's an auth code in the URL hash
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
-          
-          if (accessToken) {
-            console.log('Found tokens in URL, setting session...');
-            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || ''
-            });
-            
-            if (sessionError) {
-              console.error('Error setting session:', sessionError);
-              navigate('/auth?error=session_failed');
-            } else if (sessionData.session) {
-              console.log('Session set successfully, redirecting to dashboard');
-              navigate('/', { replace: true });
-            } else {
-              console.log('No session after setting tokens, redirecting to auth');
-              navigate('/auth', { replace: true });
-            }
+          if (sessionError) {
+            console.error('Error setting session:', sessionError);
+            navigate('/auth?error=session_failed');
+          } else if (sessionData.session) {
+            console.log('Session set successfully, user:', sessionData.session.user.email);
+            // Clear the hash from URL and redirect to dashboard
+            window.history.replaceState({}, document.title, window.location.pathname);
+            navigate('/', { replace: true });
           } else {
-            console.log('No tokens found, redirecting to auth');
+            console.log('No session after setting tokens, redirecting to auth');
+            navigate('/auth', { replace: true });
+          }
+        } else {
+          console.log('No tokens in hash, checking existing session...');
+          // Handle the OAuth callback by getting the session from URL
+          const { data, error } = await supabase.auth.getSession();
+          
+          console.log('Session data:', { session: data.session, error });
+          
+          if (error) {
+            console.error('Auth callback error:', error);
+            navigate('/auth?error=auth_failed');
+            return;
+          }
+
+          if (data.session && data.session.user) {
+            console.log('Auth successful, user:', data.session.user.email);
+            // Successfully authenticated, redirect to dashboard
+            navigate('/', { replace: true });
+          } else {
+            console.log('No session found, redirecting to auth');
             navigate('/auth', { replace: true });
           }
         }
@@ -62,7 +65,7 @@ export default function AuthCallback() {
     };
 
     // Add a small delay to ensure the session is properly set
-    const timer = setTimeout(handleAuthCallback, 500);
+    const timer = setTimeout(handleAuthCallback, 100);
     
     return () => clearTimeout(timer);
   }, [navigate]);
