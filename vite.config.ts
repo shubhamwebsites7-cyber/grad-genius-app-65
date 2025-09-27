@@ -28,5 +28,9 @@ export default defineConfig({
         }
       }
     }
+  },
+  define: {
+    // Ensure proper environment variable handling
+    'process.env': process.env
   }
 });
