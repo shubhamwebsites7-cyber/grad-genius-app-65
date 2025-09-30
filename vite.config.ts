@@ -17,9 +17,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize for production
-    minify: 'esbuild',
-    sourcemap: false,
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
@@ -34,15 +31,6 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
-  define: {
-    // Ensure proper environment variable handling
-    'process.env': process.env
-  },
   base: '/',
-  publicDir: 'public',
-  // Fix MIME type issues
-  esbuild: {
-    target: 'es2020',
-    format: 'esm'
-  }
+  publicDir: 'public'
 }));
