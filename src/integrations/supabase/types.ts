@@ -1,4 +1,4 @@
-// Updated types for goal table (renamed from goals)
+// Updated types for both goal and goals tables
 export type Json =
   | string
   | number
@@ -8,8 +8,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
@@ -56,12 +54,40 @@ export type Database = {
       }
       goal: {
         Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goals: {
+        Row: {
           completed: boolean | null
           created_at: string
           id: string
           title: string | null
           updated_at: string
           user_id: string
+          weight_goal: number | null
         }
         Insert: {
           completed?: boolean | null
@@ -70,6 +96,7 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id: string
+          weight_goal?: number | null
         }
         Update: {
           completed?: boolean | null
@@ -78,6 +105,7 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id?: string
+          weight_goal?: number | null
         }
         Relationships: []
       }
