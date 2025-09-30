@@ -1,35 +1,36 @@
-# Deployment Fixes for Track My Gain
+# CRITICAL FIX - Deploy Immediately
 
-## Issues Fixed
+## Step 1: Fix vercel.json
 
-### 1. MIME Type Errors
-- **Problem**: JavaScript files served with wrong MIME type causing module loading failures
-- **Solution**: Updated `vercel.json` with proper Content-Type headers for JS/CSS files
-- **Files Modified**: `vercel.json`
+The current `vercel.json` configuration is causing JavaScript files to be served as HTML.
 
-### 2. Content Security Policy (CSP) Violations
-- **Problem**: CSP blocking eval() usage and inline scripts
-- **Solution**: Added comprehensive CSP meta tag in `index.html`
-- **Files Modified**: `index.html`
+Replace the ENTIRE contents of `vercel.json` with:
 
-### 3. Supabase Authentication Issues
-- **Problem**: Invalid API key causing 401 errors
-- **Solution**: Enhanced Supabase client configuration with PKCE flow
-- **Files Modified**: `src/integrations/supabase/client.ts`
+```json
+{
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
+```
 
-### 4. Build Configuration
-- **Problem**: Vite build not optimized for production
-- **Solution**: Updated Vite config with proper ESBuild settings
-- **Files Modified**: `vite.config.ts`
+## Step 2: Set Environment Variables in Vercel Dashboard
 
-## Required Actions
+**IMMEDIATELY** after deploying, set these in your Vercel dashboard:
 
-### 1. Vercel Environment Variables
-Add these environment variables in your Vercel dashboard:
+1. Go to: https://vercel.com/dashboard
+2. Select your project "track-my-gain"
+3. Go to Settings > Environment Variables
+4. Add these variables:
 
 ```
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_SUPABASE_URL=https://jzindaoigqrryvssgmwf
 ```
 
 **How to get these values:**
