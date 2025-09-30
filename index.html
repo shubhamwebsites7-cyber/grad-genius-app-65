@@ -7,6 +7,20 @@
     <meta name="description" content="Track your calories, monitor weight goals, todo list, strike and maintain a healthy lifestyle with TrackMyCalories - your personal health companion.">
     <meta name="author" content="TrackMyCalories App" />
 
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live;
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: https:;
+      font-src 'self' data:;
+      connect-src 'self' https://*.supabase.co https://vercel.live;
+      frame-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#6366f1" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
