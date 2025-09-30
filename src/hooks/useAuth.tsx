@@ -23,19 +23,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Handle specific auth events
-        if (event === 'SIGNED_IN' && session) {
-          console.log('User signed in successfully:', session.user.email);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed');
-        }
       }
     );
 
@@ -44,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Error getting session:', error);
       }
-      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -56,7 +45,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       const redirectUrl = `${window.location.origin}/auth/callback`;
-      console.log('Starting Google OAuth with redirect:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -65,26 +53,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
       
-      if (error) {
-        console.error('Google OAuth error:', error);
-      } else {
-        console.log('Google OAuth initiated:', data);
-      }
-      
       return { error };
     } catch (error) {
-      console.error('Google OAuth exception:', error);
       return { error };
     }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    const redirectUrl = import.meta.env.VITE_SUPABASE_REDIRECT_URL || `${window.location.origin}/`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           name: name
         }
