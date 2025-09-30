@@ -7,7 +7,6 @@ import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./pages/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
 import CalendarView from "./pages/CalendarView";
 import Weight from "./pages/Weight";
 import Todo from "./pages/Todo";
@@ -25,7 +24,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/dashboard" element={<Navigate to="/" replace />} />
             <Route path="/" element={
               <ProtectedRoute>
