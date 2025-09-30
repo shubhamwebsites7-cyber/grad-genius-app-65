@@ -206,6 +206,38 @@ export default function CalendarView() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!user) return;
+
+    try {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const { error } = await supabase
+        .from('calories')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('date', dateStr);
+
+      if (error) throw error;
+
+      setCalorieData(null);
+      setEditedData(null);
+      setIsEditing(false);
+      toast({
+        title: "Deleted",
+        description: "Calorie entry removed for the selected date."
+      });
+      // Refresh progress widgets
+      fetchProgressData();
+    } catch (error) {
+      console.error('Error deleting calorie data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete entry. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleCancel = () => {
     setIsEditing(false);
     setEditedData(calorieData);
@@ -298,6 +330,12 @@ export default function CalendarView() {
                         <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 px-3 touch-manipulation">
                           <X className="h-4 w-4 mr-1" />
                           <span className="hidden sm:inline">Cancel</span>
+                        </Button>
+                      )}
+                      {calorieData && (
+                        <Button size="sm" variant="destructive" onClick={handleDelete} className="h-10 px-3 touch-manipulation">
+                          <X className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Delete Entry</span>
                         </Button>
                       )}
                     </>
