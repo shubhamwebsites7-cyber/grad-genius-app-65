@@ -106,8 +106,20 @@ export default function Auth() {
     } else {
       toast({
         title: "Success",
-        description: "Account created successfully! You can now sign in.",
+        description: "Account created successfully! You can now sign in with your email and password.",
       });
+      // Clear signup form
+      setSignupData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
+      // Switch to login tab
+      const loginTab = document.querySelector('[value="login"]') as HTMLElement;
+      if (loginTab) {
+        loginTab.click();
+      }
     }
     setIsSubmitting(false);
   };
