@@ -52,28 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user profile when user signs in
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
-        } else {
-          setProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session with timeout
-    const checkSession = async () => {
+    // Check for existing session immediately
+    const initAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -81,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Error getting session:', error);
+          setLoading(false);
+          return;
         }
         
         setSession(session);
@@ -89,7 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           // Fetch user profile
           const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          if (mounted) {
+            setProfile(userProfile);
+          }
         }
         
         setLoading(false);
@@ -101,15 +85,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Set up auth state listener for subsequent changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state changed:', event);
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user profile when user signs in
+          const userProfile = await fetchProfile(session.user.id);
+          if (mounted) {
+            setProfile(userProfile);
+          }
+        } else {
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
     // Add timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      if (mounted) {
+      if (mounted && loading) {
         console.log('Auth timeout reached, stopping loading');
         setLoading(false);
       }
-    }, 5000); // 5 second timeout
+    }, 3000); // 3 second timeout
 
-    checkSession();
+    initAuth();
 
     return () => {
       mounted = false;
