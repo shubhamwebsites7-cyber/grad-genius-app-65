@@ -164,16 +164,14 @@ export default function Goals() {
     if (!newGoal.trim() || !user) return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('goals')
-        .insert([{ title: newGoal, user_id: user.id }])
-        .select()
-        .single();
+        .insert([{ title: newGoal, user_id: user.id }]);
 
       if (error) throw error;
 
-      setGoals([data as Goal, ...goals]);
       setNewGoal('');
+      await fetchGoals();
       
       toast({
         title: "Success",
