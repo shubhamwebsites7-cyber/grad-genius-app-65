@@ -99,7 +99,7 @@ export default function Goals() {
 
     try {
       const { data, error } = await supabase
-        .from('goal')
+        .from('goals')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -164,20 +164,14 @@ export default function Goals() {
     if (!newGoal.trim() || !user) return;
 
     try {
-      console.log('Adding goal:', { title: newGoal, user_id: user.id });
-      
       const { data, error } = await supabase
-        .from('goal')
-        .insert([{ title: newGoal.trim(), user_id: user.id }])
+        .from('goals')
+        .insert([{ title: newGoal, user_id: user.id }])
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Goal added successfully:', data);
       setGoals([data as Goal, ...goals]);
       setNewGoal('');
       
@@ -189,7 +183,7 @@ export default function Goals() {
       console.error('Error adding goal:', error);
       toast({
         title: "Error",
-        description: `Failed to add goal: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: "Failed to add goal",
         variant: "destructive",
       });
     }
@@ -198,7 +192,7 @@ export default function Goals() {
   const updateGoal = async (goalId: string, updates: Partial<Goal>) => {
     try {
       const { error } = await supabase
-        .from('goal')
+        .from('goals')
         .update(updates)
         .eq('id', goalId);
 
@@ -227,7 +221,7 @@ export default function Goals() {
   const deleteGoal = async (goalId: string) => {
     try {
       const { error } = await supabase
-        .from('goal')
+        .from('goals')
         .delete()
         .eq('id', goalId);
 

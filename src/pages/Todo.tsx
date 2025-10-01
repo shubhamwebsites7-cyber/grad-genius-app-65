@@ -207,13 +207,11 @@ export default function Todo() {
   };
 
   const toggleTask = async (taskId: string, completed: boolean) => {
-    if (!user) return;
     try {
       const { error } = await supabase
         .from('tasks')
         .update({ completed })
-        .eq('id', taskId)
-        .eq('user_id', user.id);
+        .eq('id', taskId);
 
       if (error) throw error;
 
@@ -233,13 +231,11 @@ export default function Todo() {
   };
 
   const deleteTask = async (taskId: string) => {
-    if (!user) return;
     try {
       const { error } = await supabase
         .from('tasks')
         .delete()
-        .eq('id', taskId)
-        .eq('user_id', user.id);
+        .eq('id', taskId);
 
       if (error) throw error;
 

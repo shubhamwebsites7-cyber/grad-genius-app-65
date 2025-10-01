@@ -1,4 +1,3 @@
-// Updated types for both goal and goals tables
 export type Json =
   | string
   | number
@@ -8,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
@@ -47,33 +48,6 @@ export type Database = {
           evening?: number | null
           id?: string
           morning?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      goal: {
-        Row: {
-          completed: boolean
-          created_at: string
-          id: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean
-          created_at?: string
-          id?: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          id?: string
-          title?: string
           updated_at?: string
           user_id?: string
         }

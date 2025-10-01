@@ -62,11 +62,8 @@ export default function CalendarView() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (selectedDate && user) {
       fetchCalorieData(selectedDate);
-    } else if (!user) {
-      setCalorieData(null);
-      setIsLoading(false);
     }
   }, [selectedDate, user]);
 
@@ -94,26 +91,17 @@ export default function CalendarView() {
   }, [user, activeTab]);
 
   const fetchCalorieData = async (date: Date) => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-    
     setIsLoading(true);
     setIsEditing(false);
     try {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('calories')
         .select('morning, afternoon, evening, dinner, daily_goal')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .eq('date', dateStr)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching calorie data:', error);
-      }
-      
       setCalorieData(data);
       setEditedData(data);
     } catch (error) {
@@ -126,11 +114,6 @@ export default function CalendarView() {
   };
 
   const fetchProgressData = async () => {
-    if (!user) {
-      setIsProgressLoading(false);
-      return;
-    }
-    
     setIsProgressLoading(true);
     try {
       const today = new Date();
@@ -150,20 +133,13 @@ export default function CalendarView() {
           startDate = subDays(today, 7);
       }
 
-      const { data: calorieProgressData, error } = await supabase
+      const { data: calorieProgressData } = await supabase
         .from('calories')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .gte('date', format(startDate, 'yyyy-MM-dd'))
         .lte('date', format(today, 'yyyy-MM-dd'))
         .order('date');
-
-      if (error) {
-        console.error('Error fetching progress data:', error);
-        setProgressData([]);
-        setIsProgressLoading(false);
-        return;
-      }
 
       if (calorieProgressData) {
         const processedData = calorieProgressData.map(item => ({
@@ -225,38 +201,6 @@ export default function CalendarView() {
       toast({
         title: "Error",
         description: "Failed to update calories. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!user) return;
-
-    try {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const { error } = await supabase
-        .from('calories')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('date', dateStr);
-
-      if (error) throw error;
-
-      setCalorieData(null);
-      setEditedData(null);
-      setIsEditing(false);
-      toast({
-        title: "Deleted",
-        description: "Calorie entry removed for the selected date."
-      });
-      // Refresh progress widgets
-      fetchProgressData();
-    } catch (error) {
-      console.error('Error deleting calorie data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete entry. Please try again.",
         variant: "destructive"
       });
     }
@@ -354,12 +298,6 @@ export default function CalendarView() {
                         <Button size="sm" variant="outline" onClick={handleCancel} className="h-10 px-3 touch-manipulation">
                           <X className="h-4 w-4 mr-1" />
                           <span className="hidden sm:inline">Cancel</span>
-                        </Button>
-                      )}
-                      {calorieData && (
-                        <Button size="sm" variant="destructive" onClick={handleDelete} className="h-10 px-3 touch-manipulation">
-                          <X className="h-4 w-4 mr-1" />
-                          <span className="hidden sm:inline">Delete Entry</span>
                         </Button>
                       )}
                     </>
