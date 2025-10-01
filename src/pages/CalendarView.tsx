@@ -62,8 +62,11 @@ export default function CalendarView() {
   };
 
   useEffect(() => {
-    if (selectedDate && user) {
+    if (user) {
       fetchCalorieData(selectedDate);
+    } else if (!user) {
+      setCalorieData(null);
+      setIsLoading(false);
     }
   }, [selectedDate, user]);
 
@@ -91,17 +94,26 @@ export default function CalendarView() {
   }, [user, activeTab]);
 
   const fetchCalorieData = async (date: Date) => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     setIsEditing(false);
     try {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('calories')
         .select('morning, afternoon, evening, dinner, daily_goal')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('date', dateStr)
         .maybeSingle();
 
+      if (error) {
+        console.error('Error fetching calorie data:', error);
+      }
+      
       setCalorieData(data);
       setEditedData(data);
     } catch (error) {
@@ -114,6 +126,11 @@ export default function CalendarView() {
   };
 
   const fetchProgressData = async () => {
+    if (!user) {
+      setIsProgressLoading(false);
+      return;
+    }
+    
     setIsProgressLoading(true);
     try {
       const today = new Date();
@@ -133,13 +150,20 @@ export default function CalendarView() {
           startDate = subDays(today, 7);
       }
 
-      const { data: calorieProgressData } = await supabase
+      const { data: calorieProgressData, error } = await supabase
         .from('calories')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .gte('date', format(startDate, 'yyyy-MM-dd'))
         .lte('date', format(today, 'yyyy-MM-dd'))
         .order('date');
+
+      if (error) {
+        console.error('Error fetching progress data:', error);
+        setProgressData([]);
+        setIsProgressLoading(false);
+        return;
+      }
 
       if (calorieProgressData) {
         const processedData = calorieProgressData.map(item => ({
