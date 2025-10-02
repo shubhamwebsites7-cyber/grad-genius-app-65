@@ -683,7 +683,11 @@ export default function Goals() {
                         </div>
                       </div>
                       {tip.description && (
-                        <p className="text-sm text-muted-foreground">{tip.description}</p>
+                        <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                          {tip.description.split('\n').filter(line => line.trim()).map((line, index) => (
+                            <li key={index}>{line.trim()}</li>
+                          ))}
+                        </ul>
                       )}
                     </>
                   )}
