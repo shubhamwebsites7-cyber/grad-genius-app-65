@@ -11,6 +11,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Goal {
   id: string;
@@ -51,6 +57,10 @@ export default function Goals() {
   const [newTipDescription, setNewTipDescription] = useState('');
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [editingTip, setEditingTip] = useState<Tip | null>(null);
+  
+  // Dropdown states
+  const [showGoalForm, setShowGoalForm] = useState(false);
+  const [showTipForm, setShowTipForm] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -181,6 +191,7 @@ export default function Goals() {
 
       console.log('Goal added successfully:', data);
       setNewGoal('');
+      setShowGoalForm(false);
       await fetchGoals();
       
       toast({
@@ -272,6 +283,7 @@ export default function Goals() {
       setTips([data as Tip, ...tips]);
       setNewTip('');
       setNewTipDescription('');
+      setShowTipForm(false);
       
       toast({
         title: "Success",
@@ -477,29 +489,46 @@ export default function Goals() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Goals Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              My Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter a new goal..."
-                value={newGoal}
-                onChange={(e) => setNewGoal(e.target.value)}
-                className="flex-1"
-              />
-              <Button onClick={addGoal} disabled={!newGoal.trim()}>
-                Add
-              </Button>
+            <div className="flex items-center justify-between">
+              <CardTitle>My Goals</CardTitle>
+              <DropdownMenu open={showGoalForm} onOpenChange={setShowGoalForm}>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 p-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Add New Goal</h4>
+                    <Input
+                      placeholder="Enter a new goal..."
+                      value={newGoal}
+                      onChange={(e) => setNewGoal(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && newGoal.trim()) {
+                          addGoal();
+                        }
+                      }}
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={addGoal} disabled={!newGoal.trim()} className="flex-1">
+                        Add
+                      </Button>
+                      <Button variant="ghost" onClick={() => setShowGoalForm(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-
-            <div className="space-y-2 max-h-80 overflow-y-auto">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
               {goals.map((goal) => (
                 <div key={goal.id} className="flex items-center gap-2 p-2 rounded-lg border">
                   <Checkbox
@@ -550,8 +579,8 @@ export default function Goals() {
                 </div>
               ))}
               {goals.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  No goals yet. Add your first goal above!
+                <p className="text-center text-muted-foreground py-8">
+                  No goals yet. Click the + button to add your first goal!
                 </p>
               )}
             </div>
@@ -561,30 +590,43 @@ export default function Goals() {
         {/* Tips Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Health & Lifestyle Tips
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                placeholder="Tip title..."
-                value={newTip}
-                onChange={(e) => setNewTip(e.target.value)}
-              />
-              <Textarea
-                placeholder="Tip description..."
-                value={newTipDescription}
-                onChange={(e) => setNewTipDescription(e.target.value)}
-                rows={2}
-              />
-              <Button onClick={addTip} disabled={!newTip.trim()} className="w-full">
-                Add Tip
-              </Button>
+            <div className="flex items-center justify-between">
+              <CardTitle>Health & Lifestyle Tips</CardTitle>
+              <DropdownMenu open={showTipForm} onOpenChange={setShowTipForm}>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 p-4">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Add New Tip</h4>
+                    <Input
+                      placeholder="Tip title..."
+                      value={newTip}
+                      onChange={(e) => setNewTip(e.target.value)}
+                    />
+                    <Textarea
+                      placeholder="Tip description..."
+                      value={newTipDescription}
+                      onChange={(e) => setNewTipDescription(e.target.value)}
+                      rows={3}
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={addTip} disabled={!newTip.trim()} className="flex-1">
+                        Add
+                      </Button>
+                      <Button variant="ghost" onClick={() => setShowTipForm(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-
-            <div className="space-y-3 max-h-80 overflow-y-auto">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
               {tips.map((tip) => (
                 <div key={tip.id} className="p-3 rounded-lg border">
                   {editingTip?.id === tip.id ? (
@@ -648,8 +690,8 @@ export default function Goals() {
                 </div>
               ))}
               {tips.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  No tips yet. Add your first tip above!
+                <p className="text-center text-muted-foreground py-8">
+                  No tips yet. Click the + button to add your first tip!
                 </p>
               )}
             </div>
