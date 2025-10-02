@@ -53,6 +53,60 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_completions: {
+        Row: {
+          completion_status: string
+          created_at: string
+          date: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completion_status: string
+          created_at?: string
+          date: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completion_status?: string
+          created_at?: string
+          date?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      goal: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           completed: boolean | null

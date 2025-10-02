@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Utensils, Weight, Download, CheckSquare, Target } from 'lucide-react';
+import { Utensils, Weight, Download, CheckSquare, Target, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,6 +38,7 @@ export function Layout() {
     { href: '/weight', icon: Weight, label: 'Weight' },
     { href: '/todo', icon: CheckSquare, label: 'Todo' },
     { href: '/goals', icon: Target, label: 'Goals' },
+    { href: '/exercise', icon: Dumbbell, label: 'Exercise' },
   ];
 
   const currentPage = navigationItems.find(item => item.href === location.pathname);
