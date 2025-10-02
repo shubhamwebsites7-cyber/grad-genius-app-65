@@ -255,7 +255,7 @@ export default function CalendarView() {
   return (
     <div className="container mx-auto p-4 pb-20 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Calories - UPDATED VERSION</h1>
+        <h1 className="text-2xl font-bold mb-2">Calories Tracker</h1>
         <p className="text-muted-foreground">
           Track your daily calorie intake and view progress over time
         </p>

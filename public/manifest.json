@@ -1,7 +1,7 @@
 {
-  "name": "TrackMyCalories - Calorie & Weight Tracker",
-  "short_name": "TrackMyCalories",
-  "description": "Your personal calorie & weight tracking companion",
+  "name": "GoalGrip - Personal Tracker",
+  "short_name": "GoalGrip",
+  "description": "Your personal calorie, weight, todo & goal tracking companion",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

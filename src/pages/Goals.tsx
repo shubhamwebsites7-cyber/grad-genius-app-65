@@ -480,7 +480,7 @@ export default function Goals() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Goals & Lifestyle - UPDATED</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Goals & Lifestyle</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">Track your goals, tips, and daily streaks</p>
         </div>
         <Button variant="ghost" onClick={() => signOut()} size="sm">
