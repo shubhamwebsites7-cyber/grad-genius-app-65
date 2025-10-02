@@ -163,13 +163,23 @@ export default function Goals() {
   const addGoal = async () => {
     if (!newGoal.trim() || !user) return;
 
+    setLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('goals')
-        .insert([{ title: newGoal, user_id: user.id }]);
+        .insert([{ 
+          title: newGoal.trim(), 
+          user_id: user.id,
+          completed: false
+        }])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Goal added successfully:', data);
       setNewGoal('');
       await fetchGoals();
       
@@ -177,13 +187,15 @@ export default function Goals() {
         title: "Success",
         description: "Goal added successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding goal:', error);
       toast({
         title: "Error",
-        description: "Failed to add goal",
+        description: error?.message || "Failed to add goal",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
