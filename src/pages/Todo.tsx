@@ -278,7 +278,7 @@ export default function Todo() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-2 sm:p-4 max-w-4xl mx-auto pb-20">
+    <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto pb-20">
       {/* Header */}
       <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>

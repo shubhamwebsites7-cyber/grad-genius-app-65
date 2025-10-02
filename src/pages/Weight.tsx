@@ -307,7 +307,7 @@ export default function Weight() {
   const isGainGoal = currentWeight && goalWeight ? currentWeight < goalWeight : false;
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 pb-20 max-w-2xl">
+    <div className="container mx-auto p-2 sm:p-4 pb-20 max-w-6xl">
       <div className="mb-4 sm:mb-6">
         <h1 className="text-xl sm:text-2xl font-bold mb-2">Weight Tracker</h1>
         <p className="text-muted-foreground text-sm sm:text-base">
