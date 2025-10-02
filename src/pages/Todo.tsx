@@ -421,35 +421,37 @@ export default function Todo() {
             </TabsList>
           </Tabs>
         </CardHeader>
-        <CardContent className="px-2 sm:px-6">
-          <ChartContainer className="h-48 sm:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={progressData}>
-                <XAxis 
-                  dataKey="day" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={40}
-                />
-                <YAxis 
-                  domain={[0, 100]}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="percentage" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartContainer>
+        <CardContent className="px-2 sm:px-6 overflow-x-auto">
+          <div className="min-w-[500px]">
+            <ChartContainer className="h-48 sm:h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={progressData}>
+                  <XAxis 
+                    dataKey="day" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={40}
+                  />
+                  <YAxis 
+                    domain={[0, 100]}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="percentage" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
         </CardContent>
       </Card>
     </div>

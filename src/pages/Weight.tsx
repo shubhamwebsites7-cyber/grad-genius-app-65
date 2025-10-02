@@ -392,35 +392,37 @@ export default function Weight() {
           <CardHeader>
             <CardTitle>Weight Progress</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
-                <Tooltip />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="weight" 
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2} 
-                  name="Weight"
-                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
-                />
-                {goalWeight && (
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
+                  <Tooltip />
+                  <Legend />
                   <Line 
                     type="monotone" 
-                    dataKey="goal" 
-                    stroke="hsl(var(--success))" 
+                    dataKey="weight" 
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2} 
-                    strokeDasharray="5 5" 
-                    name="Goal"
-                    dot={false}
+                    name="Weight"
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
                   />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
+                  {goalWeight && (
+                    <Line 
+                      type="monotone" 
+                      dataKey="goal" 
+                      stroke="hsl(var(--success))" 
+                      strokeWidth={2} 
+                      strokeDasharray="5 5" 
+                      name="Goal"
+                      dot={false}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       )}
