@@ -148,8 +148,8 @@ export default function Todo() {
       const dayStr = format(day, 'yyyy-MM-dd');
       const dayTasks = data.filter(task => task.date === dayStr);
       const completed = dayTasks.filter(task => task.completed).length;
-      const total = dayTasks.length;
-      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      // Always calculate percentage out of 10, capping at 100%
+      const percentage = Math.min(Math.round((completed / 10) * 100), 100);
 
       return {
         date: format(day, interval === 'day' ? 'MMM dd' : 'MMM dd'),
