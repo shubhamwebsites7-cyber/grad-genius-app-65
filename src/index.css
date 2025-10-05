@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Educational SaaS Design System - AI Exam Preparation Platform */
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 222 84% 5%;
+
+    /* Card components */
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 5%;
+
+    /* Popover components */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 84% 5%;
+
+    /* Primary - Educational Blue */
+    --primary: 220 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 220 100% 45%;
+
+    /* Secondary - Success Green */
+    --secondary: 146 70% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Educational accent colors */
+    --accent: 220 15% 96%;
+    --accent-foreground: 222 84% 5%;
+
+    /* Muted backgrounds */
+    --muted: 220 13% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Status colors */
+    --success: 146 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 100% 55%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* UI elements */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 220 100% 50%;
+
+    /* Educational gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 100% 50%), hsl(200 100% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(146 70% 45%), hsl(120 70% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 100% 50%) 0%, hsl(200 100% 55%) 50%, hsl(146 70% 45%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 100% 50% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 100% 50% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(220 100% 50% / 0.1);
+    --shadow-card: 0 4px 12px hsl(220 100% 50% / 0.08);
+
+    /* Border radius */
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark backgrounds with better contrast */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Educational Blue in dark mode */
+    --primary: 220 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 220 100% 55%;
+
+    /* Success Green in dark mode */
+    --secondary: 146 70% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted with better contrast */
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 70%;
+
+    /* Accent colors */
+    --accent: 217 33% 20%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Status colors optimized for dark mode */
+    --success: 146 70% 50%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 100% 60%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and inputs with better visibility */
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 220 100% 60%;
+
+    /* Sidebar colors for dark mode */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 220 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 20%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 22%;
+    --sidebar-ring: 220 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Animation utilities */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+}

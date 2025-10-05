@@ -1,0 +1,1250 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { Navigation } from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { 
+  ArrowLeft, 
+  Users, 
+  BookOpen, 
+  Target, 
+  ChevronDown, 
+  ChevronUp, 
+  FolderOpen,
+  Lock,
+  ExpandIcon,
+  ShrinkIcon,
+  Loader2,
+  ThumbsUp
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Topic {
+  id: string;
+  name: string;
+  marks?: number;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  isCompleted: boolean;
+  isAccessible?: boolean;
+  userDifficultyRating?: 'Easy' | 'Medium' | 'Hard';
+  voteCount?: number;
+  voteDifficulty?: 'Easy' | 'Medium' | 'Hard';
+}
+
+interface Subject {
+  id: string;
+  name: string;
+  topics: Topic[];
+  allTopics?: Topic[]; // Keep all topics for accurate progress calculation
+  marks?: number;
+}
+
+interface Exam {
+  id: string;
+  name: string;
+  type: string;
+  subjects: Subject[];
+  enrolledStudents: string;
+  isEnrolled: boolean;
+  progress?: number;
+  completedTopics?: number;
+  totalTopics: number;
+}
+
+const ExamDetail = () => {
+  const { examId } = useParams<{ examId: string }>();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [sortBy, setSortBy] = useState('default');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [allExpanded, setAllExpanded] = useState(false);
+  const [calculatedDifficulties, setCalculatedDifficulties] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(true);
+  const [exam, setExam] = useState<Exam | null>(null);
+  const [completedTopicIds, setCompletedTopicIds] = useState<Set<string>>(new Set());
+  const [enrolling, setEnrolling] = useState(false);
+  const [topicVoteCounts, setTopicVoteCounts] = useState<{ [key: string]: number }>({});
+  const [userTopicRatings, setUserTopicRatings] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (examId) {
+      fetchExamData();
+    }
+  }, [examId, user]);
+
+  const fetchExamData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch exam details
+      const { data: examData, error: examError } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('id', examId)
+        .eq('is_active', true)
+        .single();
+
+      if (examError) throw examError;
+      if (!examData) throw new Error('Exam not found');
+
+      // Check enrollment status
+      let isEnrolled = false;
+      if (user) {
+        const { data: enrollmentData } = await supabase
+          .from('user_exam_enrollments')
+          .select('is_active')
+          .eq('user_id', user.id)
+          .eq('exam_id', examId)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        isEnrolled = !!enrollmentData;
+      }
+
+      // Fetch subjects for this exam
+      const { data: subjectsData, error: subjectsError } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('exam_id', examId)
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (subjectsError) throw subjectsError;
+
+      // Fetch topics for all subjects
+      const subjectIds = subjectsData?.map((s: any) => s.id) || [];
+      const { data: topicsData, error: topicsError } = await supabase
+        .from('topics')
+        .select('*')
+        .in('subject_id', subjectIds)
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (topicsError) throw topicsError;
+
+      // Fetch user progress
+      let completedIds = new Set<string>();
+      if (user) {
+        const { data: progressData } = await supabase
+          .from('user_exam_progress')
+          .select('completed_topics_ids')
+          .eq('user_id', user.id)
+          .eq('exam_id', examId)
+          .maybeSingle();
+
+        const typedProgressData = progressData as any;
+        if (typedProgressData && typedProgressData.completed_topics_ids) {
+          completedIds = new Set(typedProgressData.completed_topics_ids);
+        }
+      }
+
+      setCompletedTopicIds(completedIds);
+
+      // Fetch calculated difficulties and vote counts for all topics
+      const topicIds = topicsData?.map((t: any) => t.id) || [];
+      const diffMap: { [key: string]: string } = {};
+      const voteCountMap: { [key: string]: number } = {};
+      const userRatingsMap: { [key: string]: string } = {};
+      
+      // Fetch vote counts and calculated difficulties
+      for (const topicId of topicIds) {
+        // Get vote count
+        const { data: voteCountData } = await supabase
+          .from('topic_difficulty_ratings')
+          .select('id')
+          .eq('topic_id', topicId);
+        
+        voteCountMap[topicId] = voteCountData?.length || 0;
+        
+        // Get calculated difficulty
+        const { data: calcDiff } = await (supabase as any)
+          .rpc('get_topic_calculated_difficulty', { p_topic_id: topicId });
+        if (calcDiff) {
+          diffMap[topicId] = calcDiff;
+        }
+      }
+      
+      // Fetch user ratings if logged in
+      if (user) {
+        const { data: userRatingsData } = await supabase
+          .from('topic_difficulty_ratings')
+          .select('topic_id, difficulty_rating')
+          .eq('user_id', user.id)
+          .in('topic_id', topicIds);
+        
+        if (userRatingsData) {
+          userRatingsData.forEach((rating: any) => {
+            userRatingsMap[rating.topic_id] = rating.difficulty_rating;
+          });
+        }
+      }
+      
+      setCalculatedDifficulties(diffMap);
+      setTopicVoteCounts(voteCountMap);
+      setUserTopicRatings(userRatingsMap);
+
+      // Build exam structure
+      const subjects: Subject[] = (subjectsData || []).map((subject: any) => ({
+        id: subject.id,
+        name: subject.name,
+        marks: subject.total_marks || undefined,
+        topics: (topicsData || [])
+          .filter((t: any) => t.subject_id === subject.id)
+          .map((topic: any) => {
+            const voteCount = voteCountMap[topic.id] || 0;
+            const baseDifficulty = topic.difficulty || 'Medium';
+            const voteDifficulty = diffMap[topic.id];
+            
+            // Use vote-based difficulty if 10+ votes, otherwise use database difficulty
+            const displayDifficulty = (voteCount >= 10 && voteDifficulty) 
+              ? voteDifficulty 
+              : baseDifficulty;
+            
+            return {
+              id: topic.id,
+              name: topic.name,
+              marks: topic.marks || undefined,
+              difficulty: displayDifficulty as 'Easy' | 'Medium' | 'Hard',
+              isCompleted: completedIds.has(topic.id),
+              isAccessible: true,
+              userDifficultyRating: userRatingsMap[topic.id] as 'Easy' | 'Medium' | 'Hard' | undefined,
+              voteCount,
+              voteDifficulty: voteDifficulty as 'Easy' | 'Medium' | 'Hard' | undefined
+            };
+          })
+      }));
+
+      const allTopics = subjects.flatMap(s => s.topics);
+      const completedCount = allTopics.filter(t => t.isCompleted).length;
+      const progressPercentage = allTopics.length > 0 ? Math.round((completedCount / allTopics.length) * 100) : 0;
+
+      const typedExamData = examData as any;
+      setExam({
+        id: typedExamData.id,
+        name: typedExamData.name,
+        type: typedExamData.exam_type,
+        subjects,
+        enrolledStudents: `${typedExamData.enrollment_count || 0}+`,
+        isEnrolled,
+        progress: progressPercentage,
+        completedTopics: completedCount,
+        totalTopics: allTopics.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching exam data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load exam data.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTopicToggle = async (topicId: string) => {
+    if (!user || !exam) return;
+
+    const isCurrentlyCompleted = completedTopicIds.has(topicId);
+    const newCompletedIds = new Set(completedTopicIds);
+
+    if (isCurrentlyCompleted) {
+      newCompletedIds.delete(topicId);
+    } else {
+      newCompletedIds.add(topicId);
+    }
+
+    setCompletedTopicIds(newCompletedIds);
+
+    // Update UI optimistically
+    setExam(prev => {
+      if (!prev) return prev;
+      const updatedSubjects = prev.subjects.map(subject => ({
+        ...subject,
+        topics: subject.topics.map(topic =>
+          topic.id === topicId ? { ...topic, isCompleted: !isCurrentlyCompleted } : topic
+        )
+      }));
+      
+      const allTopics = updatedSubjects.flatMap(s => s.topics);
+      const completedCount = allTopics.filter(t => t.isCompleted).length;
+      const progressPercentage = Math.round((completedCount / allTopics.length) * 100);
+
+      return {
+        ...prev,
+        subjects: updatedSubjects,
+        completedTopics: completedCount,
+        progress: progressPercentage
+      };
+    });
+
+    // Update database
+    try {
+      const allTopics = exam.subjects.flatMap(s => s.topics);
+      const totalTopics = allTopics.length;
+      const completedCount = newCompletedIds.size;
+      const progressPercentage = Math.round((completedCount / totalTopics) * 100);
+
+      const { error } = await supabase
+        .from('user_exam_progress')
+        .upsert({
+          user_id: user.id,
+          exam_id: exam.id,
+          completed_topics: completedCount,
+          total_topics: totalTopics,
+          progress_percentage: progressPercentage,
+          completed_topics_ids: Array.from(newCompletedIds),
+          last_accessed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as any, {
+          onConflict: 'user_id,exam_id'
+        });
+
+      if (error) throw error;
+
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      // Revert optimistic update
+      setCompletedTopicIds(isCurrentlyCompleted ? 
+        new Set([...newCompletedIds, topicId]) : 
+        new Set([...newCompletedIds].filter(id => id !== topicId))
+      );
+      toast({
+        title: 'Error',
+        description: 'Failed to update progress.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDifficultyVote = async (topicId: string, difficulty: 'Easy' | 'Medium' | 'Hard') => {
+    if (!user) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to vote on difficulty.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      // Save user's vote
+      const { error } = await supabase
+        .from('topic_difficulty_ratings')
+        .upsert({
+          topic_id: topicId,
+          user_id: user.id,
+          difficulty_rating: difficulty,
+          updated_at: new Date().toISOString()
+        } as any, {
+          onConflict: 'user_id,topic_id'
+        });
+
+      if (error) throw error;
+
+      // Update vote count
+      const { data: voteCountData } = await supabase
+        .from('topic_difficulty_ratings')
+        .select('id')
+        .eq('topic_id', topicId);
+
+      const newVoteCount = voteCountData?.length || 0;
+
+      // Get updated calculated difficulty
+      const { data: calcDiff } = await (supabase as any)
+        .rpc('get_topic_calculated_difficulty', { p_topic_id: topicId });
+
+      // Update local state
+      setTopicVoteCounts(prev => ({ ...prev, [topicId]: newVoteCount }));
+      setUserTopicRatings(prev => ({ ...prev, [topicId]: difficulty }));
+      if (calcDiff) {
+        setCalculatedDifficulties(prev => ({ ...prev, [topicId]: calcDiff }));
+      }
+
+      // Update exam state to reflect new difficulty if vote count >= 10
+      setExam(prev => {
+        if (!prev) return prev;
+        const updatedSubjects = prev.subjects.map(subject => ({
+          ...subject,
+          topics: subject.topics.map(topic => {
+            if (topic.id === topicId) {
+              const voteCount = newVoteCount;
+              const voteDifficulty = calcDiff;
+              const displayDifficulty = (voteCount >= 10 && voteDifficulty) 
+                ? voteDifficulty 
+                : topic.difficulty;
+              
+              return {
+                ...topic,
+                difficulty: displayDifficulty as 'Easy' | 'Medium' | 'Hard',
+                userDifficultyRating: difficulty,
+                voteCount,
+                voteDifficulty: voteDifficulty as 'Easy' | 'Medium' | 'Hard' | undefined
+              };
+            }
+            return topic;
+          })
+        }));
+        
+        return {
+          ...prev,
+          subjects: updatedSubjects
+        };
+      });
+
+      toast({
+        title: 'Vote Saved',
+        description: 'Your difficulty rating has been recorded.',
+      });
+    } catch (error: any) {
+      console.error('Error voting on difficulty:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save your vote. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleEnrollExam = async () => {
+    if (!user) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to enroll in the exam.',
+        variant: 'destructive'
+      });
+      // Redirect to login page
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!exam) return;
+
+    try {
+      setEnrolling(true);
+
+      const { error } = await supabase
+        .from('user_exam_enrollments')
+        .insert({
+          user_id: user.id,
+          exam_id: exam.id,
+          is_active: true
+        } as any);
+
+      if (error) throw error;
+
+      setExam(prev => prev ? { ...prev, isEnrolled: true } : null);
+
+      toast({
+        title: 'Enrolled Successfully',
+        description: 'You have been enrolled in the exam.',
+      });
+    } catch (error: any) {
+      console.error('Error enrolling in exam:', error);
+      toast({
+        title: 'Enrollment Failed',
+        description: error.message || 'Failed to enroll in exam. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+
+  // Store both filtered and unfiltered subjects for accurate progress
+  const { sortedSubjects, unfilteredSubjects } = useMemo(() => {
+    if (!exam) return { sortedSubjects: [], unfilteredSubjects: [] };
+    
+    const filtered = exam.subjects.map(subject => ({
+      ...subject,
+      allTopics: subject.topics, // Keep reference to all topics
+      topics: subject.topics
+        .filter(topic => {
+          if (statusFilter === 'completed') return topic.isCompleted;
+          if (statusFilter === 'pending') return !topic.isCompleted;
+          return true;
+        })
+        .filter(topic => {
+          if (difficultyFilter === 'all') return true;
+          return topic.difficulty.toLowerCase() === difficultyFilter;
+        })
+        .sort((a, b) => {
+          switch (sortBy) {
+            case 'marks-high':
+              return (b.marks || 0) - (a.marks || 0);
+            case 'marks-low':
+              return (a.marks || 0) - (b.marks || 0);
+            case 'difficulty-easy':
+              const diffOrder = { 'Easy': 1, 'Medium': 2, 'Hard': 3 };
+              return diffOrder[a.difficulty] - diffOrder[b.difficulty];
+            case 'difficulty-hard':
+              const diffOrderReverse = { 'Easy': 3, 'Medium': 2, 'Hard': 1 };
+              return diffOrderReverse[a.difficulty] - diffOrderReverse[b.difficulty];
+            default:
+              return 0;
+          }
+        })
+    }));
+    
+    return { 
+      sortedSubjects: filtered,
+      unfilteredSubjects: exam.subjects 
+    };
+  }, [exam, sortBy, difficultyFilter, statusFilter]);
+
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Loading... | Examtrakr</title>
+        </Helmet>
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          <main className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAllSections = () => {
+    if (allExpanded) {
+      setExpandedSections(new Set());
+    } else {
+      setExpandedSections(new Set(exam?.subjects.map(s => s.id) || []));
+    }
+    setAllExpanded(!allExpanded);
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'bg-success text-success-foreground';
+      case 'Medium': return 'bg-warning text-warning-foreground';
+      case 'Hard': return 'bg-destructive text-destructive-foreground';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getDifficultyBorderColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'border-success';
+      case 'Medium': return 'border-warning';
+      case 'Hard': return 'border-destructive';
+      default: return 'border-muted';
+    }
+  };
+
+  const getSubjectProgress = (subjectId: string) => {
+    // Always calculate based on ALL topics, not filtered ones
+    const unfilteredSubject = unfilteredSubjects.find(s => s.id === subjectId);
+    if (!unfilteredSubject) return 0;
+    const completedTopics = unfilteredSubject.topics.filter(t => t.isCompleted).length;
+    return Math.round((completedTopics / unfilteredSubject.topics.length) * 100);
+  };
+
+  const getSubjectTopicCounts = (subjectId: string) => {
+    // Always return counts based on ALL topics, not filtered ones
+    const unfilteredSubject = unfilteredSubjects.find(s => s.id === subjectId);
+    if (!unfilteredSubject) return { completed: 0, total: 0 };
+    const completed = unfilteredSubject.topics.filter(t => t.isCompleted).length;
+    return { completed, total: unfilteredSubject.topics.length };
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 61) return 'bg-success';
+    if (progress >= 31) return 'bg-warning';
+    return 'bg-destructive';
+  };
+
+  const getProgressVariant = (progress: number) => {
+    if (progress >= 61) return 'success';
+    if (progress >= 31) return 'warning';
+    return 'destructive';
+  };
+
+  if (!exam) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground mb-4">Exam not found</h1>
+            <Button asChild>
+              <Link to="/exams">Back to Exams</Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Helmet>
+        <title>{exam.name} - Exam Details | Examtrakr</title>
+        <meta 
+          name="description" 
+          content={`Track your ${exam.name} preparation progress with detailed section and topic-wise analytics on Examtrakr.`} 
+        />
+        <link rel="canonical" href={`/exam/${examId}`} />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta property="og:title" content={`${exam.name} - Examtrakr`} />
+        <meta property="og:description" content={`Track your ${exam.name} preparation progress`} />
+        <meta 
+          name="description" 
+          content={`Detailed view of ${exam.name} exam with subjects, topics, and progress tracking. Start your preparation journey today.`} 
+        />
+        <link rel="canonical" href={`/exam/${exam.id}`} />
+      </Helmet>
+
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        
+        <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto">
+            {/* Back Button */}
+            <Button asChild variant="ghost" className="mb-6">
+              <Link to="/exams" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Exams
+              </Link>
+            </Button>
+
+            {/* Top Section */}
+            <div className="mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">{exam.name}</h1>
+                  <p className="text-muted-foreground text-lg">{exam.type}</p>
+                </div>
+                
+                {/* Desktop Stats */}
+                <div className="hidden sm:flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 text-success">
+                    <Users className="h-5 w-5" />
+                    <span className="font-medium">{exam.enrolledStudents} students</span>
+                  </div>
+                  <Badge className="bg-primary/10 text-primary">
+                    <BookOpen className="h-3 w-3 mr-1" />
+                    {exam.subjects.length} Subjects
+                  </Badge>
+                  <Badge className="bg-secondary/10 text-secondary">
+                    <Target className="h-3 w-3 mr-1" />
+                    {exam.totalTopics} Topics
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Progress Section */}
+              {exam.isEnrolled && exam.progress !== undefined && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
+                          <span className="text-2xl font-bold text-primary">{exam.progress}%</span>
+                        </div>
+                         <Progress 
+                           value={exam.progress} 
+                           variant={getProgressVariant(exam.progress || 0)}
+                           className="h-3" 
+                         />
+                        <p className="text-sm text-muted-foreground mt-2">
+                          {exam.completedTopics} of {exam.totalTopics} topics completed
+                        </p>
+                        
+                        {/* Mobile Stats - shown in progress container */}
+                        <div className="flex sm:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+                          <div className="flex items-center gap-1 text-success text-sm">
+                            <Users className="h-4 w-4" />
+                            <span className="font-medium">{exam.enrolledStudents} students</span>
+                          </div>
+                          <Badge className="bg-primary/10 text-primary text-xs">
+                            <BookOpen className="h-3 w-3 mr-1" />
+                            {exam.subjects.length} Subjects
+                          </Badge>
+                          <Badge className="bg-secondary/10 text-secondary text-xs">
+                            <Target className="h-3 w-3 mr-1" />
+                            {exam.totalTopics} Topics
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Filters Section */}
+            <Card className="mb-8">
+              <CardContent className="p-4 sm:p-6">
+                {/* Mobile Layout */}
+                <div className="block sm:hidden">
+                  <div className="text-sm font-semibold text-foreground mb-3">Filters & Sorting</div>
+                  <div className="space-y-3">
+                    {/* Status Filter */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Status</label>
+                      <div className="flex gap-2 flex-1">
+                        <Badge 
+                          variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                          className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
+                          onClick={() => setStatusFilter('all')}
+                        >
+                          All
+                        </Badge>
+                        <Badge 
+                          variant={statusFilter === 'completed' ? 'default' : 'outline'} 
+                          className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
+                          onClick={() => setStatusFilter('completed')}
+                        >
+                          Completed
+                        </Badge>
+                        <Badge 
+                          variant={statusFilter === 'pending' ? 'default' : 'outline'} 
+                          className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
+                          onClick={() => setStatusFilter('pending')}
+                        >
+                          Pending
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    {/* Difficulty Filter */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Difficulty</label>
+                      <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Levels</SelectItem>
+                          <SelectItem value="easy">Easy</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="hard">Hard</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Sort By */}
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Sort by</label>
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Default</SelectItem>
+                          <SelectItem value="marks-high">Marks (High to Low)</SelectItem>
+                          <SelectItem value="marks-low">Marks (Low to High)</SelectItem>
+                          <SelectItem value="difficulty-easy">Easy First</SelectItem>
+                          <SelectItem value="difficulty-hard">Hard First</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden sm:block">
+                  <div className="text-sm font-semibold text-foreground mb-4">Filters & Sorting</div>
+                  <div className="flex items-center justify-between gap-6">
+                    <div className="flex items-center gap-6 flex-1">
+                      {/* Status Filter */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Status</label>
+                        <div className="flex gap-2">
+                          <Badge 
+                            variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                            className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
+                            onClick={() => setStatusFilter('all')}
+                          >
+                            All
+                          </Badge>
+                          <Badge 
+                            variant={statusFilter === 'completed' ? 'default' : 'outline'} 
+                            className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
+                            onClick={() => setStatusFilter('completed')}
+                          >
+                            Completed
+                          </Badge>
+                          <Badge 
+                            variant={statusFilter === 'pending' ? 'default' : 'outline'} 
+                            className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
+                            onClick={() => setStatusFilter('pending')}
+                          >
+                            Pending
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      {/* Difficulty Filter */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-muted-foreground min-w-[70px]">Difficulty</label>
+                        <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Levels</SelectItem>
+                            <SelectItem value="easy">Easy</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="hard">Hard</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Sort By */}
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Sort by</label>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Default</SelectItem>
+                            <SelectItem value="marks-high">Marks (High to Low)</SelectItem>
+                            <SelectItem value="marks-low">Marks (Low to High)</SelectItem>
+                            <SelectItem value="difficulty-easy">Easy First</SelectItem>
+                            <SelectItem value="difficulty-hard">Hard First</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={toggleAllSections}
+                      className="flex items-center gap-2 shrink-0"
+                    >
+                      {allExpanded ? (
+                        <>
+                          <ShrinkIcon className="h-4 w-4" />
+                          Collapse All
+                        </>
+                      ) : (
+                        <>
+                          <ExpandIcon className="h-4 w-4" />
+                          Expand All
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Subjects */}
+            <div className="space-y-6">
+              {sortedSubjects.map(subject => {
+                const isExpanded = expandedSections.has(subject.id);
+                const subjectProgress = getSubjectProgress(subject.id);
+                const { completed: completedTopics, total: totalTopics } = getSubjectTopicCounts(subject.id);
+                
+                return (
+                  <Card key={subject.id} className="overflow-hidden">
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSection(subject.id)}>
+                          {/* Mobile Layout */}
+                          <div className="flex sm:hidden flex-col gap-3">
+                             {/* First row: Section name + Resources button */}
+                             <div className="flex items-center justify-between">
+                               <CardTitle className="text-lg">{subject.name}</CardTitle>
+                               <div className="flex items-center gap-2">
+                                 {/* Resources Button for Section - Mobile */}
+                                 <Button 
+                                   asChild 
+                                   size="sm" 
+                                   variant="secondary" 
+                                   className="h-7 px-2 text-xs"
+                                   onClick={(e) => e.stopPropagation()}
+                                 >
+                                   <Link to={`/resources/${subject.id}`}>
+                                     <FolderOpen className="h-3 w-3 mr-1" />
+                                     Resources
+                                   </Link>
+                                 </Button>
+                                 
+                                 {isExpanded ? (
+                                   <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                                 ) : (
+                                   <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                                 )}
+                               </div>
+                             </div>
+                             
+                             {/* Second row: Total marks */}
+                             {subject.marks && (
+                               <div className="flex items-center">
+                                 <Badge variant="outline" className="text-sm">
+                                   {subject.marks} marks
+                                 </Badge>
+                               </div>
+                             )}
+                             
+                             {/* Third row: Progress bar */}
+                             <div className="w-full">
+                               <div className="flex justify-between items-center mb-1">
+                                 <span className="text-xs text-muted-foreground">Progress</span>
+                                 <span className="text-xs font-medium">{completedTopics}/{totalTopics}</span>
+                               </div>
+                                <Progress 
+                                  value={subjectProgress} 
+                                  variant={getProgressVariant(subjectProgress)}
+                                  className="w-full h-2" 
+                                />
+                               <div className="flex justify-between items-center mt-1">
+                                 <span className="text-xs text-muted-foreground">{subjectProgress}% completed</span>
+                               </div>
+                             </div>
+                          </div>
+                          
+                           {/* Desktop Layout */}
+                           <div className="hidden sm:flex flex-col gap-3 w-full">
+                             {/* First row: Section name + marks on left, Total topics + dropdown on right */}
+                             <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-3">
+                                  <CardTitle className="text-xl">{subject.name}</CardTitle>
+                                  {subject.marks && (
+                                    <Badge variant="outline" className="text-sm">
+                                      {subject.marks} marks
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                 <div className="flex items-center gap-3">
+                                   <Badge className="bg-primary/10 text-primary">
+                                     {totalTopics} topics
+                                   </Badge>
+                                  
+                                  {/* Resources Button for Section */}
+                                  <Button 
+                                    asChild 
+                                    size="sm" 
+                                    variant="secondary" 
+                                    className="h-8 px-3 text-xs"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Link to={`/resources/${subject.id}`}>
+                                      <FolderOpen className="h-3 w-3 mr-1" />
+                                      Resources
+                                    </Link>
+                                  </Button>
+                                  
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Progress bar for desktop view */}
+                              <div className="w-full">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-sm font-medium text-muted-foreground">Progress</span>
+                                  <span className="text-sm font-medium">{completedTopics}/{totalTopics}</span>
+                                </div>
+                                <Progress 
+                                  value={subjectProgress} 
+                                  variant={getProgressVariant(subjectProgress)}
+                                  className="w-full h-3" 
+                                />
+                                <div className="flex justify-between items-center mt-1">
+                                  <span className="text-sm text-muted-foreground">{subjectProgress}% completed</span>
+                                </div>
+                              </div>
+                            </div>
+                        </CardHeader>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent>
+                        <CardContent className="pt-0">
+                          <div className="space-y-3">
+                            {subject.topics.map((topic, index) => {
+                              const isAccessible = topic.isAccessible || index < 3;
+                              
+                              return (
+                                <div
+                                  key={topic.id}
+                                  className={`p-4 rounded-lg border-2 transition-all ${
+                                    isAccessible
+                                      ? 'border-border bg-card hover:shadow-md'
+                                      : 'border-muted bg-muted/20 opacity-60'
+                                  }`}
+                                >
+                                  {/* Mobile Layout */}
+                                  <div className="block sm:hidden">
+                                    {isAccessible ? (
+                                      <>
+                                         {/* First row: Checkbox + Topic name + Marks */}
+                                        <div className="flex items-center gap-3 mb-3">
+                                          <Checkbox
+                                            checked={topic.isCompleted}
+                                            onCheckedChange={() => handleTopicToggle(topic.id)}
+                                            className="h-5 w-5"
+                                          />
+                                          <h4 className="font-medium text-foreground flex-1">
+                                            {topic.name}
+                                          </h4>
+                                          {topic.marks && (
+                                            <span className="text-sm text-muted-foreground">
+                                              {topic.marks} marks
+                                            </span>
+                                          )}
+                                        </div>
+                                         
+                                          {/* Second row: Difficulty + Vote dropdown */}
+                                          <div className="flex items-center gap-2">
+                                            <Badge 
+                                              className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
+                                            >
+                                              {topic.difficulty}
+                                            </Badge>
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button 
+                                                  variant="ghost" 
+                                                  size="sm" 
+                                                  className="h-6 px-2 text-xs"
+                                                  onClick={(e) => e.stopPropagation()}
+                                                >
+                                                  <ThumbsUp className={`h-3 w-3 ${topic.userDifficultyRating ? 'fill-primary text-primary' : ''}`} />
+                                                  {topic.voteCount && topic.voteCount > 0 ? (
+                                                    <span className="ml-1">{topic.voteCount}</span>
+                                                  ) : null}
+                                                </Button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent align="end" className="w-40">
+                                                <DropdownMenuItem 
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDifficultyVote(topic.id, 'Easy');
+                                                  }}
+                                                  className={topic.userDifficultyRating === 'Easy' ? 'bg-success/10' : ''}
+                                                >
+                                                  <div className="flex items-center gap-2 w-full">
+                                                    <Badge className="text-xs bg-success">Easy</Badge>
+                                                    {topic.userDifficultyRating === 'Easy' && <span className="ml-auto text-xs">✓</span>}
+                                                  </div>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDifficultyVote(topic.id, 'Medium');
+                                                  }}
+                                                  className={topic.userDifficultyRating === 'Medium' ? 'bg-warning/10' : ''}
+                                                >
+                                                  <div className="flex items-center gap-2 w-full">
+                                                    <Badge className="text-xs bg-warning">Medium</Badge>
+                                                    {topic.userDifficultyRating === 'Medium' && <span className="ml-auto text-xs">✓</span>}
+                                                  </div>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDifficultyVote(topic.id, 'Hard');
+                                                  }}
+                                                  className={topic.userDifficultyRating === 'Hard' ? 'bg-destructive/10' : ''}
+                                                >
+                                                  <div className="flex items-center gap-2 w-full">
+                                                    <Badge className="text-xs bg-destructive">Hard</Badge>
+                                                    {topic.userDifficultyRating === 'Hard' && <span className="ml-auto text-xs">✓</span>}
+                                                  </div>
+                                                </DropdownMenuItem>
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          </div>
+                                        </>
+                                        ) : (
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-5 h-5" />
+                                        <div className="flex-1 blur-sm">
+                                          <h4 className="font-medium text-foreground">{topic.name}</h4>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                          <Lock className="h-4 w-4" />
+                                          <span className="text-xs">Locked</span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Desktop Layout */}
+                                  <div className="hidden sm:block">
+                                     <div className="flex items-center justify-between">
+                                      <div className={`flex items-center gap-3 ${!isAccessible ? 'blur-sm' : ''}`}>
+                                        {isAccessible && (
+                                          <Checkbox
+                                            checked={topic.isCompleted}
+                                            onCheckedChange={() => handleTopicToggle(topic.id)}
+                                            className="h-5 w-5"
+                                          />
+                                        )}
+                                         <div>
+                                         <h4 className="font-medium text-foreground flex items-center gap-2">
+                                           {topic.name}
+                                           {topic.marks && (
+                                             <span className="text-sm text-muted-foreground">
+                                               ({topic.marks} marks)
+                                             </span>
+                                           )}
+                                         </h4>
+                                         <div className="flex items-center gap-2 mt-1">
+                                           <Badge 
+                                             className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
+                                           >
+                                             {topic.difficulty}
+                                           </Badge>
+                                           <DropdownMenu>
+                                             <DropdownMenuTrigger asChild>
+                                               <Button 
+                                                 variant="ghost" 
+                                                 size="sm" 
+                                                 className="h-6 px-2 text-xs"
+                                                 onClick={(e) => e.stopPropagation()}
+                                               >
+                                                 <ThumbsUp className={`h-3 w-3 ${topic.userDifficultyRating ? 'fill-primary text-primary' : ''}`} />
+                                                 {topic.voteCount && topic.voteCount > 0 ? (
+                                                   <span className="ml-1">{topic.voteCount}</span>
+                                                 ) : null}
+                                               </Button>
+                                             </DropdownMenuTrigger>
+                                             <DropdownMenuContent align="start" className="w-40">
+                                               <DropdownMenuItem 
+                                                 onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   handleDifficultyVote(topic.id, 'Easy');
+                                                 }}
+                                                 className={topic.userDifficultyRating === 'Easy' ? 'bg-success/10' : ''}
+                                               >
+                                                 <div className="flex items-center gap-2 w-full">
+                                                   <Badge className="text-xs bg-success">Easy</Badge>
+                                                   {topic.userDifficultyRating === 'Easy' && <span className="ml-auto text-xs">✓</span>}
+                                                 </div>
+                                               </DropdownMenuItem>
+                                               <DropdownMenuItem 
+                                                 onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   handleDifficultyVote(topic.id, 'Medium');
+                                                 }}
+                                                 className={topic.userDifficultyRating === 'Medium' ? 'bg-warning/10' : ''}
+                                               >
+                                                 <div className="flex items-center gap-2 w-full">
+                                                   <Badge className="text-xs bg-warning">Medium</Badge>
+                                                   {topic.userDifficultyRating === 'Medium' && <span className="ml-auto text-xs">✓</span>}
+                                                 </div>
+                                               </DropdownMenuItem>
+                                               <DropdownMenuItem 
+                                                 onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   handleDifficultyVote(topic.id, 'Hard');
+                                                 }}
+                                                 className={topic.userDifficultyRating === 'Hard' ? 'bg-destructive/10' : ''}
+                                               >
+                                                 <div className="flex items-center gap-2 w-full">
+                                                   <Badge className="text-xs bg-destructive">Hard</Badge>
+                                                   {topic.userDifficultyRating === 'Hard' && <span className="ml-auto text-xs">✓</span>}
+                                                 </div>
+                                               </DropdownMenuItem>
+                                             </DropdownMenuContent>
+                                           </DropdownMenu>
+                                         </div>
+                                       </div>
+                                     </div>
+                                     
+                                     <div className="flex items-center gap-2">
+                                       {isAccessible ? (
+                                          <>
+                                          </>
+                                        ) : (
+                                         <div className="flex items-center gap-2 text-muted-foreground">
+                                           <Lock className="h-4 w-4" />
+                                           <span className="text-xs">Locked</span>
+                                         </div>
+                                       )}
+                                     </div>
+                                   </div>
+                                   </div>
+                                 </div>
+                               );
+                             })}
+                           </div>
+                         </CardContent>
+                       </CollapsibleContent>
+                     </Collapsible>
+                   </Card>
+                 );
+               })}
+             </div>
+
+             {/* CTA Section */}
+            {!exam.isEnrolled && (
+              <Card className="mt-12 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+                <CardContent className="p-8 text-center">
+                  <h3 className="text-2xl font-bold text-foreground mb-4">
+                    Ready to start your {exam.name} preparation?
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Join {exam.enrolledStudents} students already preparing for this exam
+                  </p>
+                  <Button 
+                    variant="hero" 
+                    size="lg"
+                    onClick={handleEnrollExam}
+                    disabled={enrolling}
+                  >
+                    {enrolling ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Enrolling...
+                      </>
+                    ) : (
+                      'Enroll Now'
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    </>
+  );
+};
+
+export default ExamDetail;

@@ -1,0 +1,556 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Navigation } from '@/components/Navigation';
+import { Footer } from '@/components/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AddExamModal } from '@/components/AddExamModal';
+import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+
+interface Topic {
+  id: string;
+  name: string;
+  marks?: number;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+}
+
+interface Subject {
+  id: string;
+  name: string;
+  topics: Topic[];
+}
+
+interface Exam {
+  id: string;
+  name: string;
+  type: string;
+  subjects: Subject[];
+  enrolledStudents: string;
+  isEnrolled: boolean;
+  progress?: number;
+  completedTopics?: number;
+  totalTopics: number;
+}
+
+const Exams = () => {
+  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [visibleExams, setVisibleExams] = useState(6);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchExams();
+  }, [user]);
+
+  const fetchExams = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch exams with subjects and topics
+      const { data: examsData, error: examsError } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (examsError) throw examsError;
+
+      if (!examsData) {
+        setExams([]);
+        return;
+      }
+
+      // Fetch all subjects
+      const { data: subjectsData, error: subjectsError } = await supabase
+        .from('subjects')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (subjectsError) throw subjectsError;
+
+      // Fetch all topics
+      const { data: topicsData, error: topicsError } = await supabase
+        .from('topics')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (topicsError) throw topicsError;
+
+      // Fetch user enrollments if logged in
+      let enrollmentsMap = new Map<string, boolean>();
+      if (user) {
+        const { data: enrollmentsData } = await supabase
+          .from('user_exam_enrollments')
+          .select('exam_id, is_active')
+          .eq('user_id', user.id)
+          .eq('is_active', true);
+
+        if (enrollmentsData) {
+          enrollmentsData.forEach((enrollment: any) => {
+            enrollmentsMap.set(enrollment.exam_id, true);
+          });
+        }
+      }
+
+      // Fetch user progress if logged in
+      let progressMap = new Map<string, { completed: number; percentage: number }>();
+      if (user) {
+        const { data: progressData } = await supabase
+          .from('user_exam_progress')
+          .select('exam_id, completed_topics, progress_percentage')
+          .eq('user_id', user.id);
+
+        if (progressData) {
+          progressData.forEach((progress: any) => {
+            progressMap.set(progress.exam_id, {
+              completed: progress.completed_topics,
+              percentage: progress.progress_percentage
+            });
+          });
+        }
+      }
+
+      // Transform the data to match the Exam interface
+      const transformedExams: Exam[] = (examsData || []).map((exam: any) => {
+        const examSubjects = (subjectsData || []).filter((s: any) => s.exam_id === exam.id);
+        
+        const subjects: Subject[] = examSubjects.map((subject: any) => {
+          const subjectTopics = (topicsData || []).filter((t: any) => t.subject_id === subject.id);
+          
+          const topics: Topic[] = subjectTopics.map((topic: any) => ({
+            id: topic.id,
+            name: topic.name,
+            marks: topic.marks || undefined,
+            difficulty: (topic.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard'
+          }));
+
+          return {
+            id: subject.id,
+            name: subject.name,
+            topics
+          };
+        });
+
+        const totalTopics = subjects.reduce((sum, subject) => sum + subject.topics.length, 0);
+        const isEnrolled = enrollmentsMap.has(exam.id);
+        const progress = progressMap.get(exam.id);
+
+        return {
+          id: exam.id,
+          name: exam.name,
+          type: exam.exam_type,
+          subjects,
+          enrolledStudents: exam.enrollment_count > 0 ? `${exam.enrollment_count.toLocaleString()}+` : '0',
+          isEnrolled,
+          progress: progress?.percentage,
+          completedTopics: progress?.completed,
+          totalTopics
+        };
+      });
+
+      setExams(transformedExams);
+    } catch (error: any) {
+      console.error('Error fetching exams:', error);
+      toast({
+        title: 'Error loading exams',
+        description: error.message || 'Failed to load exams from database',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnrollExam = async (examId: string) => {
+    if (!user) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to enroll in an exam.',
+        variant: 'destructive'
+      });
+      // Redirect to login page
+      window.location.href = '/login';
+      return;
+    }
+
+    try {
+      setEnrolling(examId);
+
+      const { error } = await supabase
+        .from('user_exam_enrollments')
+        .insert({
+          user_id: user.id,
+          exam_id: examId,
+          is_active: true
+        } as any);
+
+      if (error) throw error;
+
+      // Update local state
+      setExams(prev => prev.map(exam => 
+        exam.id === examId ? { ...exam, isEnrolled: true } : exam
+      ));
+
+      toast({
+        title: 'Enrolled Successfully',
+        description: 'You have been enrolled in the exam.',
+      });
+    } catch (error: any) {
+      console.error('Error enrolling in exam:', error);
+      toast({
+        title: 'Enrollment Failed',
+        description: error.message || 'Failed to enroll in exam. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setEnrolling(null);
+    }
+  };
+
+  const filteredExams = useMemo(() => {
+    let filtered = exams;
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(exam =>
+        exam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.subjects.some(subject =>
+          subject.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+
+    // Apply type filter
+    if (selectedFilter !== 'all') {
+      const filterMap: { [key: string]: string } = {
+        'government': 'Government',
+        'medical': 'Medical',
+        'engineering': 'Engineering',
+        'banking': 'Banking'
+      };
+      
+      const filterType = filterMap[selectedFilter];
+      if (filterType) {
+        filtered = filtered.filter(exam =>
+          exam.type.toLowerCase().includes(filterType.toLowerCase())
+        );
+      }
+    }
+
+    return filtered;
+  }, [exams, searchQuery, selectedFilter]);
+
+  const handleAddExam = (newExam: Omit<Exam, 'id'>) => {
+    const examWithId = {
+      ...newExam,
+      id: newExam.name.toLowerCase().replace(/\s+/g, '-'),
+    };
+    setExams(prev => [...prev, examWithId]);
+  };
+
+  const loadMoreExams = () => {
+    setVisibleExams(prev => prev + 6);
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy': return 'bg-success text-success-foreground';
+      case 'Medium': return 'bg-warning text-warning-foreground';
+      case 'Hard': return 'bg-destructive text-destructive-foreground';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>Exams - Examtrakr | Comprehensive Exam Preparation Tracker</title>
+        <meta 
+          name="description" 
+          content="Browse and track preparation for IBPS PO, NEET, JEE, SSC, UPSC, CAT, GATE and other competitive exams on Examtrakr." 
+        />
+        <link rel="canonical" href="/exams" />
+        <meta property="og:title" content="Exams - Examtrakr" />
+        <meta property="og:description" content="Track your competitive exam preparation" />
+        <meta 
+          name="description" 
+          content="Explore and prepare for competitive exams including IBPS PO, NEET, JEE Main with comprehensive study materials and progress tracking." 
+        />
+        <link rel="canonical" href="/exams" />
+      </Helmet>
+
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        
+        <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            {loading ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+            {/* Header Section */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-4">All Exams</h1>
+              
+              {/* Search Bar */}
+              <div className="relative mb-6">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search exams (IBPS, NEET, JEE...)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-12 text-base"
+                />
+              </div>
+
+              {/* Toolbar */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Exams</SelectItem>
+                      <SelectItem value="government">Government Exams</SelectItem>
+                      <SelectItem value="medical">Medical Exams</SelectItem>
+                      <SelectItem value="engineering">Engineering Exams</SelectItem>
+                      <SelectItem value="banking">Banking Exams</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Button asChild variant="hero" className="flex items-center gap-2">
+                  <Link to="/exams/add">
+                    <Plus className="h-4 w-4" />
+                    Add Exam
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+              <Card>
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Total Exams</p>
+                      <p className="text-lg sm:text-2xl font-bold text-primary">{exams.length}</p>
+                    </div>
+                    <BookOpen className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Active Students</p>
+                      <p className="text-lg sm:text-2xl font-bold text-success">50K+</p>
+                    </div>
+                    <Users className="h-5 w-5 sm:h-8 sm:w-8 text-success" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Success Rate</p>
+                      <p className="text-lg sm:text-2xl font-bold text-warning">89%</p>
+                    </div>
+                    <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-warning" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Avg. Prep Time</p>
+                      <p className="text-lg sm:text-2xl font-bold text-secondary">6 months</p>
+                    </div>
+                    <Clock className="h-5 w-5 sm:h-8 sm:w-8 text-secondary" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Exam Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {filteredExams.slice(0, visibleExams).map((exam) => (
+                <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                          {exam.name}
+                        </CardTitle>
+                        <CardDescription className="mt-2 text-muted-foreground">
+                          {exam.type}
+                        </CardDescription>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                        {exam.type.includes('Banking') ? 'Banking' : 
+                         exam.type.includes('Medical') ? 'Medical' : 
+                         exam.type.includes('Engineering') ? 'Engineering' : 
+                         exam.type.includes('Government') ? 'Government' : exam.type}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-6">
+                    {/* Subject Tags */}
+                    <div className="flex flex-wrap gap-2">
+                      {exam.subjects.map((subject) => (
+                        <Badge 
+                          key={subject.id}
+                          variant="outline"
+                          className="text-xs"
+                        >
+                          {subject.name}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    {/* Progress (if enrolled) */}
+                    {exam.isEnrolled && exam.progress !== undefined && (
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-medium">{exam.progress}%</span>
+                        </div>
+                        <Progress value={exam.progress} className="h-2" />
+                        <div className="text-sm text-muted-foreground">
+                          {exam.completedTopics} of {exam.totalTopics} topics completed
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Enrolled Students */}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Enrolled Students:</span>
+                      <span className="font-medium text-success">{exam.enrolledStudents}</span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      {exam.isEnrolled ? (
+                        <Button asChild variant="hero" className="flex-1">
+                          <Link to={`/exam/${exam.id}`}>Continue Learning</Link>
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="hero" 
+                          className="flex-1"
+                          onClick={() => handleEnrollExam(exam.id)}
+                          disabled={enrolling === exam.id}
+                        >
+                          {enrolling === exam.id ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Enrolling...
+                            </>
+                          ) : (
+                            'Enroll'
+                          )}
+                        </Button>
+                      )}
+                      <Button asChild variant="outline">
+                        <Link to={`/exam/${exam.id}`}>View Details</Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {visibleExams < filteredExams.length && (
+              <div className="text-center">
+                <Button 
+                  onClick={loadMoreExams}
+                  variant="outline"
+                  size="lg"
+                  className="px-8"
+                >
+                  Load More Exams
+                </Button>
+              </div>
+            )}
+
+            {/* No Results */}
+            {filteredExams.length === 0 && (
+              <div className="text-center py-12">
+                <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">No exams found</h3>
+                <p className="text-muted-foreground mb-6">
+                  Try adjusting your search or filter criteria
+                </p>
+                <Button 
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedFilter('all');
+                  }}
+                  variant="outline"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
+
+            {/* CTA for More Exams */}
+            <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+              <CardContent className="p-8 text-center">
+                <h3 className="text-2xl font-bold text-foreground mb-4">
+                  Can't find your exam?
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  We're constantly adding new exams. Let us know what you're looking for!
+                </p>
+                <Button variant="hero" size="lg">
+                  Request New Exam
+                </Button>
+              </CardContent>
+            </Card>
+            </>
+            )}
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+
+      <AddExamModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddExam}
+      />
+    </>
+  );
+};
+
+export default Exams;
