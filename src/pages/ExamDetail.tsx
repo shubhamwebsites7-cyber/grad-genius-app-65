@@ -22,8 +22,7 @@ import {
   Lock,
   ExpandIcon,
   ShrinkIcon,
-  Loader2,
-  ThumbsUp
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -207,8 +206,8 @@ const ExamDetail = () => {
             const baseDifficulty = topic.difficulty || 'Medium';
             const voteDifficulty = diffMap[topic.id];
             
-            // Use vote-based difficulty if 10+ votes, otherwise use database difficulty
-            const displayDifficulty = (voteCount >= 10 && voteDifficulty) 
+            // Use vote-based difficulty if 5+ votes, otherwise use database difficulty
+            const displayDifficulty = (voteCount >= 5 && voteDifficulty) 
               ? voteDifficulty 
               : baseDifficulty;
             
@@ -383,7 +382,7 @@ const ExamDetail = () => {
             if (topic.id === topicId) {
               const voteCount = newVoteCount;
               const voteDifficulty = calcDiff;
-              const displayDifficulty = (voteCount >= 10 && voteDifficulty) 
+              const displayDifficulty = (voteCount >= 5 && voteDifficulty) 
                 ? voteDifficulty 
                 : topic.difficulty;
               
@@ -1038,12 +1037,13 @@ const ExamDetail = () => {
                                                 <Button 
                                                   variant="ghost" 
                                                   size="sm" 
-                                                  className="h-6 px-2 text-xs"
+                                                  className="h-6 px-2 text-xs flex items-center gap-1"
                                                   onClick={(e) => e.stopPropagation()}
                                                 >
-                                                  <ThumbsUp className={`h-3 w-3 ${topic.userDifficultyRating ? 'fill-primary text-primary' : ''}`} />
+                                                  <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
+                                                  <ChevronDown className="h-3 w-3" />
                                                   {topic.voteCount && topic.voteCount > 0 ? (
-                                                    <span className="ml-1">{topic.voteCount}</span>
+                                                    <span className="ml-1">({topic.voteCount})</span>
                                                   ) : null}
                                                 </Button>
                                               </DropdownMenuTrigger>
@@ -1128,20 +1128,21 @@ const ExamDetail = () => {
                                            >
                                              {topic.difficulty}
                                            </Badge>
-                                           <DropdownMenu>
-                                             <DropdownMenuTrigger asChild>
-                                               <Button 
-                                                 variant="ghost" 
-                                                 size="sm" 
-                                                 className="h-6 px-2 text-xs"
-                                                 onClick={(e) => e.stopPropagation()}
-                                               >
-                                                 <ThumbsUp className={`h-3 w-3 ${topic.userDifficultyRating ? 'fill-primary text-primary' : ''}`} />
-                                                 {topic.voteCount && topic.voteCount > 0 ? (
-                                                   <span className="ml-1">{topic.voteCount}</span>
-                                                 ) : null}
-                                               </Button>
-                                             </DropdownMenuTrigger>
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button 
+                                                  variant="ghost" 
+                                                  size="sm" 
+                                                  className="h-6 px-2 text-xs flex items-center gap-1"
+                                                  onClick={(e) => e.stopPropagation()}
+                                                >
+                                                  <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
+                                                  <ChevronDown className="h-3 w-3" />
+                                                  {topic.voteCount && topic.voteCount > 0 ? (
+                                                    <span className="ml-1">({topic.voteCount})</span>
+                                                  ) : null}
+                                                </Button>
+                                              </DropdownMenuTrigger>
                                              <DropdownMenuContent align="start" className="w-40">
                                                <DropdownMenuItem 
                                                  onClick={(e) => {
