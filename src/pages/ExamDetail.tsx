@@ -151,42 +151,58 @@ const ExamDetail = () => {
 
       setCompletedTopicIds(completedIds);
 
-      // Fetch calculated difficulties and vote counts for all topics
+      // Fetch vote counts and user ratings in parallel for all topics
       const topicIds = topicsData?.map((t: any) => t.id) || [];
       const diffMap: { [key: string]: string } = {};
       const voteCountMap: { [key: string]: number } = {};
       const userRatingsMap: { [key: string]: string } = {};
       
-      // Fetch vote counts and calculated difficulties
-      for (const topicId of topicIds) {
-        // Get vote count
-        const { data: voteCountData } = await supabase
-          .from('topic_difficulty_ratings')
-          .select('id')
-          .eq('topic_id', topicId);
+      if (topicIds.length > 0) {
+        // Batch fetch all ratings at once
+        const ratingsPromises = [
+          supabase
+            .from('topic_difficulty_ratings')
+            .select('topic_id, difficulty_rating')
+            .in('topic_id', topicIds)
+        ];
         
-        voteCountMap[topicId] = voteCountData?.length || 0;
-        
-        // Get calculated difficulty
-        const { data: calcDiff } = await (supabase as any)
-          .rpc('get_topic_calculated_difficulty', { p_topic_id: topicId });
-        if (calcDiff) {
-          diffMap[topicId] = calcDiff;
+        // Add user ratings query if logged in
+        if (user) {
+          ratingsPromises.push(
+            supabase
+              .from('topic_difficulty_ratings')
+              .select('topic_id, difficulty_rating')
+              .eq('user_id', user.id)
+              .in('topic_id', topicIds)
+          );
         }
-      }
-      
-      // Fetch user ratings if logged in
-      if (user) {
-        const { data: userRatingsData } = await supabase
-          .from('topic_difficulty_ratings')
-          .select('topic_id, difficulty_rating')
-          .eq('user_id', user.id)
-          .in('topic_id', topicIds);
         
-        if (userRatingsData) {
-          userRatingsData.forEach((rating: any) => {
+        const [allRatingsResult, userRatingsResult] = await Promise.all(ratingsPromises);
+        
+        // Count votes per topic
+        if (allRatingsResult.data) {
+          allRatingsResult.data.forEach((rating: any) => {
+            voteCountMap[rating.topic_id] = (voteCountMap[rating.topic_id] || 0) + 1;
+          });
+        }
+        
+        // Store user ratings
+        if (user && userRatingsResult?.data) {
+          userRatingsResult.data.forEach((rating: any) => {
             userRatingsMap[rating.topic_id] = rating.difficulty_rating;
           });
+        }
+        
+        // Calculate difficulty for topics with 5+ votes
+        for (const topicId of topicIds) {
+          const voteCount = voteCountMap[topicId] || 0;
+          if (voteCount >= 5) {
+            const { data: calcDiff } = await (supabase as any)
+              .rpc('get_topic_calculated_difficulty', { p_topic_id: topicId });
+            if (calcDiff) {
+              diffMap[topicId] = calcDiff;
+            }
+          }
         }
       }
       
@@ -1042,9 +1058,6 @@ const ExamDetail = () => {
                                                 >
                                                   <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
                                                   <ChevronDown className="h-3 w-3" />
-                                                  {topic.voteCount && topic.voteCount > 0 ? (
-                                                    <span className="ml-1">({topic.voteCount})</span>
-                                                  ) : null}
                                                 </Button>
                                               </DropdownMenuTrigger>
                                               <DropdownMenuContent align="end" className="w-40">
@@ -1138,9 +1151,6 @@ const ExamDetail = () => {
                                                 >
                                                   <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
                                                   <ChevronDown className="h-3 w-3" />
-                                                  {topic.voteCount && topic.voteCount > 0 ? (
-                                                    <span className="ml-1">({topic.voteCount})</span>
-                                                  ) : null}
                                                 </Button>
                                               </DropdownMenuTrigger>
                                              <DropdownMenuContent align="start" className="w-40">
