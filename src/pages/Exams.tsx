@@ -62,7 +62,7 @@ const Exams = () => {
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const EXAMS_PER_PAGE = 8;
+  const EXAMS_PER_PAGE = 9;
 
   useEffect(() => {
     fetchExams();
@@ -427,8 +427,20 @@ const Exams = () => {
               </Card>
             </div>
 
+            {/* Results Info */}
+            {filteredExams.length > 0 && (
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing <span className="font-semibold text-foreground">{startIndex + 1}-{Math.min(endIndex, filteredExams.length)}</span> of <span className="font-semibold text-foreground">{filteredExams.length}</span> exams
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Page <span className="font-semibold text-foreground">{currentPage}</span> of <span className="font-semibold text-foreground">{totalPages}</span>
+                </p>
+              </div>
+            )}
+
             {/* Exam Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {paginatedExams.map((exam) => (
                 <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
                   <CardHeader>
@@ -573,13 +585,6 @@ const Exams = () => {
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
-            )}
-
-            {/* Pagination Info */}
-            {filteredExams.length > 0 && (
-              <div className="text-center text-sm text-muted-foreground mt-4">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredExams.length)} of {filteredExams.length} exams
-              </div>
             )}
 
             {/* No Results */}
