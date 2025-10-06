@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle } from 'lucide-react';
+import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -68,6 +68,7 @@ export const Navigation: React.FC = () => {
     { name: 'Exams', href: '/exams', icon: BookOpen },
     { name: 'Profile', href: '/profile', icon: User },
     { name: 'Pricing', href: '/pricing', icon: CreditCard },
+    { name: 'Feedback', href: '/feedback', icon: MessageSquare },
   ];
 
   const isActive = (path: string) => location.pathname === path;

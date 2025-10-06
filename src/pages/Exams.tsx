@@ -17,7 +17,8 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { AddExamModal } from '@/components/AddExamModal';
-import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2 } from 'lucide-react';
+import { RequestExamModal } from '@/components/RequestExamModal';
+import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2, MessageSquarePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +55,7 @@ const Exams = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -354,12 +356,23 @@ const Exams = () => {
                   </Select>
                 </div>
                 
-                <Button asChild variant="hero" className="flex items-center gap-2">
-                  <Link to="/exams/add">
-                    <Plus className="h-4 w-4" />
-                    Add Exam
-                  </Link>
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                    onClick={() => setIsRequestModalOpen(true)}
+                  >
+                    <MessageSquarePlus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Request New Exam</span>
+                    <span className="sm:hidden">Request</span>
+                  </Button>
+                  <Button asChild variant="hero" className="flex items-center gap-2">
+                    <Link to="/exams/add">
+                      <Plus className="h-4 w-4" />
+                      Add Exam
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -584,7 +597,7 @@ const Exams = () => {
                 <p className="text-muted-foreground mb-6">
                   We're constantly adding new exams. Let us know what you're looking for!
                 </p>
-                <Button variant="hero" size="lg">
+                <Button variant="hero" size="lg" onClick={() => setIsRequestModalOpen(true)}>
                   Request New Exam
                 </Button>
               </CardContent>
@@ -600,6 +613,11 @@ const Exams = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddExam}
+      />
+      
+      <RequestExamModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
       />
     </>
   );

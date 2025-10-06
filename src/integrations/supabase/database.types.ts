@@ -543,6 +543,76 @@ export interface Database {
           created_at?: string
         }
       }
+      user_feedback: {
+        Row: {
+          id: string
+          user_id: string
+          helpfulness: string
+          ease_of_use: string
+          design_speed: string
+          recommendation: string
+          pricing_preference: string
+          improvement_suggestion: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          helpfulness: string
+          ease_of_use: string
+          design_speed: string
+          recommendation: string
+          pricing_preference: string
+          improvement_suggestion?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          helpfulness?: string
+          ease_of_use?: string
+          design_speed?: string
+          recommendation?: string
+          pricing_preference?: string
+          improvement_suggestion?: string | null
+          created_at?: string
+        }
+      }
+      exam_requests: {
+        Row: {
+          id: string
+          user_id: string
+          exam_name: string
+          exam_type: string
+          reason: string | null
+          status: string
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          exam_name: string
+          exam_type: string
+          reason?: string | null
+          status?: string
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          exam_name?: string
+          exam_type?: string
+          reason?: string | null
+          status?: string
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       topic_difficulty_ratings: {
         Row: {
           id: string
