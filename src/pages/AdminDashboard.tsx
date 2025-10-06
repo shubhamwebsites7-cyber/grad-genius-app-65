@@ -28,13 +28,19 @@ import {
   DollarSign,
   Activity,
   AlertCircle,
-  Loader2
+  Loader2,
+  ClipboardList,
+  MessageSquare
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
+import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
+import { ExamRequestsSection } from "@/components/admin/ExamRequestsSection";
+import { FeedbackSection } from "@/components/admin/FeedbackSection";
+import { EnhancedResourcesSection } from "@/components/admin/EnhancedResourcesSection";
 
 interface Stats {
   totalUsers: number;
@@ -280,9 +286,12 @@ const AdminDashboard = () => {
   // Sidebar navigation items
   const navigationItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'users', label: 'Users Management', icon: Users },
     { id: 'exams', label: 'Exams Management', icon: BookOpen },
-    { id: 'resources', label: 'Resources Approval', icon: FileText },
+    { id: 'exam-requests', label: 'Exam Requests', icon: ClipboardList },
+    { id: 'resources', label: 'Resources', icon: FileText },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquare },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -417,6 +426,15 @@ const AdminDashboard = () => {
           </div>
         );
 
+      case 'analytics':
+        return <AnalyticsSection stats={stats} />;
+
+      case 'exam-requests':
+        return <ExamRequestsSection />;
+
+      case 'feedback':
+        return <FeedbackSection />;
+
       case 'users':
         return (
           <div className="space-y-6">
@@ -514,85 +532,7 @@ const AdminDashboard = () => {
         );
 
       case 'resources':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Resources Approval</h2>
-                <p className="text-muted-foreground">Review and approve user-contributed resources</p>
-              </div>
-            </div>
-
-            {pendingResources.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No pending resources</h3>
-                  <p className="text-muted-foreground">All user contributions have been reviewed.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {pendingResources.map((resource) => (
-                  <Card key={resource.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg">{resource.title}</CardTitle>
-                          <CardDescription className="mt-2">
-                            <span className="font-medium">Topic:</span> {(resource.topics as any)?.name || 'N/A'}
-                            {(resource.topics as any)?.subjects && (
-                              <span className="ml-4">
-                                <span className="font-medium">Subject:</span> {(resource.topics as any).subjects.name}
-                              </span>
-                            )}
-                          </CardDescription>
-                          <CardDescription className="mt-1">
-                            <span className="font-medium">Contributed by:</span> {(resource.users as any)?.full_name || 'Unknown'}
-                            <span className="ml-4">
-                              <span className="font-medium">Date:</span> {new Date(resource.created_at).toLocaleDateString()}
-                            </span>
-                          </CardDescription>
-                        </div>
-                        <Badge variant="outline">{resource.resource_type}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleApproveResource(resource.id)}
-                        >
-                          <Check className="h-4 w-4 mr-2" />
-                          Approve
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRejectResource(resource.id)}
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Reject
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          asChild
-                        >
-                          <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Preview
-                          </a>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        );
+        return <EnhancedResourcesSection />;
 
       case 'subscriptions':
         return (
