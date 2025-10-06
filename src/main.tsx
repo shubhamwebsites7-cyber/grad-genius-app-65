@@ -5,7 +5,9 @@ import "./index.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider>
-    <App />
-  </ThemeProvider>
+  <React.StrictMode>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <App />
+    </ThemeProvider>
+  </React.StrictMode>
 );
