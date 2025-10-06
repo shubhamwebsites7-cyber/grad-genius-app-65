@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DashboardLoadingSkeleton } from '@/components/dashboard/DashboardLoadingSkeleton';
 
 interface Subject {
   name: string;
@@ -210,13 +211,7 @@ const Dashboard = () => {
           <meta property="og:title" content="Dashboard - Examtrakr" />
           <meta property="og:description" content="Track your exam preparation progress" />
         </Helmet>
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </main>
-          <Footer />
-        </div>
+        <DashboardLoadingSkeleton />
       </>
     );
   }

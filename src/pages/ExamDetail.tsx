@@ -27,6 +27,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ExamDetailLoadingSkeleton } from '@/components/exam-detail/LoadingSkeleton';
 
 interface Topic {
   id: string;
@@ -527,13 +528,7 @@ const ExamDetail = () => {
         <Helmet>
           <title>Loading... | Examtrakr</title>
         </Helmet>
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          <main className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </main>
-          <Footer />
-        </div>
+        <ExamDetailLoadingSkeleton />
       </>
     );
   }

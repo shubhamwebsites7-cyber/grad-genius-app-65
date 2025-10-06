@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { ExamsLoadingSkeleton } from '@/components/exam-detail/ExamsLoadingSkeleton';
 
 interface Topic {
   id: string;
@@ -295,17 +296,14 @@ const Exams = () => {
         <link rel="canonical" href="/exams" />
       </Helmet>
 
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        
-        <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            {loading ? (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            ) : (
-              <>
+      {loading ? (
+        <ExamsLoadingSkeleton />
+      ) : (
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          
+          <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
             {/* Header Section */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-4">All Exams</h1>
@@ -536,13 +534,12 @@ const Exams = () => {
                 </Button>
               </CardContent>
             </Card>
-            </>
-            )}
-          </div>
-        </main>
-        
-        <Footer />
-      </div>
+            </div>
+          </main>
+          
+          <Footer />
+        </div>
+      )}
 
       <AddExamModal 
         isOpen={isAddModalOpen}
