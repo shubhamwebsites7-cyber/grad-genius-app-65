@@ -21,7 +21,7 @@ const SectionResources = lazy(() => import("./pages/SectionResources"));
 const AddExam = lazy(() => import("./pages/AddExam"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Pricing = lazy(() => import("./pages/Pricing"));
-const Feedback = lazy(() => import("./pages/Feedback"));
+import Feedback from "./pages/Feedback";
 const Support = lazy(() => import("./pages/Support"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -62,7 +62,7 @@ const App = () => (
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/exams" element={<Exams />} />
-                <Route path="/exam/:examId" element={<ExamDetail />} />
+                <Route path="/exam/:examId" element={<ProtectedRoute><ExamDetail /></ProtectedRoute>} />
                 <Route path="/exams/add" element={<ProtectedRoute><AddExam /></ProtectedRoute>} />
                 <Route path="/resources/:sectionId" element={<ProtectedRoute><SectionResources /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
