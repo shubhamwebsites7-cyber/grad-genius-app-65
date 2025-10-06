@@ -528,7 +528,11 @@ const ExamDetail = () => {
         <Helmet>
           <title>Loading... | Examtrakr</title>
         </Helmet>
-        <ExamDetailLoadingSkeleton />
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          <ExamDetailLoadingSkeleton />
+          <Footer />
+        </div>
       </>
     );
   }

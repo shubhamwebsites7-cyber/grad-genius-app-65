@@ -1,13 +1,9 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-import { Navigation } from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 
 export const ExamsLoadingSkeleton = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <Skeleton className="h-9 w-32 mb-4" />
@@ -57,8 +53,6 @@ export const ExamsLoadingSkeleton = () => {
             ))}
           </div>
         </div>
-      </main>
-      <Footer />
-    </div>
+    </main>
   );
 };

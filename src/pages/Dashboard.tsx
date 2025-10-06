@@ -197,25 +197,6 @@ const Dashboard = () => {
     return 'text-destructive';
   };
 
-  if (loading) {
-    return (
-      <>
-        <Helmet>
-          <title>Dashboard - Examtrakr | Track Your Study Progress</title>
-          <meta 
-            name="description" 
-            content="View your comprehensive exam preparation dashboard with progress tracking, analytics, and performance insights on Examtrakr." 
-          />
-          <link rel="canonical" href="/dashboard" />
-          <meta name="robots" content="noindex, nofollow" />
-          <meta property="og:title" content="Dashboard - Examtrakr" />
-          <meta property="og:description" content="Track your exam preparation progress" />
-        </Helmet>
-        <DashboardLoadingSkeleton />
-      </>
-    );
-  }
-
   return (
     <>
       <Helmet>
@@ -236,8 +217,11 @@ const Dashboard = () => {
       <div className="min-h-screen flex flex-col">
         <Navigation />
         
-        <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
+        {loading ? (
+          <DashboardLoadingSkeleton />
+        ) : (
+          <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
             {error && (
               <Alert variant="destructive" className="mb-6">
                 <AlertCircle className="h-4 w-4" />
@@ -423,8 +407,9 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </main>
+            </div>
+          </main>
+        )}
         
         <Footer />
       </div>

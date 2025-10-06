@@ -296,12 +296,12 @@ const Exams = () => {
         <link rel="canonical" href="/exams" />
       </Helmet>
 
-      {loading ? (
-        <ExamsLoadingSkeleton />
-      ) : (
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        
+        {loading ? (
+          <ExamsLoadingSkeleton />
+        ) : (
           <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
             {/* Header Section */}
@@ -536,10 +536,10 @@ const Exams = () => {
             </Card>
             </div>
           </main>
+        )}
           
-          <Footer />
-        </div>
-      )}
+        <Footer />
+      </div>
 
       <AddExamModal 
         isOpen={isAddModalOpen}

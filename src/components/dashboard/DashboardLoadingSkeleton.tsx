@@ -1,13 +1,9 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Navigation } from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 
 export const DashboardLoadingSkeleton = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
-      <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8 flex flex-col lg:flex-row lg:justify-between">
@@ -75,8 +71,6 @@ export const DashboardLoadingSkeleton = () => {
             ))}
           </div>
         </div>
-      </main>
-      <Footer />
-    </div>
+    </main>
   );
 };
