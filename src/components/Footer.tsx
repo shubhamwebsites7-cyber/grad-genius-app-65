@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Youtube, Send, Instagram, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export const Footer: React.FC = () => {
@@ -10,8 +10,9 @@ export const Footer: React.FC = () => {
     {
       title: 'Company',
       links: [
-        { name: 'About', href: '/about' },
-        { name: 'Contact', href: '/contact' },
+        { name: 'Home', href: '/' },
+        { name: 'About Us', href: '/about' },
+        { name: 'Contact Us', href: '/contact' },
         { name: 'FAQ', href: '/faq' },
       ],
     },
@@ -20,13 +21,16 @@ export const Footer: React.FC = () => {
       links: [
         { name: 'Terms of Service', href: '/terms' },
         { name: 'Privacy Policy', href: '/privacy' },
+        { name: 'Refund & Cancellation Policy', href: '/refund' },
       ],
     },
     {
-      title: 'Support',
+      title: 'Social Media',
       links: [
-        { name: 'Help Center', href: '/help' },
-        { name: 'Community', href: '/community' },
+        { name: 'YouTube', href: 'https://youtube.com', icon: Youtube },
+        { name: 'Telegram', href: 'https://telegram.org', icon: Send },
+        { name: 'Instagram', href: 'https://instagram.com', icon: Instagram },
+        { name: 'WhatsApp', href: 'https://wa.me/919302418061', icon: MessageCircle },
       ],
     },
   ];
@@ -53,16 +57,33 @@ export const Footer: React.FC = () => {
             <div key={section.title}>
               <h3 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">{section.title}</h3>
               <ul className="space-y-3">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center group"
-                    >
-                      <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
-                    </Link>
-                  </li>
-                ))}
+                {section.links.map((link) => {
+                  const Icon = link.icon;
+                  const isExternal = link.href.startsWith('http');
+                  return (
+                    <li key={link.name}>
+                      {isExternal ? (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center group gap-2"
+                        >
+                          {Icon && <Icon className="h-4 w-4" />}
+                          <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
+                        </a>
+                      ) : (
+                        <Link
+                          to={link.href}
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center group gap-2"
+                        >
+                          {Icon && <Icon className="h-4 w-4" />}
+                          <span className="group-hover:translate-x-1 transition-transform">{link.name}</span>
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
