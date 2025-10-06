@@ -6,12 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle } from 'lucide-react';
+import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DashboardLoadingSkeleton } from '@/components/dashboard/DashboardLoadingSkeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
 
 interface Subject {
   name: string;
@@ -33,9 +45,11 @@ interface EnrolledExam {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrolledExams, setEnrolledExams] = useState<EnrolledExam[]>([]);
+  const [deletingExamId, setDeletingExamId] = useState<string | null>(null);
   const [overallProgress, setOverallProgress] = useState({
     percentage: 0,
     completedTopics: 0,
@@ -197,6 +211,46 @@ const Dashboard = () => {
     return 'text-destructive';
   };
 
+  // Handle exam deletion
+  const handleDeleteExam = async (examId: string, examName: string) => {
+    try {
+      setDeletingExamId(examId);
+      
+      // Delete user enrollment
+      const { error: deleteError } = await supabase
+        .from('user_exam_enrollments')
+        .delete()
+        .eq('user_id', user!.id)
+        .eq('exam_id', examId);
+
+      if (deleteError) throw deleteError;
+
+      // Delete user progress
+      await supabase
+        .from('user_exam_progress')
+        .delete()
+        .eq('user_id', user!.id)
+        .eq('exam_id', examId);
+
+      toast({
+        title: "Exam removed",
+        description: `${examName} has been removed from your dashboard.`,
+      });
+
+      // Refresh dashboard data
+      await fetchDashboardData();
+    } catch (err: any) {
+      console.error('Error deleting exam:', err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to remove exam. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingExamId(null);
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -311,8 +365,8 @@ const Dashboard = () => {
                 {enrolledExams.map((exam) => (
                   <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
                     <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1">
                           <CardTitle className="text-xl group-hover:text-primary transition-colors">
                             {exam.name}
                           </CardTitle>
@@ -320,9 +374,41 @@ const Dashboard = () => {
                             {exam.completedTopics}/{exam.totalTopics} topics completed
                           </CardDescription>
                         </div>
-                        <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                          {exam.type}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
+                            {exam.type}
+                          </Badge>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                disabled={deletingExamId === exam.id}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remove this exam?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to remove <span className="font-semibold">{exam.name}</span> from your dashboard? 
+                                  This will delete all your progress data for this exam. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteExam(exam.id, exam.name)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Remove Exam
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </div>
                     </CardHeader>
                     
