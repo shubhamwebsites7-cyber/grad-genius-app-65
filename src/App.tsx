@@ -21,7 +21,7 @@ const SectionResources = lazy(() => import("./pages/SectionResources"));
 const AddExam = lazy(() => import("./pages/AddExam"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Pricing = lazy(() => import("./pages/Pricing"));
-import Feedback from "./pages/Feedback";
+const Feedback = lazy(() => import("./pages/Feedback"));
 const Support = lazy(() => import("./pages/Support"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
