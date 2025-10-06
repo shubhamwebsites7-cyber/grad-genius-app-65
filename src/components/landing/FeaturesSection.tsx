@@ -5,24 +5,24 @@ import { TrendingUp, Target, BarChart3, Crown } from 'lucide-react';
 export const FeaturesSection: React.FC = () => {
   const features = [
     {
-      icon: TrendingUp,
-      title: 'Progress Tracking',
-      description: 'Monitor your study progress across all subjects with detailed analytics and insights.',
-    },
-    {
       icon: Target,
-      title: 'Topic-wise Completion',
-      description: 'Track completion status for each topic and identify areas that need more attention.',
+      title: 'Syllabus-Based Tracking',
+      description: 'Complete exam syllabus with marks, subject, and topic-wise breakdown. Track every aspect of your preparation with precision.',
     },
     {
       icon: BarChart3,
-      title: 'Exam-wise Analytics',
-      description: 'Get comprehensive analytics for each exam with performance trends and predictions.',
+      title: 'Progress Analytics',
+      description: 'Comprehensive marks-wise and difficulty-wise progress tracking. Monitor your performance across easy, medium, and hard topics.',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Smart Filters & Voting',
+      description: 'Filter topics by difficulty level and vote on topic difficulty to help the community. Access rating-based filters for better preparation.',
     },
     {
       icon: Crown,
-      title: 'Free + Premium Plans',
-      description: 'Start with our free plan and upgrade to premium for advanced features and unlimited access.',
+      title: 'Free Resources & Leaderboard',
+      description: 'Access free resources for each subject with topic-based ratings. Compete on exam-specific leaderboards with enrolled students.',
     },
   ];
 

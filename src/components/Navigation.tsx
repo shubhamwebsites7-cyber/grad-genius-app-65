@@ -75,7 +75,7 @@ export const Navigation: React.FC = () => {
   // Desktop Navigation
   if (!isMobile) {
     return (
-      <header className="bg-background border-b border-border sticky top-0 z-50">
+      <header className="bg-background/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50 shadow-sm">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -227,7 +227,7 @@ export const Navigation: React.FC = () => {
   return (
     <>
       {/* Top Header for Mobile */}
-      <header className="bg-background border-b border-border sticky top-0 z-50">
+      <header className="bg-background/80 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50 shadow-sm">
         <div className="flex justify-between items-center h-16 px-4">
           <Link to="/" className="flex items-center space-x-2">
             <BookOpen className="h-6 w-6 text-primary" />
@@ -279,7 +279,7 @@ export const Navigation: React.FC = () => {
       </header>
 
       {/* Bottom Navigation for Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 shadow-lg">
         <nav className="flex justify-around items-center h-16 px-2">
           {navItems.map((item) => (
             <Link

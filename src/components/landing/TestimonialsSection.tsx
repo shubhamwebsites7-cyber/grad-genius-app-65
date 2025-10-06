@@ -114,36 +114,36 @@ export const TestimonialsSection: React.FC = () => {
           {duplicatedTestimonials.map((testimonial, index) => (
             <Card 
               key={index} 
-              className="flex-shrink-0 w-[420px] border-border hover:shadow-lg transition-all duration-300 bg-card"
+              className="flex-shrink-0 w-[340px] sm:w-[400px] lg:w-[420px] border-border hover:shadow-lg transition-all duration-300 bg-card"
             >
-              <CardContent className="p-8 space-y-5">
+              <CardContent className="p-5 sm:p-8 space-y-4 sm:space-y-5">
                 {/* Rating and Result */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-warning fill-warning" />
+                      <Star key={i} className="h-4 w-4 sm:h-5 sm:w-5 text-warning fill-warning" />
                     ))}
                   </div>
-                  <span className="text-sm font-semibold text-success bg-success/10 px-3 py-1 rounded-full">
+                  <span className="text-xs sm:text-sm font-semibold text-success bg-success/10 px-2 sm:px-3 py-1 rounded-full">
                     {testimonial.result}
                   </span>
                 </div>
 
                 {/* Comment */}
-                <p className="text-muted-foreground leading-relaxed min-h-[140px]">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed min-h-[120px] sm:min-h-[140px]">
                   "{testimonial.comment}"
                 </p>
 
                 {/* Author info */}
-                <div className="flex items-center space-x-4 pt-5 border-t border-border">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
+                <div className="flex items-center space-x-3 sm:space-x-4 pt-4 sm:pt-5 border-t border-border">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
                     {testimonial.avatar}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-foreground text-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-foreground text-base sm:text-lg truncate">
                       {testimonial.name}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground truncate">
                       {testimonial.exam} • {testimonial.location}
                     </div>
                   </div>

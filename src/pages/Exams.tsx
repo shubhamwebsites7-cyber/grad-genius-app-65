@@ -8,6 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { AddExamModal } from '@/components/AddExamModal';
 import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -46,11 +54,13 @@ const Exams = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [visibleExams, setVisibleExams] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  const EXAMS_PER_PAGE = 8;
 
   useEffect(() => {
     fetchExams();
@@ -257,16 +267,23 @@ const Exams = () => {
     return filtered;
   }, [exams, searchQuery, selectedFilter]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredExams.length / EXAMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * EXAMS_PER_PAGE;
+  const endIndex = startIndex + EXAMS_PER_PAGE;
+  const paginatedExams = filteredExams.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedFilter]);
+
   const handleAddExam = (newExam: Omit<Exam, 'id'>) => {
     const examWithId = {
       ...newExam,
       id: newExam.name.toLowerCase().replace(/\s+/g, '-'),
     };
     setExams(prev => [...prev, examWithId]);
-  };
-
-  const loadMoreExams = () => {
-    setVisibleExams(prev => prev + 6);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -398,8 +415,8 @@ const Exams = () => {
             </div>
 
             {/* Exam Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {filteredExams.slice(0, visibleExams).map((exam) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {paginatedExams.map((exam) => (
                 <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -486,17 +503,55 @@ const Exams = () => {
               ))}
             </div>
 
-            {/* Load More Button */}
-            {visibleExams < filteredExams.length && (
-              <div className="text-center">
-                <Button 
-                  onClick={loadMoreExams}
-                  variant="outline"
-                  size="lg"
-                  className="px-8"
-                >
-                  Load More Exams
-                </Button>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <Pagination className="mt-8">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(p => p - 1);
+                      }}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) setCurrentPage(p => p + 1);
+                      }}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+
+            {/* Pagination Info */}
+            {filteredExams.length > 0 && (
+              <div className="text-center text-sm text-muted-foreground mt-4">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredExams.length)} of {filteredExams.length} exams
               </div>
             )}
 

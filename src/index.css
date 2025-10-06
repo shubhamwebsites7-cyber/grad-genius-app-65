@@ -167,4 +167,13 @@
   .hover-scale:hover {
     transform: scale(1.05);
   }
+
+  /* Glass effect utilities */
+  .glass {
+    @apply backdrop-blur-xl bg-background/80 border-border/50;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-md bg-card/90 border-border/50 shadow-lg;
+  }
 }
