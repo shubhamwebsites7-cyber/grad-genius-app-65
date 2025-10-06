@@ -125,6 +125,7 @@ const Feedback = () => {
         description: 'Please login to submit feedback.',
         variant: 'destructive',
       });
+      window.location.href = '/login';
       return;
     }
 
@@ -144,6 +145,8 @@ const Feedback = () => {
 
       const { error } = await supabase.from('user_feedback').insert({
         user_id: user.id,
+        user_email: user.email,
+        user_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
         helpfulness: answers[1],
         ease_of_use: answers[2],
         design_speed: answers[3],

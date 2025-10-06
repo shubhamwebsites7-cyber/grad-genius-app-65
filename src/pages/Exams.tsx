@@ -507,8 +507,22 @@ const Exams = () => {
                           )}
                         </Button>
                       )}
-                      <Button asChild variant="outline">
-                        <Link to={`/exam/${exam.id}`}>View Details</Link>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          if (!user) {
+                            toast({
+                              title: 'Login Required',
+                              description: 'Please login to view exam details.',
+                              variant: 'destructive'
+                            });
+                            window.location.href = '/login';
+                          } else {
+                            window.location.href = `/exam/${exam.id}`;
+                          }
+                        }}
+                      >
+                        View Details
                       </Button>
                     </div>
                   </CardContent>
