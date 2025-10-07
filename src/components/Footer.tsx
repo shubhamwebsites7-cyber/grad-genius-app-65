@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
           </div>
 
           {/* Company and Legal in one row on mobile */}
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-4 md:gap-8">
             {footerLinks.slice(0, 2).map((section) => (
               <div key={section.title}>
                 <h3 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">{section.title}</h3>
