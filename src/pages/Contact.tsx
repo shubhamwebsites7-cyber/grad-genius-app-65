@@ -156,15 +156,14 @@ const Contact = () => {
                     <p className="text-sm text-muted-foreground mt-2">
                       We typically respond within 24 hours.
                     </p>
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Legal Entity:</span> Shubham Choudhary
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
-            </div>
-
-            <div className="mt-8 pt-8 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center">
-                <span className="font-medium text-foreground">Legal Entity:</span> Shubham Choudhary
-              </p>
             </div>
           </div>
         </main>
