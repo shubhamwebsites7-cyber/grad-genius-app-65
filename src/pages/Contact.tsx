@@ -148,6 +148,12 @@ const Contact = () => {
                 </Card>
               </div>
             </div>
+
+            <div className="mt-8 pt-8 border-t border-border">
+              <p className="text-sm text-muted-foreground text-center">
+                <span className="font-medium text-foreground">Legal Entity:</span> Shubham Choudhary
+              </p>
+            </div>
           </div>
         </main>
 
