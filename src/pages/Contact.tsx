@@ -122,10 +122,22 @@ const Contact = () => {
                       Phone/WhatsApp
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <a href="tel:+919302418061" className="text-primary hover:underline">
-                      +91 9302418061
-                    </a>
+                  <CardContent className="space-y-2">
+                    <div>
+                      <a href="tel:+919302418061" className="text-primary hover:underline">
+                        +91 9302418061
+                      </a>
+                    </div>
+                    <div>
+                      <a 
+                        href="https://wa.me/919302418061" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Chat on WhatsApp →
+                      </a>
+                    </div>
                   </CardContent>
                 </Card>
 
