@@ -37,7 +37,7 @@ export const HeroSection: React.FC = () => {
                 </span>
               </h1>
               <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
-                Track, analyze, and excel in IBPS, NEET, JEE, SSC, UPSC & competitive exams with intelligent progress tracking and personalized insights.
+                Track your progress subject-wise by topics and overall performance based on the complete syllabus — for all exams, including competitive, job, and entrance exams.
               </p>
             </div>
 
