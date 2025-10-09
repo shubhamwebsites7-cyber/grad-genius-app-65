@@ -15,11 +15,18 @@ interface Resource {
   title: string;
   description: string | null;
   url: string;
-  type: string;
-  status: string;
-  submitted_by: string | null;
+  resource_type: string;
+  admin_approved: boolean;
+  is_active: boolean;
+  contributed_by_user_id: string | null;
   created_at: string;
   avg_rating?: number;
+  topics?: {
+    name: string;
+  };
+  users?: {
+    full_name: string;
+  };
 }
 
 export const EnhancedResourcesSection = () => {
@@ -38,16 +45,21 @@ export const EnhancedResourcesSection = () => {
         .from('topic_resources')
         .select(`
           *,
-          resource_ratings(rating)
+          resource_ratings(rating),
+          topics(name),
+          users(full_name)
         `)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
+      if (filter === 'pending') {
+        query = query.eq('admin_approved', false);
+      } else if (filter === 'approved') {
+        query = query.eq('admin_approved', true);
       }
 
       if (typeFilter !== 'all') {
-        query = query.eq('type', typeFilter);
+        query = query.eq('resource_type', typeFilter);
       }
 
       const { data, error } = await query;
@@ -89,7 +101,7 @@ export const EnhancedResourcesSection = () => {
     try {
       const { error } = await (supabase
         .from('topic_resources')
-        .update as any)({ status: 'approved' })
+        .update as any)({ admin_approved: true })
         .eq('id', id);
 
       if (error) throw error;
@@ -114,7 +126,7 @@ export const EnhancedResourcesSection = () => {
     try {
       const { error } = await (supabase
         .from('topic_resources')
-        .delete as any)()
+        .update as any)({ is_active: false })
         .eq('id', id);
 
       if (error) throw error;
@@ -149,17 +161,12 @@ export const EnhancedResourcesSection = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
-      case 'approved':
-        return <Badge variant="default" className="bg-green-600">Approved</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+  const getStatusBadge = (adminApproved: boolean) => {
+    return adminApproved ? (
+      <Badge variant="default" className="bg-green-600">Approved</Badge>
+    ) : (
+      <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-600">Pending</Badge>
+    );
   };
 
   const renderRating = (rating: number) => {
@@ -201,7 +208,6 @@ export const EnhancedResourcesSection = () => {
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
 
@@ -234,18 +240,28 @@ export const EnhancedResourcesSection = () => {
               <Card key={resource.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div className="space-y-2">
+                     <div className="space-y-2">
                       <CardTitle className="flex items-center gap-2">
-                        {getTypeIcon(resource.type)}
+                        {getTypeIcon(resource.resource_type)}
                         {resource.title}
                       </CardTitle>
                       <div className="flex gap-2">
-                        <Badge variant="secondary">{resource.type}</Badge>
-                        {getStatusBadge(resource.status)}
+                        <Badge variant="secondary">{resource.resource_type}</Badge>
+                        {getStatusBadge(resource.admin_approved)}
                         {!isValidUrl && (
                           <Badge variant="destructive">Invalid URL</Badge>
                         )}
                       </div>
+                      {resource.topics && (
+                        <p className="text-sm text-muted-foreground">
+                          Topic: {resource.topics.name}
+                        </p>
+                      )}
+                      {resource.users && (
+                        <p className="text-sm text-muted-foreground">
+                          Submitted by: {resource.users.full_name}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-4">
                       {renderRating(resource.avg_rating || 0)}
@@ -276,7 +292,7 @@ export const EnhancedResourcesSection = () => {
                     )}
                   </div>
 
-                  {resource.status === 'pending' && (
+                  {!resource.admin_approved && (
                     <div className="flex gap-2">
                       <Button
                         onClick={() => handleApprove(resource.id)}
