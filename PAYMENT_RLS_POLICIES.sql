@@ -6,6 +6,16 @@ ALTER TABLE plan_pricing ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own payments" ON payments;
+DROP POLICY IF EXISTS "Service role can insert payments" ON payments;
+DROP POLICY IF EXISTS "Service role can update payments" ON payments;
+DROP POLICY IF EXISTS "Anyone can view active pricing" ON plan_pricing;
+DROP POLICY IF EXISTS "Anyone can view active plans" ON subscription_plans;
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON user_subscriptions;
+DROP POLICY IF EXISTS "Service role can insert subscriptions" ON user_subscriptions;
+DROP POLICY IF EXISTS "Service role can update subscriptions" ON user_subscriptions;
+
 -- Payments table policies
 -- Users can view their own payments
 CREATE POLICY "Users can view own payments"
