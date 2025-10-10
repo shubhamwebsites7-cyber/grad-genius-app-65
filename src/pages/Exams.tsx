@@ -196,13 +196,43 @@ const Exams = () => {
         description: 'Please login to enroll in an exam.',
         variant: 'destructive'
       });
-      // Redirect to login page
       window.location.href = '/login';
       return;
     }
 
     try {
       setEnrolling(examId);
+
+      // Check user's subscription status
+      const { data: subscriptionData } = await supabase
+        .from('user_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      const hasActiveSubscription = !!subscriptionData;
+
+      // Check current enrollment count for free users
+      if (!hasActiveSubscription) {
+        const { count, error: enrollmentCountError } = await supabase
+          .from('user_exam_enrollments')
+          .select('exam_id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_active', true);
+
+        if (enrollmentCountError) throw enrollmentCountError;
+
+        if (count && count >= 1) {
+          toast({
+            title: 'Subscription Required',
+            description: 'Free users can only enroll in 1 exam. Upgrade to a premium plan to unlock unlimited exams.',
+            variant: 'destructive'
+          });
+          setEnrolling(null);
+          return;
+        }
+      }
 
       const { error } = await supabase
         .from('user_exam_enrollments')

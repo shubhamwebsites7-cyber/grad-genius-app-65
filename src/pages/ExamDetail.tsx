@@ -134,6 +134,19 @@ const ExamDetail = () => {
 
       if (topicsError) throw topicsError;
 
+      // Check user's subscription status
+      let hasActiveSubscription = false;
+      if (user) {
+        const { data: subscriptionData } = await supabase
+          .from('user_subscriptions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+        
+        hasActiveSubscription = !!subscriptionData;
+      }
+
       // Fetch user progress
       let completedIds = new Set<string>();
       if (user) {
@@ -212,13 +225,10 @@ const ExamDetail = () => {
       setUserTopicRatings(userRatingsMap);
 
       // Build exam structure
-      const subjects: Subject[] = (subjectsData || []).map((subject: any) => ({
-        id: subject.id,
-        name: subject.name,
-        marks: subject.total_marks || undefined,
-        topics: (topicsData || [])
+      const subjects: Subject[] = (subjectsData || []).map((subject: any) => {
+        const subjectTopics = (topicsData || [])
           .filter((t: any) => t.subject_id === subject.id)
-          .map((topic: any) => {
+          .map((topic: any, index: number) => {
             const voteCount = voteCountMap[topic.id] || 0;
             const baseDifficulty = topic.difficulty || 'Medium';
             const voteDifficulty = diffMap[topic.id];
@@ -228,19 +238,29 @@ const ExamDetail = () => {
               ? voteDifficulty 
               : baseDifficulty;
             
+            // Free users: only first 3 topics are accessible per subject
+            const isAccessible = hasActiveSubscription || index < 3;
+            
             return {
               id: topic.id,
               name: topic.name,
               marks: topic.marks || undefined,
               difficulty: displayDifficulty as 'Easy' | 'Medium' | 'Hard',
               isCompleted: completedIds.has(topic.id),
-              isAccessible: true,
+              isAccessible,
               userDifficultyRating: userRatingsMap[topic.id] as 'Easy' | 'Medium' | 'Hard' | undefined,
               voteCount,
               voteDifficulty: voteDifficulty as 'Easy' | 'Medium' | 'Hard' | undefined
             };
-          })
-      }));
+          });
+
+        return {
+          id: subject.id,
+          name: subject.name,
+          marks: subject.total_marks || undefined,
+          topics: subjectTopics
+        };
+      });
 
       const allTopics = subjects.flatMap(s => s.topics);
       const completedCount = allTopics.filter(t => t.isCompleted).length;
@@ -1011,17 +1031,17 @@ const ExamDetail = () => {
                               const isAccessible = topic.isAccessible || index < 3;
                               
                               return (
-                                <div
+                                 <div
                                   key={topic.id}
                                   className={`p-4 rounded-lg border-2 transition-all ${
-                                    isAccessible
+                                    topic.isAccessible
                                       ? 'border-border bg-card hover:shadow-md'
-                                      : 'border-muted bg-muted/20 opacity-60'
+                                      : 'border-muted bg-muted/20 opacity-70'
                                   }`}
                                 >
                                   {/* Mobile Layout */}
                                   <div className="block sm:hidden">
-                                    {isAccessible ? (
+                                    {topic.isAccessible ? (
                                       <>
                                          {/* First row: Checkbox + Topic name + Marks */}
                                         <div className="flex items-center gap-3 mb-3">
@@ -1114,18 +1134,18 @@ const ExamDetail = () => {
                                     )}
                                   </div>
                                   
-                                  {/* Desktop Layout */}
-                                  <div className="hidden sm:block">
-                                     <div className="flex items-center justify-between">
-                                      <div className={`flex items-center gap-3 ${!isAccessible ? 'blur-sm' : ''}`}>
-                                        {isAccessible && (
-                                          <Checkbox
-                                            checked={topic.isCompleted}
-                                            onCheckedChange={() => handleTopicToggle(topic.id)}
-                                            className="h-5 w-5"
-                                          />
-                                        )}
-                                         <div>
+                                   {/* Desktop Layout */}
+                                   <div className="hidden sm:block">
+                                      <div className="flex items-center justify-between">
+                                       <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'blur-sm' : ''}`}>
+                                         {topic.isAccessible && (
+                                           <Checkbox
+                                             checked={topic.isCompleted}
+                                             onCheckedChange={() => handleTopicToggle(topic.id)}
+                                             className="h-5 w-5"
+                                           />
+                                         )}
+                                          <div>
                                          <h4 className="font-medium text-foreground flex items-center gap-2">
                                            {topic.name}
                                            {topic.marks && (
@@ -1199,12 +1219,17 @@ const ExamDetail = () => {
                                        {isAccessible ? (
                                           <>
                                           </>
-                                        ) : (
-                                         <div className="flex items-center gap-2 text-muted-foreground">
-                                           <Lock className="h-4 w-4" />
-                                           <span className="text-xs">Locked</span>
-                                         </div>
-                                       )}
+                                      ) : (
+                                        <div className="space-y-2">
+                                          <div className="flex items-center gap-2 text-muted-foreground">
+                                            <Lock className="h-4 w-4" />
+                                            <h4 className="font-medium blur-sm">{topic.name}</h4>
+                                          </div>
+                                          <div className="text-xs text-muted-foreground bg-warning/10 p-2 rounded border border-warning/20">
+                                            🔒 Upgrade to unlock all topics. Free users get 3 topics per subject.
+                                          </div>
+                                        </div>
+                                      )}
                                      </div>
                                    </div>
                                    </div>

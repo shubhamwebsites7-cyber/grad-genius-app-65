@@ -113,7 +113,9 @@ const Pricing = () => {
           console.log('Using default country (India)');
         }
         
-        setUserCountry(detectedCountry);
+        // India gets INR, all others get USD
+        const targetCountry = detectedCountry === 'IN' ? 'IN' : 'US';
+        setUserCountry(targetCountry);
 
         // Fetch subscription plans
         const { data: plansData, error: plansError } = await supabase
@@ -130,32 +132,18 @@ const Pricing = () => {
           return;
         }
 
-        // Fetch pricing for user's country
+        // Fetch pricing for target country (IN or US only)
         const planIds = plansData.map((p: any) => p.id);
         const { data: pricingData, error: pricingError } = await supabase
           .from('plan_pricing')
           .select('*')
           .in('plan_id', planIds)
-          .eq('country_code', detectedCountry)
+          .eq('country_code', targetCountry)
           .eq('is_active', true);
 
         if (pricingError) throw pricingError;
 
-        // If no pricing for user's country, try fallback to US
         let finalPricing = pricingData;
-        if (!pricingData || pricingData.length === 0) {
-          const { data: fallbackPricing, error: fallbackError } = await supabase
-            .from('plan_pricing')
-            .select('*')
-            .in('plan_id', planIds)
-            .eq('country_code', 'US')
-            .eq('is_active', true);
-
-          if (!fallbackError && fallbackPricing && fallbackPricing.length > 0) {
-            finalPricing = fallbackPricing;
-            setUserCountry('US');
-          }
-        }
 
         // Combine plans with their pricing
         const plansWithPricing: SubscriptionPlan[] = plansData.map((plan: any) => {
