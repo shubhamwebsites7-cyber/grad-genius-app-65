@@ -49,6 +49,12 @@ CREATE TRIGGER update_user_subscriptions_updated_at
 -- RLS POLICIES FOR SUBSCRIPTION_PLANS
 -- ============================================
 
+-- Drop existing policies first
+DROP POLICY IF EXISTS "Anyone can view active subscription plans" ON public.subscription_plans;
+DROP POLICY IF EXISTS "Admins can insert subscription plans" ON public.subscription_plans;
+DROP POLICY IF EXISTS "Admins can update subscription plans" ON public.subscription_plans;
+DROP POLICY IF EXISTS "Admins can delete subscription plans" ON public.subscription_plans;
+
 -- Public can view active plans
 CREATE POLICY "Anyone can view active subscription plans"
   ON public.subscription_plans
@@ -78,6 +84,12 @@ CREATE POLICY "Admins can delete subscription plans"
 -- RLS POLICIES FOR PLAN_PRICING
 -- ============================================
 
+-- Drop existing policies first
+DROP POLICY IF EXISTS "Anyone can view active plan pricing" ON public.plan_pricing;
+DROP POLICY IF EXISTS "Admins can insert plan pricing" ON public.plan_pricing;
+DROP POLICY IF EXISTS "Admins can update plan pricing" ON public.plan_pricing;
+DROP POLICY IF EXISTS "Admins can delete plan pricing" ON public.plan_pricing;
+
 -- Public can view active pricing
 CREATE POLICY "Anyone can view active plan pricing"
   ON public.plan_pricing
@@ -106,6 +118,14 @@ CREATE POLICY "Admins can delete plan pricing"
 -- ============================================
 -- RLS POLICIES FOR USER_SUBSCRIPTIONS
 -- ============================================
+
+-- Drop existing policies first
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.user_subscriptions;
+DROP POLICY IF EXISTS "Admins can view all subscriptions" ON public.user_subscriptions;
+DROP POLICY IF EXISTS "Admins can insert subscriptions" ON public.user_subscriptions;
+DROP POLICY IF EXISTS "Users can update own subscription settings" ON public.user_subscriptions;
+DROP POLICY IF EXISTS "Admins can update all subscriptions" ON public.user_subscriptions;
+DROP POLICY IF EXISTS "Admins can delete subscriptions" ON public.user_subscriptions;
 
 -- Users can view their own subscriptions
 CREATE POLICY "Users can view own subscriptions"
