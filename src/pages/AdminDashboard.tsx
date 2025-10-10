@@ -41,6 +41,7 @@ import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
 import { ExamRequestsSection } from "@/components/admin/ExamRequestsSection";
 import { FeedbackSection } from "@/components/admin/FeedbackSection";
 import { EnhancedResourcesSection } from "@/components/admin/EnhancedResourcesSection";
+import { PricingManagementSection } from "@/components/admin/PricingManagementSection";
 
 interface Stats {
   totalUsers: number;
@@ -292,6 +293,7 @@ const AdminDashboard = () => {
     { id: 'exam-requests', label: 'Exam Requests', icon: ClipboardList },
     { id: 'resources', label: 'Resources', icon: FileText },
     { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+    { id: 'pricing', label: 'Pricing Management', icon: DollarSign },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -533,6 +535,9 @@ const AdminDashboard = () => {
 
       case 'resources':
         return <EnhancedResourcesSection />;
+
+      case 'pricing':
+        return <PricingManagementSection />;
 
       case 'subscriptions':
         return (
