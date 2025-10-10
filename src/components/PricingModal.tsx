@@ -145,6 +145,13 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
     try {
       setProcessingPayment(plan.id);
 
+      // Check if Cashfree SDK is loaded
+      if (!(window as any).Cashfree) {
+        throw new Error('Payment system not loaded. Please refresh the page.');
+      }
+
+      console.log('Creating payment order for plan:', plan.id);
+
       // Create payment session via edge function
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
@@ -155,28 +162,61 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
         }
       });
 
-      if (error) throw error;
+      console.log('Payment order response:', { data, error });
 
-      if (data.payment_session_id && data.order_id) {
-        // Redirect to Cashfree payment page
-        const cashfree = (window as any).Cashfree({
-          mode: 'production' // Use 'sandbox' for testing
-        });
-
-        cashfree.checkout({
-          paymentSessionId: data.payment_session_id,
-          redirectTarget: '_self'
-        });
-      } else {
-        throw new Error('Failed to create payment session');
+      if (error) {
+        throw new Error(error.message || 'Failed to create payment order');
       }
+
+      if (!data) {
+        throw new Error('No response from payment service');
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.payment_session_id || !data.order_id) {
+        throw new Error('Invalid payment session data received');
+      }
+
+      console.log('Initializing Cashfree checkout with session:', data.payment_session_id);
+
+      // Initialize Cashfree
+      const cashfree = await (window as any).Cashfree({
+        mode: 'production' // Use 'sandbox' for testing
+      });
+
+      // Open checkout
+      const checkoutOptions = {
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: '_self',
+        returnUrl: `${window.location.origin}/profile?payment_status=success`
+      };
+
+      console.log('Opening Cashfree checkout with options:', checkoutOptions);
+
+      await cashfree.checkout(checkoutOptions);
+
     } catch (err: any) {
-      console.error('Error creating payment:', err);
+      console.error('Error in payment flow:', err);
+      
+      let errorMessage = 'Failed to initiate payment. Please try again.';
+      
+      if (err.message.includes('not loaded')) {
+        errorMessage = 'Payment system loading. Please refresh and try again.';
+      } else if (err.message.includes('not configured')) {
+        errorMessage = 'Payment system is being set up. Please contact support.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
       toast({
         title: 'Payment Failed',
-        description: err.message || 'Failed to initiate payment. Please try again.',
+        description: errorMessage,
         variant: 'destructive'
       });
+      
       setProcessingPayment(null);
     }
   };
