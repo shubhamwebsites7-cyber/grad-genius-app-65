@@ -154,11 +154,7 @@ CREATE POLICY "Users can update own subscription settings"
   FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
-  WITH CHECK (
-    user_id = auth.uid() AND 
-    -- Only allow updating these fields
-    (OLD.id = NEW.id AND OLD.user_id = NEW.user_id AND OLD.plan_id = NEW.plan_id)
-  );
+  WITH CHECK (user_id = auth.uid());
 
 -- Admins can update all subscriptions
 CREATE POLICY "Admins can update all subscriptions"
@@ -173,6 +169,40 @@ CREATE POLICY "Admins can delete subscriptions"
   FOR DELETE
   TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
+
+-- ============================================
+-- COLUMN-LEVEL RESTRICTION: user_subscriptions
+-- Prevent non-admins from changing restricted columns
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.enforce_user_subscription_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NOT public.has_role(auth.uid(), 'admin') THEN
+    -- Users may only toggle auto_renew
+    IF NEW.user_id <> OLD.user_id
+       OR NEW.plan_id <> OLD.plan_id
+       OR NEW.status <> OLD.status
+       OR NEW.starts_at <> OLD.starts_at
+       OR NEW.expires_at <> OLD.expires_at
+       OR COALESCE(NEW.payment_method,'') <> COALESCE(OLD.payment_method,'')
+       OR COALESCE(NEW.external_subscription_id,'') <> COALESCE(OLD.external_subscription_id,'')
+    THEN
+      RAISE EXCEPTION 'You can only update auto_renew on your subscription.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_enforce_user_subscription_update ON public.user_subscriptions;
+
+CREATE TRIGGER trg_enforce_user_subscription_update
+BEFORE UPDATE ON public.user_subscriptions
+FOR EACH ROW
+EXECUTE FUNCTION public.enforce_user_subscription_update();
 
 -- ============================================
 -- HELPER FUNCTION: Get User's Active Subscription
