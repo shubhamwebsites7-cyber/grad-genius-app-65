@@ -28,6 +28,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ExamDetailLoadingSkeleton } from '@/components/exam-detail/LoadingSkeleton';
+import { PricingModal } from '@/components/PricingModal';
 
 interface Topic {
   id: string;
@@ -77,6 +78,8 @@ const ExamDetail = () => {
   const [enrolling, setEnrolling] = useState(false);
   const [topicVoteCounts, setTopicVoteCounts] = useState<{ [key: string]: number }>({});
   const [userTopicRatings, setUserTopicRatings] = useState<{ [key: string]: string }>({});
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [pricingModalTrigger, setPricingModalTrigger] = useState<'enrollment' | 'topic_access'>('enrollment');
 
   useEffect(() => {
     if (examId) {
@@ -462,7 +465,6 @@ const ExamDetail = () => {
         description: 'Please login to enroll in the exam.',
         variant: 'destructive'
       });
-      // Redirect to login page
       window.location.href = '/login';
       return;
     }
@@ -472,6 +474,34 @@ const ExamDetail = () => {
     try {
       setEnrolling(true);
 
+      // Check if user has active subscription
+      const { data: subscriptionData } = await supabase
+        .from('user_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      
+      const hasActiveSubscription = !!subscriptionData;
+
+      // If no active subscription, check how many exams user has enrolled
+      if (!hasActiveSubscription) {
+        const { data: enrollmentsData } = await supabase
+          .from('user_exam_enrollments')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_active', true);
+        
+        // Free users can only enroll in 1 exam
+        if (enrollmentsData && enrollmentsData.length >= 1) {
+          setEnrolling(false);
+          setPricingModalTrigger('enrollment');
+          setShowPricingModal(true);
+          return;
+        }
+      }
+
+      // Proceed with enrollment
       const { error } = await supabase
         .from('user_exam_enrollments')
         .insert({
@@ -498,6 +528,11 @@ const ExamDetail = () => {
     } finally {
       setEnrolling(false);
     }
+  };
+
+  const handleLockedTopicClick = () => {
+    setPricingModalTrigger('topic_access');
+    setShowPricingModal(true);
   };
 
 
@@ -1120,15 +1155,18 @@ const ExamDetail = () => {
                                             </DropdownMenu>
                                           </div>
                                         </>
-                                        ) : (
-                                      <div className="flex items-center gap-3">
+                                         ) : (
+                                      <div 
+                                        className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
+                                        onClick={handleLockedTopicClick}
+                                      >
                                         <div className="w-5 h-5" />
                                         <div className="flex-1 blur-sm">
                                           <h4 className="font-medium text-foreground">{topic.name}</h4>
                                         </div>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                        <div className="flex items-center gap-2 text-warning">
                                           <Lock className="h-4 w-4" />
-                                          <span className="text-xs">Locked</span>
+                                          <span className="text-xs font-medium">Unlock</span>
                                         </div>
                                       </div>
                                     )}
@@ -1219,14 +1257,18 @@ const ExamDetail = () => {
                                        {isAccessible ? (
                                           <>
                                           </>
-                                      ) : (
-                                        <div className="space-y-2">
+                                       ) : (
+                                        <div 
+                                          className="space-y-2 cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
+                                          onClick={handleLockedTopicClick}
+                                        >
                                           <div className="flex items-center gap-2 text-muted-foreground">
                                             <Lock className="h-4 w-4" />
                                             <h4 className="font-medium blur-sm">{topic.name}</h4>
                                           </div>
-                                          <div className="text-xs text-muted-foreground bg-warning/10 p-2 rounded border border-warning/20">
-                                            🔒 Upgrade to unlock all topics. Free users get 3 topics per subject.
+                                          <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
+                                            <Lock className="h-3 w-3" />
+                                            Click to upgrade and unlock all topics
                                           </div>
                                         </div>
                                       )}
@@ -1278,6 +1320,14 @@ const ExamDetail = () => {
         
         <Footer />
       </div>
+
+      {/* Pricing Modal */}
+      <PricingModal 
+        open={showPricingModal}
+        onOpenChange={setShowPricingModal}
+        trigger={pricingModalTrigger}
+        examName={exam?.name}
+      />
     </>
   );
 };
