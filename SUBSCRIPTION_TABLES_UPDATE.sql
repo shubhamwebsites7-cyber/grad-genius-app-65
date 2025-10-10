@@ -1,7 +1,8 @@
 -- ============================================
 -- SUBSCRIPTION TABLES UPDATE & SECURITY SETUP
 -- ============================================
--- Run these queries in order to fix foreign keys and add RLS policies
+-- IMPORTANT: Run CREATE_PROFILES_TABLE.sql FIRST!
+-- Then run these queries to fix foreign keys and add RLS policies
 
 -- Step 1: Fix user_subscriptions foreign key (if you have 'users' table, change to 'profiles')
 -- First, drop the existing incorrect foreign key
