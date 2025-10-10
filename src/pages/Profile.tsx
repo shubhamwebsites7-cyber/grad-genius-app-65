@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useSearchParams } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +14,7 @@ import { ProfileLoadingSkeleton } from '@/components/profile/ProfileLoadingSkele
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -39,6 +41,27 @@ const Profile = () => {
       fetchSubscriptionData();
     }
   }, [user]);
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment_status');
+    if (paymentStatus === 'success') {
+      toast({
+        title: "Payment Successful! 🎉",
+        description: "Your subscription has been activated. Enjoy premium features!",
+      });
+      // Remove query parameter
+      setSearchParams({});
+      // Refresh subscription data
+      fetchSubscriptionData();
+    } else if (paymentStatus === 'failed') {
+      toast({
+        title: "Payment Failed",
+        description: "Your payment could not be processed. Please try again.",
+        variant: "destructive",
+      });
+      setSearchParams({});
+    }
+  }, [searchParams]);
 
   const fetchProfileData = async () => {
     try {

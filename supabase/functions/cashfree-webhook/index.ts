@@ -78,10 +78,26 @@ serve(async (req) => {
         const expiresAt = new Date(now)
         expiresAt.setMonth(expiresAt.getMonth() + plan.duration_months)
 
-        // Create or update subscription
+        // Check for existing active subscription
+        const { data: existingSubscription } = await supabaseClient
+          .from('user_subscriptions')
+          .select('*')
+          .eq('user_id', payment.user_id)
+          .eq('status', 'active')
+          .single()
+
+        if (existingSubscription) {
+          // Expire the old subscription and create new one
+          await supabaseClient
+            .from('user_subscriptions')
+            .update({ status: 'expired', updated_at: now.toISOString() })
+            .eq('id', existingSubscription.id)
+        }
+
+        // Create new subscription
         const { error: subscriptionError } = await supabaseClient
           .from('user_subscriptions')
-          .upsert({
+          .insert({
             user_id: payment.user_id,
             plan_id: payment.plan_id,
             status: 'active',
@@ -89,10 +105,7 @@ serve(async (req) => {
             expires_at: expiresAt.toISOString(),
             payment_method: 'cashfree',
             external_subscription_id: order_id,
-            auto_renew: false,
-            updated_at: now.toISOString()
-          }, {
-            onConflict: 'user_id'
+            auto_renew: false
           })
 
         if (subscriptionError) {
