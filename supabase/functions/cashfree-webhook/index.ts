@@ -3,10 +3,47 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp',
 }
 
 console.info('cashfree-webhook initialized');
+
+// Helper function to verify Cashfree webhook signature using Web Crypto API
+async function verifyCashfreeSignature(
+  payload: string,
+  signature: string,
+  timestamp: string,
+  secretKey: string
+): Promise<boolean> {
+  try {
+    // Cashfree signature format: timestamp.payload
+    const signedPayload = `${timestamp}.${payload}`;
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secretKey);
+    const messageData = encoder.encode(signedPayload);
+
+    // Import key for HMAC
+    const key = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    // Generate signature
+    const signatureBuffer = await crypto.subtle.sign('HMAC', key, messageData);
+    
+    // Convert to base64
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const expectedSignature = btoa(String.fromCharCode(...signatureArray));
+    
+    return signature === expectedSignature;
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    return false;
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -38,10 +75,13 @@ serve(async (req) => {
       });
     }
 
+    // Get raw body for signature verification
+    const rawBody = await req.text();
+    
     // Parse webhook payload
     let webhookData;
     try {
-      webhookData = await req.json();
+      webhookData = JSON.parse(rawBody);
     } catch (err) {
       console.error('Failed to parse JSON payload:', err);
       return new Response(JSON.stringify({
@@ -52,7 +92,30 @@ serve(async (req) => {
       });
     }
 
-    console.log('Cashfree webhook received:', JSON.stringify(webhookData));
+    // Optional: Verify Cashfree webhook signature for production security
+    const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
+    if (CASHFREE_SECRET_KEY) {
+      const signature = req.headers.get('x-webhook-signature');
+      const timestamp = req.headers.get('x-webhook-timestamp');
+      
+      if (signature && timestamp) {
+        const isValid = await verifyCashfreeSignature(rawBody, signature, timestamp, CASHFREE_SECRET_KEY);
+        if (!isValid) {
+          console.error('Invalid webhook signature');
+          return new Response(JSON.stringify({
+            error: 'Invalid signature'
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        console.log('✅ Webhook signature verified');
+      } else {
+        console.warn('⚠️ Signature headers missing, skipping verification');
+      }
+    }
+
+    console.log('Cashfree webhook received for order:', webhookData?.data?.order?.order_id);
 
     // Validate payload structure
     if (!webhookData || typeof webhookData !== 'object') {
@@ -65,8 +128,20 @@ serve(async (req) => {
       });
     }
 
-    // Extract order details (Cashfree sends data in data object)
-    const { order_id, order_status } = webhookData?.data || webhookData;
+    // Extract order details (Cashfree sends data in nested structure)
+    const orderData = webhookData?.data?.order || webhookData?.data || webhookData;
+    const paymentData = webhookData?.data?.payment || {};
+    const customerDetails = webhookData?.data?.customer_details || orderData?.customer_details || {};
+    
+    const { 
+      order_id, 
+      order_status,
+      order_amount,
+      order_currency 
+    } = orderData;
+    
+    const customer_phone = customerDetails?.customer_phone || null;
+    const customer_email = customerDetails?.customer_email || null;
 
     if (!order_id) {
       console.error('Missing order_id in webhook data');
@@ -123,13 +198,27 @@ serve(async (req) => {
 
     console.log(`Updating payment status from ${payment.payment_status} to ${newStatus}`);
 
+    // Prepare update data
+    const updateData: any = {
+      payment_status: newStatus,
+      updated_at: new Date().toISOString()
+    };
+
+    // Add customer phone if available and not already stored
+    if (customer_phone && !payment.customer_phone) {
+      updateData.customer_phone = customer_phone;
+      console.log(`Storing customer phone: ${customer_phone.substring(0, 4)}****`);
+    }
+
+    // Add payment metadata if available
+    if (paymentData.payment_method) {
+      updateData.payment_method = paymentData.payment_method;
+    }
+
     // Update payment record
     const { error: updateError } = await supabaseClient
       .from('payments')
-      .update({
-        payment_status: newStatus,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', payment.id);
 
     if (updateError) {
