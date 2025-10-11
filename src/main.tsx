@@ -6,7 +6,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="examtrakr-theme">
+    <ThemeProvider defaultTheme="light" storageKey="examtrakr-theme">
       <App />
     </ThemeProvider>
   </React.StrictMode>
