@@ -20,7 +20,6 @@ const ExamDetail = lazy(() => import("./pages/ExamDetail"));
 const SectionResources = lazy(() => import("./pages/SectionResources"));
 const AddExam = lazy(() => import("./pages/AddExam"));
 const Profile = lazy(() => import("./pages/Profile"));
-const Pricing = lazy(() => import("./pages/Pricing"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Support = lazy(() => import("./pages/Support"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
@@ -63,7 +62,6 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/pricing" element={<Pricing />} />
                 <Route path="/feedback" element={<Feedback />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

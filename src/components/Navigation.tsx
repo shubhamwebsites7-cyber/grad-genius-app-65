@@ -67,7 +67,6 @@ export const Navigation: React.FC = () => {
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Exams', href: '/exams', icon: BookOpen },
     { name: 'Profile', href: '/profile', icon: User },
-    { name: 'Pricing', href: '/pricing', icon: CreditCard },
     { name: 'Feedback', href: '/feedback', icon: MessageSquare },
   ];
 
