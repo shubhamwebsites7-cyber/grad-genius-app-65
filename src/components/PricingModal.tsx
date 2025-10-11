@@ -9,7 +9,9 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Check, AlertCircle, Loader2, Phone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,6 +54,8 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
   const [error, setError] = useState<string | null>(null);
   const [userCountry, setUserCountry] = useState<string>('IN');
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [phoneError, setPhoneError] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -142,6 +146,14 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       return;
     }
 
+    // Validate phone number
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setPhoneError('Please enter a valid 10-digit phone number');
+      return;
+    }
+    setPhoneError('');
+
     try {
       setProcessingPayment(plan.id);
 
@@ -158,7 +170,8 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           plan_id: plan.id,
           pricing_id: plan.pricing.id,
           amount: plan.pricing.price,
-          currency: plan.pricing.currency
+          currency: plan.pricing.currency,
+          phone_number: cleanPhone
         }
       });
 
@@ -276,6 +289,33 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           </Alert>
         ) : (
           <>
+            {/* Phone Number Input */}
+            <div className="mb-6 space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                Phone Number (Required for payment)
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Enter 10-digit mobile number"
+                value={phoneNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setPhoneNumber(value);
+                  if (phoneError) setPhoneError('');
+                }}
+                className={phoneError ? 'border-destructive' : ''}
+                maxLength={10}
+              />
+              {phoneError && (
+                <p className="text-sm text-destructive">{phoneError}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                This number will be used for payment verification and order updates
+              </p>
+            </div>
+
             {/* Pricing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
               {plans.map((plan) => (

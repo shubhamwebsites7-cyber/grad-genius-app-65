@@ -34,10 +34,14 @@ serve(async (req) => {
     }
 
     // Get request body
-    const { plan_id, pricing_id, amount, currency } = await req.json()
+    const { plan_id, pricing_id, amount, currency, phone_number } = await req.json()
 
     if (!plan_id || !pricing_id || !amount || !currency) {
       throw new Error('Missing required parameters')
+    }
+
+    if (!phone_number || !/^\d{10}$/.test(phone_number)) {
+      throw new Error('Valid 10-digit phone number is required')
     }
 
     // Get user profile for customer details
@@ -69,7 +73,7 @@ serve(async (req) => {
       customer_details: {
         customer_id: user.id,
         customer_email: user.email || profile?.email || '',
-        customer_phone: '9999999999', // You may want to collect this from user
+        customer_phone: phone_number,
         customer_name: profile?.full_name || 'User'
       },
       order_meta: {
@@ -113,6 +117,7 @@ serve(async (req) => {
         payment_method: 'cashfree',
         payment_status: 'pending',
         external_payment_id: orderId,
+        phone_number: phone_number,
         created_at: new Date().toISOString()
       })
 
