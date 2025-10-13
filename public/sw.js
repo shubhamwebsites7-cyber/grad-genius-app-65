@@ -1,4 +1,4 @@
-const CACHE_NAME = 'examtrakr-v5';
+const CACHE_NAME = 'examtrakr-v6';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -41,6 +41,21 @@ function shouldCache(url, request) {
   
   // Never cache requests with authentication headers
   if (request.headers.get('authorization') || request.headers.get('apikey')) {
+    return false;
+  }
+  
+  // Never cache JavaScript modules from assets (they can have MIME type issues)
+  if (url.pathname.includes('/assets/') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs'))) {
+    return false;
+  }
+  
+  // Never cache main entry point files
+  if (url.pathname.includes('index-') && url.pathname.endsWith('.js')) {
+    return false;
+  }
+  
+  // Never cache vendor files
+  if (url.pathname.includes('vendor-') && url.pathname.endsWith('.js')) {
     return false;
   }
   

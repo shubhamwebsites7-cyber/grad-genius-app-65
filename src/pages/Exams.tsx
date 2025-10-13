@@ -676,3 +676,5 @@ const Exams = () => {
     </>
   );
 };
+
+export default Exams;
