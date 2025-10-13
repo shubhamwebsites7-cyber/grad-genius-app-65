@@ -66,6 +66,7 @@ export const Navigation: React.FC = () => {
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Exams', href: '/exams', icon: BookOpen },
+    { name: 'Pricing', href: '/pricing', icon: CreditCard },
     { name: 'Profile', href: '/profile', icon: User },
     { name: 'Feedback', href: '/feedback', icon: MessageSquare },
   ];

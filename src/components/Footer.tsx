@@ -12,6 +12,7 @@ export const Footer: React.FC = () => {
       links: [
         { name: 'Home', href: '/' },
         { name: 'About Us', href: '/about' },
+        { name: 'Pricing', href: '/pricing' },
         { name: 'Contact Us', href: '/contact' },
         { name: 'FAQ', href: '/faq' },
       ],
