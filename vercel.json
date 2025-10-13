@@ -4,7 +4,7 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!assets|favicon|icon|examtrakr|robots|sitemap|manifest|sw).*)",
+      "source": "/((?!assets/|favicon|icon|examtrakr|robots|sitemap|manifest|sw\\.).*)",
       "destination": "/index.html"
     }
   ],
@@ -28,16 +28,7 @@
       ]
     },
     {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/assets/(.*).js",
+      "source": "/assets/(.*)\\.js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -50,7 +41,7 @@
       ]
     },
     {
-      "source": "/assets/(.*).css",
+      "source": "/assets/(.*)\\.css",
       "headers": [
         {
           "key": "Cache-Control",
@@ -59,6 +50,15 @@
         {
           "key": "Content-Type",
           "value": "text/css; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
