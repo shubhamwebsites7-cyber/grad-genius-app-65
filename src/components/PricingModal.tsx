@@ -9,9 +9,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Check, AlertCircle, Loader2, Phone, Sparkles } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,36 +52,12 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
   const [error, setError] = useState<string | null>(null);
   const [userCountry, setUserCountry] = useState<string>('IN');
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [phoneError, setPhoneError] = useState<string>('');
 
   useEffect(() => {
     if (open) {
       fetchPricingPlans();
-      fetchUserPhoneNumber();
     }
   }, [open]);
-
-  const fetchUserPhoneNumber = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('phone_number')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      if (!error && data) {
-        const userData = data as Record<string, any>;
-        if (userData.phone_number) {
-          setPhoneNumber(userData.phone_number as string);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching phone number:', error);
-    }
-  };
 
   const fetchPricingPlans = async () => {
     try {
@@ -159,101 +133,11 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       return;
     }
 
-    if (!plan.pricing) {
-      toast({
-        title: 'Error',
-        description: 'Pricing information not available for this plan.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    // Validate phone number
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length !== 10) {
-      setPhoneError('Please enter a valid 10-digit phone number');
-      return;
-    }
-    setPhoneError('');
-
-    try {
-      setProcessingPayment(plan.id);
-
-      // Check if Cashfree SDK is loaded
-      if (!(window as any).Cashfree) {
-        throw new Error('Payment system not loaded. Please refresh the page.');
-      }
-
-      console.log('Creating payment order for plan:', plan.id);
-
-      // Create payment session via edge function
-      const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
-        body: {
-          plan_id: plan.id,
-          pricing_id: plan.pricing.id,
-          amount: plan.pricing.price,
-          currency: plan.pricing.currency,
-          phone_number: cleanPhone
-        }
-      });
-
-      console.log('Payment order response:', { data, error });
-
-      if (error) {
-        throw new Error(error.message || 'Failed to create payment order');
-      }
-
-      if (!data) {
-        throw new Error('No response from payment service');
-      }
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      if (!data.payment_session_id || !data.order_id) {
-        throw new Error('Invalid payment session data received');
-      }
-
-      console.log('Initializing Cashfree checkout with session:', data.payment_session_id);
-
-      // Initialize Cashfree
-      const cashfree = await (window as any).Cashfree({
-        mode: 'production' // Use 'sandbox' for testing
-      });
-
-      // Open checkout
-      const checkoutOptions = {
-        paymentSessionId: data.payment_session_id,
-        redirectTarget: '_self',
-        returnUrl: `${window.location.origin}/profile?payment_status=success`
-      };
-
-      console.log('Opening Cashfree checkout with options:', checkoutOptions);
-
-      await cashfree.checkout(checkoutOptions);
-
-    } catch (err: any) {
-      console.error('Error in payment flow:', err);
-      
-      let errorMessage = 'Failed to initiate payment. Please try again.';
-      
-      if (err.message.includes('not loaded')) {
-        errorMessage = 'Payment system loading. Please refresh and try again.';
-      } else if (err.message.includes('not configured')) {
-        errorMessage = 'Payment system is being set up. Please contact support.';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      toast({
-        title: 'Payment Failed',
-        description: errorMessage,
-        variant: 'destructive'
-      });
-      
-      setProcessingPayment(null);
-    }
+    // Payment gateway will be implemented separately
+    toast({
+      title: 'Coming Soon',
+      description: 'Payment integration is being set up. Please check back later.',
+    });
   };
 
   const formatPrice = (price: number, currency: string): string => {
@@ -311,40 +195,6 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           </Alert>
         ) : (
           <>
-            {/* Phone Number Input */}
-            <div className="mb-6 space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Phone Number (Required for payment)
-              </Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="Enter 10-digit mobile number"
-                value={phoneNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                  setPhoneNumber(value);
-                  if (phoneError) setPhoneError('');
-                }}
-                className={phoneError ? 'border-destructive' : ''}
-                maxLength={10}
-              />
-              {phoneError && (
-                <p className="text-sm text-destructive">{phoneError}</p>
-              )}
-              {phoneNumber ? (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Check className="h-3 w-3 text-success" />
-                  Using saved number from your profile
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  This number will be used for payment verification and order updates
-                </p>
-              )}
-            </div>
-
             {/* Pricing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
               {plans.map((plan) => (

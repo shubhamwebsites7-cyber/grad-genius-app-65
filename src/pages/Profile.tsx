@@ -10,6 +10,7 @@ import { ProfileInfoCard } from '@/components/profile/ProfileInfoCard';
 import { SubscriptionCard } from '@/components/profile/SubscriptionCard';
 import { SupportCard } from '@/components/profile/SupportCard';
 import { ProfileLoadingSkeleton } from '@/components/profile/ProfileLoadingSkeleton';
+import { PaymentHistoryCard } from '@/components/profile/PaymentHistoryCard';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -244,6 +245,7 @@ const Profile = () => {
               {/* Right Column / Below on Mobile - Subscription & Support */}
               <div className="space-y-6">
                 <SubscriptionCard subscriptionData={subscriptionData} />
+                <PaymentHistoryCard />
                 <SupportCard />
               </div>
             </div>
