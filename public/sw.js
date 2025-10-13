@@ -1,7 +1,4 @@
-const CACHE_NAME = 'examtrakr-v7';
-const STATIC_CACHE = 'examtrakr-static-v7';
-const DYNAMIC_CACHE = 'examtrakr-dynamic-v7';
-
+const CACHE_NAME = 'examtrakr-v6';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -11,42 +8,17 @@ const urlsToCache = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing v7');
   event.waitUntil(
-    Promise.all([
-      caches.open(STATIC_CACHE).then((cache) => {
-        console.log('Service Worker: Caching static assets');
-        return cache.addAll(urlsToCache);
-      }),
-      caches.open(DYNAMIC_CACHE) // Create dynamic cache
-    ])
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache.map(url => new Request(url, {cache: 'reload'})))
+          .catch(err => {
+            console.log('Cache addAll error:', err);
+          });
+      })
   );
-  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
-});
-
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating v7');
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // Delete all caches that don't match current version
-          if (cacheName !== STATIC_CACHE && 
-              cacheName !== DYNAMIC_CACHE && 
-              cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('Service Worker: Cache cleanup complete');
-      // Ensure the new service worker takes control immediately
-      return self.clients.claim();
-    })
-  );
 });
 
 // Helper function to check if URL should be cached
@@ -97,11 +69,16 @@ self.addEventListener('fetch', (event) => {
   
   // Skip caching for non-GET requests (POST, PUT, DELETE, etc.)
   if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
     return;
   }
-
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
+  
+  // Skip caching for external resources (but allow same-origin requests)
+  if (url.origin !== self.location.origin) {
+    // Allow Supabase requests to pass through without caching
+    if (url.hostname.includes('supabase')) {
+      event.respondWith(fetch(request));
+    }
     return;
   }
 
@@ -112,55 +89,38 @@ self.addEventListener('fetch', (event) => {
   if (request.destination === 'document' || 
       request.destination === 'script' || 
       url.pathname.endsWith('.js') || 
-      url.pathname.endsWith('.mjs') ||
       url.pathname.endsWith('.html') ||
       url.pathname === '/') {
-    
-    console.log('Service Worker: Network-first for:', url.pathname);
-    
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Always return fresh response for JS/HTML
-          if (response && response.status === 200) {
-            // Only cache non-JS assets to avoid MIME type issues
-            if (canCache && !url.pathname.includes('/assets/') && 
-                !url.pathname.endsWith('.js') && !url.pathname.endsWith('.mjs')) {
-              const responseToCache = response.clone();
-              caches.open(DYNAMIC_CACHE).then((cache) => {
-                cache.put(request, responseToCache);
-              });
-            }
+          // Only cache if allowed and response is successful
+          if (canCache && response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
           }
           return response;
         })
         .catch(() => {
-          // Fallback to cache only for non-JS files
-          if (canCache && !url.pathname.endsWith('.js') && !url.pathname.endsWith('.mjs')) {
-            console.log('Service Worker: Fallback to cache for:', url.pathname);
+          // Fallback to cache only if network fails and caching was allowed
+          if (canCache) {
             return caches.match(request);
           }
-          // For JS files, always fail if network fails to prevent MIME type issues
-          return new Response('Network error - JS files must be fresh', { 
-            status: 408,
-            statusText: 'Network Timeout'
-          });
+          // For non-cacheable requests, return a network error
+          return new Response('Network error', { status: 408 });
         })
     );
-  } else if (canCache && !url.pathname.includes('/assets/')) {
-    // Cache-first for non-asset static files only
+  } else if (canCache) {
+    // Cache-first for images, fonts, and other static assets (only if cacheable)
     event.respondWith(
       caches.match(request)
         .then((response) => {
-          if (response) {
-            console.log('Service Worker: Cache hit for:', url.pathname);
-            return response;
-          }
-          
-          return fetch(request).then((response) => {
+          return response || fetch(request).then((response) => {
             if (response && response.status === 200) {
               const responseToCache = response.clone();
-              caches.open(STATIC_CACHE).then((cache) => {
+              caches.open(CACHE_NAME).then((cache) => {
                 cache.put(request, responseToCache);
               });
             }
@@ -169,8 +129,24 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else {
-    // For assets and non-cacheable requests, always fetch from network
-    console.log('Service Worker: Network-only for:', url.pathname);
+    // For non-cacheable requests, always fetch from network
     event.respondWith(fetch(request));
   }
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
 });
