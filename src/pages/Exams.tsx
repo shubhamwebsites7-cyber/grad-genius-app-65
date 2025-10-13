@@ -213,7 +213,7 @@ const Exams = () => {
 
       const hasActiveSubscription = !!subscriptionData;
 
-      // Check current enrollment count for free users
+      // Check current enrollment count for free users ONLY
       if (!hasActiveSubscription) {
         const { count, error: enrollmentCountError } = await supabase
           .from('user_exam_enrollments')

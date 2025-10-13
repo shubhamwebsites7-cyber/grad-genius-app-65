@@ -244,7 +244,7 @@ const Profile = () => {
 
               {/* Right Column / Below on Mobile - Subscription & Support */}
               <div className="space-y-6">
-                <SubscriptionCard subscriptionData={subscriptionData} />
+                <SubscriptionCard />
                 <PaymentHistoryCard />
                 <SupportCard />
               </div>
