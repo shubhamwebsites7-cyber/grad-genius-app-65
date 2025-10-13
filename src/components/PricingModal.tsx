@@ -333,9 +333,16 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
               {phoneError && (
                 <p className="text-sm text-destructive">{phoneError}</p>
               )}
-              <p className="text-xs text-muted-foreground">
-                This number will be used for payment verification and order updates
-              </p>
+              {phoneNumber ? (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Check className="h-3 w-3 text-success" />
+                  Using saved number from your profile
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  This number will be used for payment verification and order updates
+                </p>
+              )}
             </div>
 
             {/* Pricing Cards */}
