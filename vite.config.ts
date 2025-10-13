@@ -16,4 +16,18 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Enable content-based hashing for cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      },
+    },
+    // Generate source maps for better debugging
+    sourcemap: mode === 'development',
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+  },
 }));
