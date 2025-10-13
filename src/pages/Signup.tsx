@@ -176,7 +176,7 @@ const Signup = () => {
 
             {/* Signup Form */}
             <Card className="shadow-lg">
-              <CardHeader className="space-y-4">
+              <CardHeader>
                 <Tabs value="signup" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="login" onClick={() => navigate('/login')}>
@@ -185,12 +185,6 @@ const Signup = () => {
                     <TabsTrigger value="signup">Sign Up</TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <div>
-                  <CardTitle>Sign Up</CardTitle>
-                  <CardDescription>
-                    Create your free account to get started
-                  </CardDescription>
-                </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -354,17 +348,6 @@ const Signup = () => {
                   </Button>
                 </div>
 
-                <div className="mt-6">
-                  <div className="text-center text-sm">
-                    <span className="text-muted-foreground">Already have an account? </span>
-                    <Link
-                      to="/login"
-                      className="text-primary hover:text-primary-hover font-medium"
-                    >
-                      Login
-                    </Link>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
