@@ -12,6 +12,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AuthDebugger } from "@/components/AuthDebugger";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 
 // Preload critical routes
 const Index = lazy(() => import("./pages/Index"));
@@ -95,6 +96,7 @@ const App = () => (
               </Suspense>
             </BrowserRouter>
             <AuthDebugger enabled={process.env.NODE_ENV === 'development'} />
+            <PWAInstallBanner />
             <Analytics />
             <SpeedInsights />
           </TooltipProvider>
