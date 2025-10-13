@@ -350,7 +350,7 @@ const Pricing = () => {
                 {plans.map((plan, index) => (
                   <Card 
                     key={plan.id} 
-                    className={`relative animate-fade-in ${
+                    className={`relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in ${
                       plan.is_popular 
                         ? 'border-primary shadow-lg ring-2 ring-primary/20 scale-105 lg:scale-110' 
                         : 'border-border'
@@ -384,7 +384,7 @@ const Pricing = () => {
                           </div>
                           
                           {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                            <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                            <Badge variant="secondary" className="bg-success/10 text-success border-success/20 pointer-events-none">
                               Save {plan.pricing.discount_percentage}%
                             </Badge>
                           )}

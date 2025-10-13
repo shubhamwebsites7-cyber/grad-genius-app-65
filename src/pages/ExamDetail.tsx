@@ -1074,143 +1074,48 @@ const ExamDetail = () => {
                                       : 'border-muted bg-muted/20 opacity-70'
                                   }`}
                                 >
-                                  {/* Mobile Layout */}
-                                  <div className="block sm:hidden">
-                                    {topic.isAccessible ? (
-                                      <>
-                                         {/* First row: Checkbox + Topic name + Marks */}
-                                        <div className="flex items-center gap-3 mb-3">
-                                          <Checkbox
-                                            checked={topic.isCompleted}
-                                            onCheckedChange={() => handleTopicToggle(topic.id)}
-                                            className="h-5 w-5"
-                                          />
-                                          <h4 className="font-medium text-foreground flex-1">
-                                            {topic.name}
-                                          </h4>
-                                          {topic.marks && (
-                                            <span className="text-sm text-muted-foreground">
-                                              {topic.marks} marks
-                                            </span>
-                                          )}
-                                        </div>
-                                         
-                                          {/* Second row: Difficulty + Vote dropdown */}
-                                          <div className="flex items-center gap-2">
-                                            <Badge 
-                                              className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
-                                            >
-                                              {topic.difficulty}
-                                            </Badge>
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="sm" 
-                                                  className="h-6 px-2 text-xs flex items-center gap-1"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                >
-                                                  <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
-                                                  <ChevronDown className="h-3 w-3" />
-                                                </Button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end" className="w-40">
-                                                <DropdownMenuItem 
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDifficultyVote(topic.id, 'Easy');
-                                                  }}
-                                                  className={topic.userDifficultyRating === 'Easy' ? 'bg-success/10' : ''}
-                                                >
-                                                  <div className="flex items-center gap-2 w-full">
-                                                    <Badge className="text-xs bg-success">Easy</Badge>
-                                                    {topic.userDifficultyRating === 'Easy' && <span className="ml-auto text-xs">✓</span>}
-                                                  </div>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDifficultyVote(topic.id, 'Medium');
-                                                  }}
-                                                  className={topic.userDifficultyRating === 'Medium' ? 'bg-warning/10' : ''}
-                                                >
-                                                  <div className="flex items-center gap-2 w-full">
-                                                    <Badge className="text-xs bg-warning">Medium</Badge>
-                                                    {topic.userDifficultyRating === 'Medium' && <span className="ml-auto text-xs">✓</span>}
-                                                  </div>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDifficultyVote(topic.id, 'Hard');
-                                                  }}
-                                                  className={topic.userDifficultyRating === 'Hard' ? 'bg-destructive/10' : ''}
-                                                >
-                                                  <div className="flex items-center gap-2 w-full">
-                                                    <Badge className="text-xs bg-destructive">Hard</Badge>
-                                                    {topic.userDifficultyRating === 'Hard' && <span className="ml-auto text-xs">✓</span>}
-                                                  </div>
-                                                </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          </div>
-                                        </>
-                                         ) : (
-                                      <div 
-                                        className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
-                                        onClick={handleLockedTopicClick}
-                                      >
-                                        <div className="w-5 h-5" />
-                                        <div className="flex-1 blur-sm">
-                                          <h4 className="font-medium text-foreground">{topic.name}</h4>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-warning">
-                                          <Lock className="h-4 w-4" />
-                                          <span className="text-xs font-medium">Unlock</span>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                   {/* Desktop Layout */}
-                                   <div className="hidden sm:block">
-                                      <div className="flex items-center justify-between">
-                                       <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'blur-sm' : ''}`}>
-                                         {topic.isAccessible && (
-                                           <Checkbox
-                                             checked={topic.isCompleted}
-                                             onCheckedChange={() => handleTopicToggle(topic.id)}
-                                             className="h-5 w-5"
-                                           />
-                                         )}
-                                          <div>
-                                         <h4 className="font-medium text-foreground flex items-center gap-2">
+                                   {/* Mobile Layout */}
+                                   <div className="block sm:hidden">
+                                     <div className={topic.isAccessible ? '' : 'opacity-50'}>
+                                       {/* First row: Checkbox + Topic name + Marks */}
+                                       <div className="flex items-center gap-3 mb-3">
+                                         <Checkbox
+                                           checked={topic.isCompleted}
+                                           onCheckedChange={() => topic.isAccessible && handleTopicToggle(topic.id)}
+                                           disabled={!topic.isAccessible}
+                                           className="h-5 w-5"
+                                         />
+                                         <h4 className="font-medium text-foreground flex-1">
                                            {topic.name}
-                                           {topic.marks && (
-                                             <span className="text-sm text-muted-foreground">
-                                               ({topic.marks} marks)
-                                             </span>
-                                           )}
                                          </h4>
-                                         <div className="flex items-center gap-2 mt-1">
-                                           <Badge 
-                                             className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
-                                           >
-                                             {topic.difficulty}
-                                           </Badge>
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="sm" 
-                                                  className="h-6 px-2 text-xs flex items-center gap-1"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                >
-                                                  <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
-                                                  <ChevronDown className="h-3 w-3" />
-                                                </Button>
-                                              </DropdownMenuTrigger>
-                                             <DropdownMenuContent align="start" className="w-40">
+                                         {topic.marks && (
+                                           <span className="text-sm text-muted-foreground">
+                                             {topic.marks} marks
+                                           </span>
+                                         )}
+                                       </div>
+                                        
+                                       {/* Second row: Difficulty + Vote dropdown */}
+                                       <div className="flex items-center gap-2">
+                                         <Badge 
+                                           className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
+                                         >
+                                           {topic.difficulty}
+                                         </Badge>
+                                         {topic.isAccessible && (
+                                           <DropdownMenu>
+                                             <DropdownMenuTrigger asChild>
+                                               <Button 
+                                                 variant="ghost" 
+                                                 size="sm" 
+                                                 className="h-6 px-2 text-xs flex items-center gap-1"
+                                                 onClick={(e) => e.stopPropagation()}
+                                               >
+                                                 <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
+                                                 <ChevronDown className="h-3 w-3" />
+                                               </Button>
+                                             </DropdownMenuTrigger>
+                                             <DropdownMenuContent align="end" className="w-40">
                                                <DropdownMenuItem 
                                                  onClick={(e) => {
                                                    e.stopPropagation();
@@ -1249,31 +1154,119 @@ const ExamDetail = () => {
                                                </DropdownMenuItem>
                                              </DropdownMenuContent>
                                            </DropdownMenu>
-                                         </div>
+                                         )}
                                        </div>
                                      </div>
                                      
-                                     <div className="flex items-center gap-2">
-                                       {isAccessible ? (
-                                          <>
-                                          </>
-                                       ) : (
-                                        <div 
-                                          className="space-y-2 cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
-                                          onClick={handleLockedTopicClick}
-                                        >
-                                          <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Lock className="h-4 w-4" />
-                                            <h4 className="font-medium blur-sm">{topic.name}</h4>
-                                          </div>
-                                          <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
-                                            <Lock className="h-3 w-3" />
-                                            Click to upgrade and unlock all topics
-                                          </div>
-                                        </div>
-                                      )}
-                                     </div>
+                                     {/* Locked Topic Overlay */}
+                                     {!topic.isAccessible && (
+                                       <div 
+                                         className="mt-2 cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
+                                         onClick={handleLockedTopicClick}
+                                       >
+                                         <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
+                                           <Lock className="h-3 w-3" />
+                                           Click to upgrade and unlock all topics
+                                         </div>
+                                       </div>
+                                     )}
                                    </div>
+                                  
+                                   {/* Desktop Layout */}
+                                   <div className="hidden sm:block">
+                                     <div className="flex items-center justify-between">
+                                       <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                         <Checkbox
+                                           checked={topic.isCompleted}
+                                           onCheckedChange={() => topic.isAccessible && handleTopicToggle(topic.id)}
+                                           disabled={!topic.isAccessible}
+                                           className="h-5 w-5"
+                                         />
+                                         <div>
+                                           <h4 className="font-medium text-foreground flex items-center gap-2">
+                                             {topic.name}
+                                             {topic.marks && (
+                                               <span className="text-sm text-muted-foreground">
+                                                 ({topic.marks} marks)
+                                               </span>
+                                             )}
+                                           </h4>
+                                           <div className="flex items-center gap-2 mt-1">
+                                             <Badge 
+                                               className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
+                                             >
+                                               {topic.difficulty}
+                                             </Badge>
+                                             {topic.isAccessible && (
+                                               <DropdownMenu>
+                                                 <DropdownMenuTrigger asChild>
+                                                   <Button 
+                                                     variant="ghost" 
+                                                     size="sm" 
+                                                     className="h-6 px-2 text-xs flex items-center gap-1"
+                                                     onClick={(e) => e.stopPropagation()}
+                                                   >
+                                                     <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
+                                                     <ChevronDown className="h-3 w-3" />
+                                                   </Button>
+                                                 </DropdownMenuTrigger>
+                                                 <DropdownMenuContent align="start" className="w-40">
+                                                   <DropdownMenuItem 
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       handleDifficultyVote(topic.id, 'Easy');
+                                                     }}
+                                                     className={topic.userDifficultyRating === 'Easy' ? 'bg-success/10' : ''}
+                                                   >
+                                                     <div className="flex items-center gap-2 w-full">
+                                                       <Badge className="text-xs bg-success">Easy</Badge>
+                                                       {topic.userDifficultyRating === 'Easy' && <span className="ml-auto text-xs">✓</span>}
+                                                     </div>
+                                                   </DropdownMenuItem>
+                                                   <DropdownMenuItem 
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       handleDifficultyVote(topic.id, 'Medium');
+                                                     }}
+                                                     className={topic.userDifficultyRating === 'Medium' ? 'bg-warning/10' : ''}
+                                                   >
+                                                     <div className="flex items-center gap-2 w-full">
+                                                       <Badge className="text-xs bg-warning">Medium</Badge>
+                                                       {topic.userDifficultyRating === 'Medium' && <span className="ml-auto text-xs">✓</span>}
+                                                     </div>
+                                                   </DropdownMenuItem>
+                                                   <DropdownMenuItem 
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       handleDifficultyVote(topic.id, 'Hard');
+                                                     }}
+                                                     className={topic.userDifficultyRating === 'Hard' ? 'bg-destructive/10' : ''}
+                                                   >
+                                                     <div className="flex items-center gap-2 w-full">
+                                                       <Badge className="text-xs bg-destructive">Hard</Badge>
+                                                       {topic.userDifficultyRating === 'Hard' && <span className="ml-auto text-xs">✓</span>}
+                                                     </div>
+                                                   </DropdownMenuItem>
+                                                 </DropdownMenuContent>
+                                               </DropdownMenu>
+                                             )}
+                                           </div>
+                                         </div>
+                                       </div>
+                                       
+                                       {/* Locked Topic Upgrade CTA */}
+                                       {!topic.isAccessible && (
+                                         <div 
+                                           className="cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
+                                           onClick={handleLockedTopicClick}
+                                         >
+                                           <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
+                                             <Lock className="h-3 w-3" />
+                                             Click to upgrade and unlock all topics
+                                           </div>
+                                         </div>
+                                       )}
+                                     </div>
                                    </div>
                                  </div>
                                );
