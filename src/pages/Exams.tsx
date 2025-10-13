@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/pagination';
 import { AddExamModal } from '@/components/AddExamModal';
 import { RequestExamModal } from '@/components/RequestExamModal';
+import { PricingModal } from '@/components/PricingModal';
 import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2, MessageSquarePlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,6 +61,7 @@ const Exams = () => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const { toast } = useToast();
   
   const EXAMS_PER_PAGE = 9;
@@ -224,16 +226,13 @@ const Exams = () => {
         if (enrollmentCountError) throw enrollmentCountError;
 
         if (count && count >= 1) {
-          toast({
-            title: 'Subscription Required',
-            description: 'Free users can only enroll in 1 exam. Upgrade to a premium plan to unlock unlimited exams.',
-            variant: 'destructive'
-          });
           setEnrolling(null);
+          setShowPricingModal(true);
           return;
         }
       }
 
+      // Proceed with enrollment
       const { error } = await supabase
         .from('user_exam_enrollments')
         .insert({
@@ -668,8 +667,12 @@ const Exams = () => {
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
       />
+      
+      <PricingModal
+        open={showPricingModal}
+        onOpenChange={setShowPricingModal}
+        trigger="enrollment"
+      />
     </>
   );
 };
-
-export default Exams;
