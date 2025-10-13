@@ -22,6 +22,7 @@ const Profile = () => {
   const [profileData, setProfileData] = useState({
     full_name: '',
     email: '',
+    phone_number: '',
     country_code: '',
     timezone: '',
     created_at: '',
@@ -83,6 +84,7 @@ const Profile = () => {
         setProfileData({
           full_name: userData.full_name || '',
           email: userData.email || '',
+          phone_number: userData.phone_number || '',
           country_code: userData.country_code || 'US',
           timezone: userData.timezone || 'UTC',
           created_at: userData.created_at || '',
@@ -133,11 +135,25 @@ const Profile = () => {
 
   const handleSaveProfile = async () => {
     try {
+      // Validate phone number if provided
+      if (profileData.phone_number) {
+        const cleanPhone = profileData.phone_number.replace(/\D/g, '');
+        if (cleanPhone.length !== 10) {
+          toast({
+            title: "Invalid phone number",
+            description: "Please enter a valid 10-digit phone number.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('users')
         // @ts-ignore - Supabase type inference issue
         .update({
           full_name: profileData.full_name,
+          phone_number: profileData.phone_number || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user?.id);

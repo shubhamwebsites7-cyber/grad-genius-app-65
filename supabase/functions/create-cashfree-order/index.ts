@@ -46,7 +46,7 @@ serve(async (req) => {
 
     // Get user profile for customer details
     const { data: profile } = await supabaseClient
-      .from('profiles')
+      .from('users')
       .select('full_name, email')
       .eq('id', user.id)
       .single()

@@ -4,13 +4,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail } from 'lucide-react';
+import { User, Mail, Phone } from 'lucide-react';
 import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 
 interface ProfileInfoCardProps {
   profileData: {
     full_name: string;
     email: string;
+    phone_number: string;
     country_code: string;
     timezone: string;
     created_at: string;
@@ -100,6 +101,31 @@ export const ProfileInfoCard = ({
             <p className="text-xs text-muted-foreground">
               Email cannot be changed
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone_number">Phone Number</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="phone_number"
+                name="phone_number"
+                type="tel"
+                value={profileData.phone_number}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  const event = {
+                    ...e,
+                    target: { ...e.target, name: 'phone_number', value }
+                  } as React.ChangeEvent<HTMLInputElement>;
+                  onChange(event);
+                }}
+                className="pl-10"
+                placeholder="Enter 10-digit number"
+                maxLength={10}
+                disabled={!isEditing}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

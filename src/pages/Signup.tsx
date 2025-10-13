@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
-import { BookOpen, User, Mail, Lock } from 'lucide-react';
+import { BookOpen, User, Mail, Lock, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,6 +16,7 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
   });
@@ -42,6 +43,17 @@ const Signup = () => {
       return;
     }
 
+    // Validate phone number
+    const cleanPhone = formData.phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      toast({
+        title: "Invalid phone number",
+        description: "Please enter a valid 10-digit phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -54,6 +66,7 @@ const Signup = () => {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: formData.name,
+            phone_number: cleanPhone,
           },
         },
       });
@@ -68,6 +81,17 @@ const Signup = () => {
       }
 
       if (data.user) {
+        // Update users table with phone number
+        const { error: updateError } = await supabase
+          .from('users')
+          // @ts-ignore - Database types need regeneration
+          .update({ phone_number: cleanPhone })
+          .eq('id', data.user.id);
+
+        if (updateError) {
+          console.error('Error updating phone number:', updateError);
+        }
+
         toast({
           title: "Account created successfully!",
           description: "Please check your email to verify your account.",
@@ -163,6 +187,27 @@ const Signup = () => {
                         onChange={handleChange}
                         className="pl-10"
                         placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setFormData(prev => ({ ...prev, phoneNumber: value }));
+                        }}
+                        className="pl-10"
+                        placeholder="Enter 10-digit mobile number"
+                        maxLength={10}
                         required
                       />
                     </div>
