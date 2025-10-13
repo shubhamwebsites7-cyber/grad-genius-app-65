@@ -9,17 +9,19 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Loader2 } from "lucide-react";
 
-// Lazy load pages for better performance
+// Preload critical routes
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Exams = lazy(() => import("./pages/Exams"));
+const Profile = lazy(() => import("./pages/Profile"));
+
+// Lazy load less critical pages
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ExamDetail = lazy(() => import("./pages/ExamDetail"));
 const SectionResources = lazy(() => import("./pages/SectionResources"));
 const AddExam = lazy(() => import("./pages/AddExam"));
-const Profile = lazy(() => import("./pages/Profile"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Support = lazy(() => import("./pages/Support"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
@@ -32,6 +34,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Refund = lazy(() => import("./pages/Refund"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 
+
 // Loading component
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -42,9 +45,11 @@ const LoadingFallback = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 60 * 1000, // 1 minute
-      gcTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
     },
   },
 });
