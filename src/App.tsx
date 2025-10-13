@@ -8,6 +8,8 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Loader2 } from "lucide-react";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Preload critical routes
 const Index = lazy(() => import("./pages/Index"));
@@ -89,6 +91,8 @@ const App = () => (
               </Routes>
             </Suspense>
           </BrowserRouter>
+          <Analytics />
+          <SpeedInsights />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
