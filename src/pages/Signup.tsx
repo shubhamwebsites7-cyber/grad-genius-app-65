@@ -81,17 +81,6 @@ const Signup = () => {
       }
 
       if (data.user) {
-        // Update users table with phone number
-        const { error: updateError } = await supabase
-          .from('users')
-          // @ts-ignore - Database types need regeneration
-          .update({ phone_number: cleanPhone })
-          .eq('id', data.user.id);
-
-        if (updateError) {
-          console.error('Error updating phone number:', updateError);
-        }
-
         toast({
           title: "Account created successfully!",
           description: "Please check your email to verify your account.",
@@ -112,10 +101,18 @@ const Signup = () => {
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     try {
+      const redirectUrl = window.location.hostname.includes('lovable.app')
+        ? `${window.location.origin}/dashboard`
+        : 'https://examtrakr.com/dashboard';
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
