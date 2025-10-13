@@ -27,8 +27,8 @@ export const Navigation: React.FC = () => {
 
   // Handle PWA install prompt
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: any) => {
-      // Store the event for later use, but don't prevent default
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallButton(true);
     };

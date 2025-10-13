@@ -67,11 +67,16 @@ const Profile = () => {
 
   const fetchProfileData = async () => {
     try {
+      console.log('Current user ID:', user?.id);
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user?.id)
         .maybeSingle();
+
+      console.log('Query error:', error);
+      console.log('Query data:', data);
 
       if (error) throw error;
 
