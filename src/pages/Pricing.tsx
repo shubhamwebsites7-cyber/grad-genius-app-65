@@ -350,7 +350,7 @@ const Pricing = () => {
                 {plans.map((plan, index) => (
                   <Card 
                     key={plan.id} 
-                    className={`relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in ${
+                    className={`relative animate-fade-in ${
                       plan.is_popular 
                         ? 'border-primary shadow-lg ring-2 ring-primary/20 scale-105 lg:scale-110' 
                         : 'border-border'
