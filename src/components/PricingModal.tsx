@@ -9,11 +9,19 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Check, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+
+declare global {
+  interface Window {
+    Cashfree: any;
+  }
+}
 
 interface PlanPricing {
   id: string;
@@ -52,6 +60,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
   const [error, setError] = useState<string | null>(null);
   const [userCountry, setUserCountry] = useState<string>('IN');
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
 
   useEffect(() => {
     if (open) {
@@ -133,11 +142,61 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       return;
     }
 
-    // Payment gateway will be implemented separately
-    toast({
-      title: 'Coming Soon',
-      description: 'Payment integration is being set up. Please check back later.',
-    });
+    if (!phoneNumber || phoneNumber.length !== 10) {
+      toast({
+        title: 'Phone Number Required',
+        description: 'Please enter a valid 10-digit phone number.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setProcessingPayment(plan.id);
+
+      // Create order via edge function
+      const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
+        body: {
+          plan_id: plan.id,
+          phone_number: phoneNumber,
+        }
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Failed to create order');
+
+      console.log('Order created:', data);
+
+      // Initialize Cashfree SDK
+      if (!window.Cashfree) {
+        throw new Error('Cashfree SDK not loaded');
+      }
+
+      const cashfree = await window.Cashfree({
+        mode: 'sandbox' // Change to 'production' for live payments
+      });
+
+      // Open payment modal
+      await cashfree.checkout({
+        paymentSessionId: data.payment_session_id,
+        returnUrl: `${window.location.origin}/profile?payment=success`,
+      });
+
+      toast({
+        title: 'Payment Initiated',
+        description: 'Complete your payment in the Cashfree window.',
+      });
+
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      toast({
+        title: 'Payment Failed',
+        description: err.message || 'Failed to initiate payment. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setProcessingPayment(null);
+    }
   };
 
   const formatPrice = (price: number, currency: string): string => {
@@ -195,6 +254,21 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           </Alert>
         ) : (
           <>
+            {/* Phone Number Input */}
+            {user && (
+              <div className="space-y-2 mb-6">
+                <Label htmlFor="phone">Phone Number (Required for Payment)</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Enter 10-digit mobile number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  maxLength={10}
+                />
+              </div>
+            )}
+
             {/* Pricing Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
               {plans.map((plan) => (
