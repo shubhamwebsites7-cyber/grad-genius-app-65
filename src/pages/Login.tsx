@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { BookOpen, Mail, Lock } from 'lucide-react';
@@ -143,11 +144,21 @@ const Login = () => {
 
             {/* Login Form */}
             <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle>Sign In</CardTitle>
-                <CardDescription>
-                  Enter your credentials to access your dashboard
-                </CardDescription>
+              <CardHeader className="space-y-4">
+                <Tabs value="login" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="signup" onClick={() => navigate('/signup')}>
+                      Sign Up
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <div>
+                  <CardTitle>Sign In</CardTitle>
+                  <CardDescription>
+                    Enter your credentials to access your dashboard
+                  </CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
