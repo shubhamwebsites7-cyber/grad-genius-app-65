@@ -190,6 +190,7 @@ const Pricing = () => {
       });
 
       console.log('Payment order response:', { data, error });
+      console.log('Full response data:', JSON.stringify(data, null, 2));
 
       if (error) {
         throw new Error(error.message || 'Failed to create payment order');
@@ -211,7 +212,7 @@ const Pricing = () => {
 
       // Initialize Cashfree
       const cashfree = await (window as any).Cashfree({
-        mode: 'production'
+        mode: 'production' // Using production mode for live payments
       });
 
       // Open checkout

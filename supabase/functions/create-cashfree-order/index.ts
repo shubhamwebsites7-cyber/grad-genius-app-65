@@ -114,7 +114,6 @@ serve(async (req) => {
       .single();
 
     if (paymentError || !payment) {
-      console.error('Payment record creation error:', paymentError);
       throw new Error('Failed to create payment record');
     }
 
@@ -123,13 +122,18 @@ serve(async (req) => {
     // Get Cashfree credentials
     const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
+    const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'production';
 
     if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
       throw new Error('Cashfree credentials not configured');
     }
 
-    // Use production API endpoint
-    const cashfreeApiUrl = 'https://api.cashfree.com/pg/orders';
+    console.log('Using Cashfree environment:', CASHFREE_ENVIRONMENT);
+
+    // Use appropriate API endpoint based on environment
+    const cashfreeApiUrl = CASHFREE_ENVIRONMENT === 'production' 
+      ? 'https://api.cashfree.com/pg/orders'
+      : 'https://sandbox.cashfree.com/pg/orders';
 
     // Get origin for return URL
     const origin = req.headers.get('origin') || 'https://examtrakr.com';
