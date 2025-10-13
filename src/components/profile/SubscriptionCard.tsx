@@ -85,10 +85,11 @@ export const SubscriptionCard = () => {
         const expiresAt = new Date(subscriptionRecord.expires_at);
         const isValid = expiresAt > new Date();
 
-        if (isValid) {
-          const currency = pricingData?.currency || 'INR';
+        if (isValid && pricingData) {
+          const priceInfo = pricingData as any;
+          const currency = priceInfo.currency || 'INR';
           const currencySymbol = currency === 'INR' ? '₹' : '$';
-          const amount = pricingData?.price ?? 0;
+          const amount = Number(priceInfo.price || 0);
 
           setSubscriptionData({
             plan: plan.name || 'Premium Plan',
