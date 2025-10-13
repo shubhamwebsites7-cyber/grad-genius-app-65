@@ -30,7 +30,7 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 export const SubscriptionCard = () => {
-  const { user, subscription } = useAuth();
+  const { user, subscription, loading: authLoading } = useAuth();
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
     plan: 'Free Plan',
     status: 'Active',
@@ -41,10 +41,18 @@ export const SubscriptionCard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to finish loading first
+    if (authLoading) {
+      return;
+    }
+    
     if (user) {
       fetchSubscriptionData();
+    } else {
+      // If no user after auth loads, stop loading immediately
+      setLoading(false);
     }
-  }, [user, subscription]);
+  }, [user, subscription, authLoading]);
 
   const fetchSubscriptionData = async () => {
     try {
@@ -52,7 +60,7 @@ export const SubscriptionCard = () => {
 
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .select('*, plan:subscription_plans(name, id), pricing:plan_pricing!inner(price, currency, country_code)')
+        .select('*, subscription_plans(name, id)')
         .eq('user_id', user?.id)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -63,7 +71,7 @@ export const SubscriptionCard = () => {
 
       if (data) {
         const subscriptionRecord = data as any;
-        const plan = subscriptionRecord.plan || {};
+        const plan = subscriptionRecord.subscription_plans || {};
         
         // Get pricing for the plan
         const { data: pricingData } = await supabase
@@ -78,8 +86,9 @@ export const SubscriptionCard = () => {
         const isValid = expiresAt > new Date();
 
         if (isValid) {
-          const currencySymbol = pricingData?.currency === 'INR' ? '₹' : '$';
-          const amount = pricingData?.price || 0;
+          const currency = pricingData?.currency || 'INR';
+          const currencySymbol = currency === 'INR' ? '₹' : '$';
+          const amount = pricingData?.price ?? 0;
 
           setSubscriptionData({
             plan: plan.name || 'Premium Plan',
@@ -89,7 +98,7 @@ export const SubscriptionCard = () => {
               month: 'short',
               day: 'numeric'
             }),
-            price: `${currencySymbol}${amount.toFixed(2)}`,
+            price: `${currencySymbol}${Number(amount).toFixed(2)}`,
             isPremium: true
           });
         } else {

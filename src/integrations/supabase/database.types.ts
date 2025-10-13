@@ -91,6 +91,47 @@ export interface Database {
           created_at?: string
         }
       }
+      payments: {
+        Row: {
+          id: string
+          user_id: string
+          plan_id: string
+          amount: number
+          currency: string
+          payment_method: string | null
+          payment_status: string
+          external_payment_id: string | null
+          phone_number: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_id: string
+          amount: number
+          currency: string
+          payment_method?: string | null
+          payment_status?: string
+          external_payment_id?: string | null
+          phone_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_id?: string
+          amount?: number
+          currency?: string
+          payment_method?: string | null
+          payment_status?: string
+          external_payment_id?: string | null
+          phone_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       user_subscriptions: {
         Row: {
           id: string

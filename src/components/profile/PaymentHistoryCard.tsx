@@ -17,16 +17,24 @@ interface Payment {
 }
 
 export const PaymentHistoryCard = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for auth to finish loading first
+    if (authLoading) {
+      return;
+    }
+    
     if (user) {
       fetchPaymentHistory();
+    } else {
+      // If no user after auth loads, stop loading immediately
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchPaymentHistory = async () => {
     try {
@@ -41,7 +49,7 @@ export const PaymentHistoryCard = () => {
           currency,
           payment_status,
           created_at,
-          subscription_plans!plan_id(name)
+          subscription_plans(name)
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })

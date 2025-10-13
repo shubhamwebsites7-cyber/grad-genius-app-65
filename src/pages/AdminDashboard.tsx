@@ -42,6 +42,7 @@ import { ExamRequestsSection } from "@/components/admin/ExamRequestsSection";
 import { FeedbackSection } from "@/components/admin/FeedbackSection";
 import { EnhancedResourcesSection } from "@/components/admin/EnhancedResourcesSection";
 import { PricingManagementSection } from "@/components/admin/PricingManagementSection";
+import { SubscriptionsManagementSection } from "@/components/admin/SubscriptionsManagementSection";
 
 interface Stats {
   totalUsers: number;
@@ -540,31 +541,12 @@ const AdminDashboard = () => {
         return <PricingManagementSection />;
 
       case 'subscriptions':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Subscriptions & Payments</h2>
-                <p className="text-muted-foreground">Manage user subscriptions and billing</p>
-              </div>
-            </div>
-            
-            <Card>
-              <CardContent className="p-12 text-center">
-                <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Subscriptions Management</h3>
-                <p className="text-muted-foreground">
-                  Active Subscriptions: {stats.activeSubscriptions}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <SubscriptionsManagementSection />;
 
       case 'settings':
         return (
           <div className="space-y-6">
-            <div>
+            <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Settings</h2>
               <p className="text-muted-foreground">Manage application settings and configurations</p>
             </div>
