@@ -1,4 +1,4 @@
-const CACHE_NAME = 'examtrakr-v4';
+const CACHE_NAME = 'examtrakr-v5';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -21,6 +21,32 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Helper function to check if URL should be cached
+function shouldCache(url, request) {
+  // Never cache Supabase API calls
+  if (url.hostname.includes('supabase')) {
+    return false;
+  }
+  
+  // Never cache authenticated routes that load dynamic data
+  const authRoutes = ['/dashboard', '/profile', '/admin', '/exam/', '/resources/'];
+  if (authRoutes.some(route => url.pathname.startsWith(route))) {
+    return false;
+  }
+  
+  // Never cache API endpoints
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) {
+    return false;
+  }
+  
+  // Never cache requests with authentication headers
+  if (request.headers.get('authorization') || request.headers.get('apikey')) {
+    return false;
+  }
+  
+  return true;
+}
+
 // Fetch event - NETWORK FIRST strategy for HTML/JS, cache for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -34,8 +60,15 @@ self.addEventListener('fetch', (event) => {
   
   // Skip caching for external resources (but allow same-origin requests)
   if (url.origin !== self.location.origin) {
+    // Allow Supabase requests to pass through without caching
+    if (url.hostname.includes('supabase')) {
+      event.respondWith(fetch(request));
+    }
     return;
   }
+
+  // Check if this request should be cached
+  const canCache = shouldCache(url, request);
 
   // Network-first strategy for HTML and JS files
   if (request.destination === 'document' || 
@@ -46,20 +79,26 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone and cache the fresh response
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
+          // Only cache if allowed and response is successful
+          if (canCache && response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
           return response;
         })
         .catch(() => {
-          // Fallback to cache only if network fails
-          return caches.match(request);
+          // Fallback to cache only if network fails and caching was allowed
+          if (canCache) {
+            return caches.match(request);
+          }
+          // For non-cacheable requests, return a network error
+          return new Response('Network error', { status: 408 });
         })
     );
-  } else {
-    // Cache-first for images, fonts, and other static assets
+  } else if (canCache) {
+    // Cache-first for images, fonts, and other static assets (only if cacheable)
     event.respondWith(
       caches.match(request)
         .then((response) => {
@@ -74,6 +113,9 @@ self.addEventListener('fetch', (event) => {
           });
         })
     );
+  } else {
+    // For non-cacheable requests, always fetch from network
+    event.respondWith(fetch(request));
   }
 });
 

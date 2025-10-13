@@ -71,6 +71,22 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  // Force refresh when component mounts and user is authenticated
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        // Refresh data when page becomes visible and user is logged in
+        fetchDashboardData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);

@@ -14,5 +14,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     storage: window.localStorage,
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development',
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'examtrakr-web',
+    },
   },
 });
