@@ -41,7 +41,7 @@ export const PaymentHistoryCard = () => {
           currency,
           payment_status,
           created_at,
-          plan:subscription_plans(name)
+          subscription_plans!plan_id(name)
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
@@ -55,7 +55,7 @@ export const PaymentHistoryCard = () => {
         currency: payment.currency,
         payment_status: payment.payment_status,
         created_at: payment.created_at,
-        plan_name: payment.plan?.name || 'Unknown Plan'
+        plan_name: payment.subscription_plans?.name || 'Unknown Plan'
       })) || [];
 
       setPayments(formattedPayments);
