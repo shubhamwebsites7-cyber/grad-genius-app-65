@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom"],
   },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       output: {
         // Enable content-based hashing for cache busting
@@ -29,5 +31,9 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === 'development',
     // Optimize chunk size
     chunkSizeWarningLimit: 1000,
+    // Ensure proper module preloading
+    modulePreload: {
+      polyfill: true,
+    },
   },
 }));
