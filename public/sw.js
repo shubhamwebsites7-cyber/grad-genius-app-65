@@ -1,4 +1,4 @@
-const CACHE_NAME = 'examtrakr-v3';
+const CACHE_NAME = 'examtrakr-v4';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -28,11 +28,12 @@ self.addEventListener('fetch', (event) => {
   
   // Skip caching for non-GET requests (POST, PUT, DELETE, etc.)
   if (request.method !== 'GET') {
-    return fetch(request);
+    event.respondWith(fetch(request));
+    return;
   }
   
-  // Skip caching for API calls and external resources
-  if (!url.origin.includes('examtrakr.com') && !url.origin.includes('localhost')) {
+  // Skip caching for external resources (but allow same-origin requests)
+  if (url.origin !== self.location.origin) {
     return;
   }
 

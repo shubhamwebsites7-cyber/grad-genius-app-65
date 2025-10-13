@@ -6,7 +6,7 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/((?!assets/|favicon|icon|examtrakr|robots|sitemap|manifest|sw\\.).*)",
+      "source": "/((?!api|assets|favicon|icon-|robots|sitemap|manifest|sw\\.|_next).*)",
       "destination": "/index.html"
     }
   ],
