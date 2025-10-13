@@ -31,51 +31,74 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { plan_id, phone_number } = await req.json();
+    const requestBody = await req.json();
+    const { plan_id, pricing_id, amount, currency, phone_number } = requestBody;
 
     if (!plan_id || !phone_number) {
       throw new Error('Missing required fields: plan_id or phone_number');
     }
 
-    // Fetch plan details
-    const { data: plan, error: planError } = await createClient(
+    console.log('Creating order for user:', user.id, 'plan:', plan_id);
+
+    // Create service role client for database operations
+    const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
+
+    // Fetch plan details
+    const { data: plan, error: planError } = await serviceClient
       .from('subscription_plans')
       .select('*')
       .eq('id', plan_id)
       .single();
 
     if (planError || !plan) {
+      console.error('Plan fetch error:', planError);
       throw new Error('Plan not found');
     }
 
-    // Fetch pricing for India
-    const { data: pricing, error: pricingError } = await createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-      .from('plan_pricing')
-      .select('*')
-      .eq('plan_id', plan_id)
-      .eq('country_code', 'IN')
-      .eq('is_active', true)
-      .single();
+    // Fetch pricing - use provided pricing_id or fetch for India
+    let pricing;
+    if (pricing_id) {
+      const { data: pricingData, error: pricingError } = await serviceClient
+        .from('plan_pricing')
+        .select('*')
+        .eq('id', pricing_id)
+        .eq('is_active', true)
+        .single();
+      
+      if (pricingError || !pricingData) {
+        console.error('Pricing fetch error:', pricingError);
+        throw new Error('Pricing not found');
+      }
+      pricing = pricingData;
+    } else {
+      // Fallback to India pricing
+      const { data: pricingData, error: pricingError } = await serviceClient
+        .from('plan_pricing')
+        .select('*')
+        .eq('plan_id', plan_id)
+        .eq('country_code', 'IN')
+        .eq('is_active', true)
+        .single();
 
-    if (pricingError || !pricing) {
-      throw new Error('Pricing not found for India');
+      if (pricingError || !pricingData) {
+        console.error('Pricing fetch error:', pricingError);
+        throw new Error('Pricing not found for India');
+      }
+      pricing = pricingData;
     }
 
+    // Use provided amount or pricing amount
+    const orderAmount = amount || pricing.price;
+    const orderCurrency = currency || pricing.currency;
     const orderId = `order_${Date.now()}_${user.id.substring(0, 8)}`;
-    const orderAmount = pricing.price;
-    const orderCurrency = pricing.currency;
 
-    // Create payment record
-    const { data: payment, error: paymentError } = await createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    console.log('Order details:', { orderId, orderAmount, orderCurrency });
+
+    // Create payment record in database
+    const { data: payment, error: paymentError } = await serviceClient
       .from('payments')
       .insert({
         user_id: user.id,
@@ -91,10 +114,13 @@ serve(async (req) => {
       .single();
 
     if (paymentError || !payment) {
+      console.error('Payment record creation error:', paymentError);
       throw new Error('Failed to create payment record');
     }
 
-    // Create Cashfree order
+    console.log('Payment record created:', payment.id);
+
+    // Get Cashfree credentials
     const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
 
@@ -102,7 +128,11 @@ serve(async (req) => {
       throw new Error('Cashfree credentials not configured');
     }
 
-    const cashfreeApiUrl = 'https://sandbox.cashfree.com/pg/orders'; // Use 'https://api.cashfree.com/pg/orders' for production
+    // Use production API endpoint
+    const cashfreeApiUrl = 'https://api.cashfree.com/pg/orders';
+
+    // Get origin for return URL
+    const origin = req.headers.get('origin') || 'https://examtrakr.com';
 
     const orderPayload = {
       order_id: orderId,
@@ -114,12 +144,12 @@ serve(async (req) => {
         customer_phone: phone_number,
       },
       order_meta: {
-        return_url: `${req.headers.get('origin') || 'https://examtrakr.com'}/profile?payment=success`,
+        return_url: `${origin}/profile?payment_status=success`,
         notify_url: 'https://bjndsotwbzmuqwdikdaq.supabase.co/functions/v1/cashfree-webhook',
       },
     };
 
-    console.log('Creating Cashfree order:', orderId);
+    console.log('Calling Cashfree API with order:', orderId);
 
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: 'POST',
@@ -136,7 +166,7 @@ serve(async (req) => {
 
     if (!cashfreeResponse.ok) {
       console.error('Cashfree API error:', cashfreeData);
-      throw new Error(`Cashfree API error: ${cashfreeData.message || 'Unknown error'}`);
+      throw new Error(`Cashfree API error: ${cashfreeData.message || JSON.stringify(cashfreeData)}`);
     }
 
     console.log('Cashfree order created successfully:', orderId);
