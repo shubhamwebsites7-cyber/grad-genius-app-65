@@ -50,7 +50,31 @@ const Pricing = () => {
 
   useEffect(() => {
     fetchPricingPlans();
-  }, []);
+    if (user) {
+      fetchUserPhoneNumber();
+    }
+  }, [user]);
+
+  const fetchUserPhoneNumber = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (!error && data) {
+        const userData = data as Record<string, any>;
+        if (userData.phone_number) {
+          setPhoneNumber(userData.phone_number as string);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching phone number:', error);
+    }
+  };
 
   const fetchPricingPlans = async () => {
     try {
@@ -308,9 +332,16 @@ const Pricing = () => {
                   {phoneError && (
                     <p className="text-sm text-destructive">{phoneError}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    This number will be used for payment verification and order updates
-                  </p>
+                  {phoneNumber ? (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Check className="h-3 w-3 text-success" />
+                      Using saved number from your profile
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      This number will be used for payment verification and order updates
+                    </p>
+                  )}
                 </div>
               )}
 
