@@ -434,7 +434,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
                     <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                     <div>
@@ -459,8 +459,22 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                   <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
                     <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                     <div>
+                      <p className="font-medium">Progress Tracking</p>
+                      <p className="text-sm text-muted-foreground">Monitor your learning journey</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
+                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                    <div>
                       <p className="font-medium">Priority Support</p>
-                      <p className="text-sm text-muted-foreground">Get help whenever you need it</p>
+                      <p className="text-sm text-muted-foreground">Get help when you need it</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
+                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Mobile Friendly</p>
+                      <p className="text-sm text-muted-foreground">Study anywhere, anytime</p>
                     </div>
                   </div>
                 </div>
