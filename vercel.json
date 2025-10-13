@@ -5,9 +5,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    {
-      "source": "/((?!api|assets|favicon|icon-|robots|sitemap|manifest|sw\\.|_next).*)",
-      "destination": "/index.html"
+    { 
+      "source": "/(.*)", 
+      "destination": "/" 
     }
   ],
   "headers": [
