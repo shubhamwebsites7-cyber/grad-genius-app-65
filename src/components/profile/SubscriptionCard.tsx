@@ -58,7 +58,7 @@ export const SubscriptionCard = () => {
     try {
       setLoading(true);
 
-      // Updated query to work with new schema including last_payment relationship
+      // Direct query to user_subscriptions now that schema is fixed
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select(`

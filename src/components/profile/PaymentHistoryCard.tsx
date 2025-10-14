@@ -46,7 +46,7 @@ export const PaymentHistoryCard = () => {
       setLoading(true);
       setError(null);
 
-      // Updated query to work with new schema - join through plan_id
+      // Query payments with plan information
       const { data, error } = await supabase
         .from('payments')
         .select(`

@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp'
 };
 
-console.info('cashfree-webhook initialized - Production Ready');
+console.info('🚀 cashfree-webhook initialized - LIVE PRODUCTION MODE');
 
 // Helper function to verify Cashfree webhook signature using HMAC SHA-256
 async function verifyCashfreeSignature(payload: string, signature: string, timestamp: string, secretKey: string): Promise<boolean> {
@@ -77,6 +77,7 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           message: 'Test webhook received successfully',
+          redirect_url: 'https://www.examtrakr.com/profile?payment_status=success',
           timestamp: new Date().toISOString()
         }),
         {
@@ -122,11 +123,13 @@ serve(async (req) => {
       );
     }
 
-    console.log(`🔄 Processing webhook for order: ${order_id}, status: ${order_status}`, {
+    console.log(`🚀 PRODUCTION Webhook Processing:`, {
       order_id,
       order_status,
       customer_phone: customer_phone ? 'provided' : 'not provided',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      webhook_source: 'Cashfree Production',
+      project_url: 'https://bjndsotwbzmuqwdikdaq.supabase.co'
     });
 
     const supabaseClient = createClient(
@@ -203,7 +206,7 @@ serve(async (req) => {
           .eq('id', existingSubscription.id);
       }
 
-      // Create subscription with last_payment_id reference
+      // Create subscription with proper user_id and last_payment_id reference
       const { data: newSubscription, error: subscriptionError } = await supabaseClient
         .from('user_subscriptions')
         .insert({
@@ -232,12 +235,21 @@ serve(async (req) => {
         .eq('id', payment.id);
     }
 
+    // Determine redirect URL based on payment status
+    const redirectUrl = newStatus === 'completed' 
+      ? 'https://www.examtrakr.com/profile?payment_status=success'
+      : 'https://www.examtrakr.com/profile?payment_status=failure';
+
+    console.log(`✅ Webhook processed successfully - Status: ${newStatus}, Redirect: ${redirectUrl}`);
+
     return new Response(
       JSON.stringify({
         success: true,
         status: newStatus,
         order_id,
         message: 'Webhook processed successfully',
+        redirect_url: redirectUrl,
+        timestamp: new Date().toISOString()
       }),
       {
         status: 200,
@@ -246,9 +258,15 @@ serve(async (req) => {
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Webhook processing error:', errorMessage);
+    console.error('❌ Webhook processing error:', errorMessage);
+    
     return new Response(
-      JSON.stringify({ error: errorMessage, success: false }),
+      JSON.stringify({ 
+        error: errorMessage, 
+        success: false,
+        redirect_url: 'https://www.examtrakr.com/profile?payment_status=failure',
+        timestamp: new Date().toISOString()
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -85,7 +85,7 @@ serve(async (req) => {
       throw new Error(`Pricing not found: ${pricingError?.message || 'No active pricing available'}`);
     }
 
-    // Validate environment variables
+    // Validate environment variables - PRODUCTION SETUP
     const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
     const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'production';
@@ -112,12 +112,14 @@ serve(async (req) => {
       customerPhone = `+91${customerPhone.replace(/\D/g, '')}`;
     }
 
-    console.log('Order details:', {
+    console.log('🚀 PRODUCTION Order Details:', {
       orderId,
       orderAmount,
       orderCurrency,
       plan_name: plan.name,
-      environment: CASHFREE_ENVIRONMENT
+      environment: CASHFREE_ENVIRONMENT,
+      return_url: 'https://www.examtrakr.com/profile?payment_status=success',
+      notify_url: 'https://bjndsotwbzmuqwdikdaq.supabase.co/functions/v1/cashfree-webhook'
     });
 
     // Create payment record in database first
@@ -157,7 +159,7 @@ serve(async (req) => {
       },
       order_meta: {
         return_url: 'https://www.examtrakr.com/profile?payment_status=success',
-        notify_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/cashfree-webhook`,
+        notify_url: 'https://bjndsotwbzmuqwdikdaq.supabase.co/functions/v1/cashfree-webhook',
       },
       order_note: `Subscription: ${plan.name} - User: ${user.id}`,
     };
