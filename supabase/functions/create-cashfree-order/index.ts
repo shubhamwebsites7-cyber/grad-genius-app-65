@@ -392,22 +392,19 @@ serve(async (req) => {
       });
     }
     
-    // Extract payment session details with better compatibility
+    // Extract payment session details
     const paymentSessionId = cfData.payment_session_id || cfData.session_id;
-    const orderToken = cfData.order_token || cfData.token;
     
     console.log('🔑 Payment session details:', { 
-      has_session_id: !!paymentSessionId, 
-      has_token: !!orderToken,
+      has_session_id: !!paymentSessionId,
       cf_order_id: cfData.cf_order_id
     });
     
-    // Validate required response fields
-    if (!paymentSessionId || !orderToken) {
-      console.error('❌ Missing payment session fields:', {
+    // Validate required response field
+    if (!paymentSessionId) {
+      console.error('❌ Missing payment_session_id:', {
         received_fields: Object.keys(cfData),
-        payment_session_id: paymentSessionId,
-        order_token: orderToken
+        payment_session_id: paymentSessionId
       });
       
       await supabaseClient.from('payments')
@@ -416,7 +413,7 @@ serve(async (req) => {
       
       return new Response(JSON.stringify({ 
         error: 'Invalid payment session response',
-        details: 'Missing payment_session_id or order_token'
+        details: 'Missing payment_session_id'
       }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -432,14 +429,13 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       payment_session_id: paymentSessionId,
-      order_token: orderToken,
       order_id: orderId,
       amount: orderAmount,
       currency: orderCurrency,
       plan_name: plan.name,
       environment: CASHFREE_ENVIRONMENT,
       payment_id: payment.id,
-    }), { 
+    }), {
       status: 200, 
       headers: { 
         ...corsHeaders, 
