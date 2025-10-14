@@ -6,205 +6,254 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-console.info('create-cashfree-order function initialized');
+console.info('create-cashfree-order initialized - Production Ready');
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
+    // Initialize Supabase client with service role key
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    // Validate authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+    // Authenticate user
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      console.error('Authentication failed:', userError?.message);
+      throw new Error('Unauthorized - Invalid token');
     }
 
+    // Parse and validate request body
     const requestBody = await req.json();
-    const { plan_id, pricing_id, amount, currency, phone_number } = requestBody;
+    const { plan_id, pricing_id, phone_number } = requestBody;
 
-    if (!plan_id || !phone_number) {
-      throw new Error('Missing required fields: plan_id or phone_number');
+    if (!plan_id) {
+      throw new Error('Missing required field: plan_id');
     }
 
-    console.log('Creating order for user:', user.id, 'plan:', plan_id);
-
-    // Create service role client for database operations
-    const serviceClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    console.log('Processing payment order:', {
+      user_id: user.id,
+      plan_id,
+      pricing_id,
+      phone_number: phone_number ? 'provided' : 'not provided'
+    });
 
     // Fetch plan details
-    const { data: plan, error: planError } = await serviceClient
+    const { data: plan, error: planError } = await supabaseClient
       .from('subscription_plans')
       .select('*')
       .eq('id', plan_id)
       .single();
 
     if (planError || !plan) {
-      console.error('Plan fetch error:', planError);
-      throw new Error('Plan not found');
+      console.error('Plan fetch error:', planError?.message);
+      throw new Error(`Plan not found: ${planError?.message || 'Invalid plan_id'}`);
     }
 
-    // Fetch pricing - use provided pricing_id or fetch for India
-    let pricing;
+    // Fetch pricing details with fallback logic
+    let pricingQuery = supabaseClient
+      .from('plan_pricing')
+      .select('*')
+      .eq('plan_id', plan_id)
+      .eq('is_active', true);
+
     if (pricing_id) {
-      const { data: pricingData, error: pricingError } = await serviceClient
-        .from('plan_pricing')
-        .select('*')
-        .eq('id', pricing_id)
-        .eq('is_active', true)
-        .single();
-      
-      if (pricingError || !pricingData) {
-        console.error('Pricing fetch error:', pricingError);
-        throw new Error('Pricing not found');
-      }
-      pricing = pricingData;
+      pricingQuery = pricingQuery.eq('id', pricing_id);
     } else {
-      // Fallback to India pricing
-      const { data: pricingData, error: pricingError } = await serviceClient
-        .from('plan_pricing')
-        .select('*')
-        .eq('plan_id', plan_id)
-        .eq('country_code', 'IN')
-        .eq('is_active', true)
-        .single();
-
-      if (pricingError || !pricingData) {
-        console.error('Pricing fetch error:', pricingError);
-        throw new Error('Pricing not found for India');
-      }
-      pricing = pricingData;
+      // Default to Indian pricing for production
+      pricingQuery = pricingQuery.eq('country_code', 'IN');
     }
 
-    // Use provided amount or pricing amount
-    const orderAmount = amount || pricing.price;
-    const orderCurrency = currency || pricing.currency;
-    const orderId = `order_${Date.now()}_${user.id.substring(0, 8)}`;
+    const { data: pricing, error: pricingError } = await pricingQuery.single();
 
-    console.log('Order details:', { orderId, orderAmount, orderCurrency });
+    if (pricingError || !pricing) {
+      console.error('Pricing fetch error:', pricingError?.message);
+      throw new Error(`Pricing not found: ${pricingError?.message || 'No active pricing available'}`);
+    }
 
-    // Create payment record in database
-    const { data: payment, error: paymentError } = await serviceClient
+    // Validate environment variables
+    const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
+    const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
+    const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'production';
+
+    if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
+      console.error('Missing Cashfree credentials');
+      throw new Error('Payment gateway configuration error');
+    }
+
+    // Generate unique order ID with timestamp and random string
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substr(2, 9);
+    const orderId = `examtrakr_${timestamp}_${randomStr}`;
+    
+    const orderAmount = Number(pricing.price);
+    const orderCurrency = pricing.currency || 'INR';
+
+    // Validate phone number format
+    let customerPhone = phone_number;
+    if (!customerPhone) {
+      // Use a default phone number if not provided
+      customerPhone = '+919999999999';
+    } else if (!customerPhone.startsWith('+91')) {
+      customerPhone = `+91${customerPhone.replace(/\D/g, '')}`;
+    }
+
+    console.log('Order details:', {
+      orderId,
+      orderAmount,
+      orderCurrency,
+      plan_name: plan.name,
+      environment: CASHFREE_ENVIRONMENT
+    });
+
+    // Create payment record in database first
+    const { data: payment, error: paymentError } = await supabaseClient
       .from('payments')
       .insert({
         user_id: user.id,
         plan_id: plan_id,
         amount: orderAmount,
         currency: orderCurrency,
-        payment_method: 'cashfree',
         payment_status: 'pending',
         external_payment_id: orderId,
-        phone_number: phone_number,
+        phone_number: customerPhone,
+        payment_method: 'cashfree',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
 
-    if (paymentError || !payment) {
-      throw new Error('Failed to create payment record');
-    }
-    console.log('Payment record created:', payment.id);
-
-    // GetCashfree credentials
-    const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
-    const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
-    const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'sandbox';
-
-    if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
-      throw new Error('Cashfree credentials not configured');
+    if (paymentError) {
+      console.error('Payment record creation failed:', paymentError);
+      throw new Error(`Failed to create payment record: ${paymentError.message}`);
     }
 
-    console.log('Using cashfree environment:', CASHFREE_ENVIRONMENT);
-    console.log('Cashfree App ID:', CASHFREE_APP_ID ? 'Present' : 'Missing');
+    console.log('Payment record created successfully:', payment.id);
 
-    // Use appropriate API endpoint based on environment
-    const cashfreeApiUrl = CASHFREE_ENVIRONMENT === 'production' 
-      ? 'https://api.cashfree.com/pg/orders' 
-      : 'https://sandbox.cashfree.com/pg/orders';
-    
-    console.log('Using cashfree API URL:', cashfreeApiUrl);
-
-    // Get origin for return URL
-    const origin = req.headers.get('origin') || 'https://examtrakr.com';
-
+    // Prepare Cashfree order payload
     const orderPayload = {
       order_id: orderId,
       order_amount: orderAmount,
       order_currency: orderCurrency,
       customer_details: {
         customer_id: user.id,
-        customer_email: user.email,
-        customer_phone: phone_number,
+        customer_email: user.email || `user_${user.id}@examtrakr.com`,
+        customer_phone: customerPhone,
       },
       order_meta: {
-        return_url: `${origin}/profile?payment_status=success`,
-        notify_url: 'https://bjndsotwbzmuqwdikdaq.supabase.co/functions/v1/cashfree-webhook',
+        return_url: 'https://www.examtrakr.com/profile?payment_status=success',
+        notify_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/cashfree-webhook`,
       },
+      order_note: `Subscription: ${plan.name} - User: ${user.id}`,
     };
 
-    console.log('Calling Cashfree API with order:', orderId);
-    console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
+    // Determine API URL based on environment
+    const apiUrl = CASHFREE_ENVIRONMENT === 'production' 
+      ? 'https://api.cashfree.com/pg/orders'
+      : 'https://sandbox.cashfree.com/pg/orders';
 
-    const cashfreeResponse = await fetch(cashfreeApiUrl, {
+    console.log('Making Cashfree API request:', {
+      url: apiUrl,
+      order_id: orderId,
+      amount: orderAmount
+    });
+
+    // Create order with Cashfree API
+    const cashfreeResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-version': '2023-08-01',
         'x-client-id': CASHFREE_APP_ID,
         'x-client-secret': CASHFREE_SECRET_KEY,
-        'x-api-version': '2023-08-01',
       },
       body: JSON.stringify(orderPayload),
     });
 
-    console.log('Cashfree response status:', cashfreeResponse.status);
-    console.log('Cashfree response headers:', Object.fromEntries(cashfreeResponse.headers.entries()));
+    const responseText = await cashfreeResponse.text();
+    console.log('Cashfree API response:', {
+      status: cashfreeResponse.status,
+      statusText: cashfreeResponse.statusText,
+      body: responseText
+    });
 
-    const cashfreeData = await cashfreeResponse.json();
     if (!cashfreeResponse.ok) {
-      console.error('Cashfree API error response:', cashfreeData);
-      console.error('Request payload that failed:', orderPayload);
-      throw new Error(`Cashfree API error: ${cashfreeData.message || JSON.stringify(cashfreeData)}`);
+      // Update payment record as failed
+      await supabaseClient
+        .from('payments')
+        .update({
+          payment_status: 'failed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', payment.id);
+
+      throw new Error(`Cashfree API error: ${cashfreeResponse.status} - ${responseText}`);
     }
 
-    console.log('Cashfree order created successfully:', orderId);
-    console.log('Cashfree response data:', JSON.stringify(cashfreeData, null, 2));
+    const cashfreeData = JSON.parse(responseText);
 
-    return new Response(JSON.stringify({
-      success: true,
-      order_id: orderId,
+    // Validate Cashfree response
+    if (!cashfreeData.payment_session_id || !cashfreeData.order_token) {
+      console.error('Invalid Cashfree response:', cashfreeData);
+      throw new Error('Invalid response from payment gateway');
+    }
+
+    console.log('Cashfree order created successfully:', {
       payment_session_id: cashfreeData.payment_session_id,
-      order_token: cashfreeData.order_token,
-      cashfree_response: cashfreeData // Include full response for debugging
-    }), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      },
-      status: 200
+      order_token: cashfreeData.order_token
     });
-  } catch (error) {
-    console.error('Error in create-cashfree-order:', error);
+
+    // Return success response with all necessary data
     return new Response(
       JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        success: true,
+        payment_session_id: cashfreeData.payment_session_id,
+        order_token: cashfreeData.order_token,
+        order_id: orderId,
+        amount: orderAmount,
+        currency: orderCurrency,
+        plan_name: plan.name,
+        environment: CASHFREE_ENVIRONMENT,
+        payment_id: payment.id,
       }),
       {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Error in create-cashfree-order:', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    
+    return new Response(
+      JSON.stringify({ 
+        error: errorMessage,
+        success: false,
+        timestamp: new Date().toISOString()
+      }),
+      {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }

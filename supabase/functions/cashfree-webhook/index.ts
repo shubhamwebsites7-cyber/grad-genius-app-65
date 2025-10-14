@@ -6,9 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp'
 };
 
-console.info('cashfree-webhook initialized');
+console.info('cashfree-webhook initialized - Production Ready');
 
-// Helper function to verify Cashfree webhook signature using Web Crypto API
+// Helper function to verify Cashfree webhook signature using HMAC SHA-256
 async function verifyCashfreeSignature(payload: string, signature: string, timestamp: string, secretKey: string): Promise<boolean> {
   try {
     const signedPayload = `${timestamp}.${payload}`;
@@ -16,7 +16,7 @@ async function verifyCashfreeSignature(payload: string, signature: string, times
     const keyData = encoder.encode(secretKey);
     const messageData = encoder.encode(signedPayload);
 
-    // Import key for HMAC
+    // Import key for HMAC SHA-256
     const key = await crypto.subtle.importKey(
       'raw',
       keyData,
@@ -104,7 +104,7 @@ serve(async (req) => {
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      console.log('✅ Webhook signature verified');
+      console.log('✅ Webhook signature verified successfully');
     } else {
       console.log('⚠️ Webhook signature verification skipped (test mode or missing headers)');
     }
@@ -122,7 +122,12 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processing webhook for order: ${order_id}, status: ${order_status}`);
+    console.log(`🔄 Processing webhook for order: ${order_id}, status: ${order_status}`, {
+      order_id,
+      order_status,
+      customer_phone: customer_phone ? 'provided' : 'not provided',
+      timestamp: new Date().toISOString()
+    });
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
