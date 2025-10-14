@@ -163,6 +163,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           plan_id: plan.id,
+          pricing_id: plan.pricing?.id,
           phone_number: e164Phone,
         }
       });
@@ -176,7 +177,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       }
 
       // Validate payment session ID
-      if (!data.payment_session_id) {
+      if (!data?.payment_session_id) {
         throw new Error('Payment session ID not received from server');
       }
 
