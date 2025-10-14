@@ -89,7 +89,7 @@ export const PaymentProcessor = ({
       const baseUrl = environment === 'sandbox' 
         ? 'https://sandbox.cashfree.com' 
         : 'https://www.cashfree.com';
-      const cashfreePaymentUrl = `${baseUrl}/pg/checkout/payment-session/${data.payment_session_id}`;
+      const cashfreePaymentUrl = `${baseUrl}/pg/view/sessions/checkout?payment_session_id=${encodeURIComponent(data.payment_session_id)}`;
       setPaymentUrl(cashfreePaymentUrl);
       
       toast.success('Payment order created! Redirecting to payment page...');
