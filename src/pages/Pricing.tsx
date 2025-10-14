@@ -214,8 +214,8 @@ const Pricing = () => {
 
       console.log('Initializing Cashfree checkout with session:', data.payment_session_id);
 
-      // Initialize Cashfree - check environment variable or default to sandbox for testing
-      const cashfreeMode = import.meta.env.VITE_CASHFREE_MODE || 'sandbox';
+      // Initialize Cashfree based on backend environment to prevent session mismatch
+      const cashfreeMode = data.environment === 'sandbox' ? 'sandbox' : 'production';
       console.log('Initializing Cashfree in mode:', cashfreeMode);
       
       const cashfree = await (window as any).Cashfree({
