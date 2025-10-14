@@ -96,33 +96,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let initialized = false;
     
     // Set up auth state listener first
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state change:', event, session?.user?.id);
         
         if (!mounted) return;
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          try {
-            await fetchSubscription(session.user.id);
-          } catch (error) {
-            console.error('Error fetching subscription on auth change:', error);
+        // Only update if initialized or not INITIAL_SESSION
+        if (initialized || event !== 'INITIAL_SESSION') {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            // Use setTimeout to avoid blocking auth flow
+            setTimeout(() => {
+              if (mounted) {
+                fetchSubscription(session.user.id).catch(err => 
+                  console.error('Error fetching subscription:', err)
+                );
+              }
+            }, 0);
+          } else {
+            setSubscription({
+              isPremium: false,
+              planName: 'Free Plan',
+              expiresAt: null,
+              status: 'free'
+            });
           }
-        } else {
-          setSubscription({
-            isPremium: false,
-            planName: 'Free Plan',
-            expiresAt: null,
-            status: 'free'
-          });
+          
+          if (initialized) {
+            setLoading(false);
+          }
         }
-        
-        setLoading(false);
       }
     );
 
@@ -133,8 +142,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('Error getting session:', error);
-          setLoading(false);
-          return;
         }
         
         if (!mounted) return;
@@ -150,10 +157,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }
         
+        initialized = true;
         setLoading(false);
       } catch (error) {
         console.error('Error initializing auth:', error);
         if (mounted) {
+          initialized = true;
           setLoading(false);
         }
       }

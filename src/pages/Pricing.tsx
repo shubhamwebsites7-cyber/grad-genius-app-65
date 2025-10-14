@@ -193,6 +193,7 @@ const Pricing = () => {
       console.log('Full response data:', JSON.stringify(data, null, 2));
 
       if (error) {
+        console.error('Supabase function error:', error);
         throw new Error(error.message || 'Failed to create payment order');
       }
 
@@ -200,19 +201,25 @@ const Pricing = () => {
         throw new Error('No response from payment service');
       }
 
-      if (data.error) {
-        throw new Error(data.error);
+      // Check for both success flag and error message
+      if (data.success === false || data.error) {
+        console.error('Payment order creation failed:', data);
+        throw new Error(data.error || 'Failed to create payment order');
       }
 
       if (!data.payment_session_id || !data.order_id) {
-        throw new Error('Invalid payment session data received');
+        console.error('Missing payment session data:', data);
+        throw new Error('Invalid payment session data received. Please try again.');
       }
 
       console.log('Initializing Cashfree checkout with session:', data.payment_session_id);
 
-      // Initialize Cashfree
+      // Initialize Cashfree - check environment variable or default to sandbox for testing
+      const cashfreeMode = import.meta.env.VITE_CASHFREE_MODE || 'sandbox';
+      console.log('Initializing Cashfree in mode:', cashfreeMode);
+      
       const cashfree = await (window as any).Cashfree({
-        mode: 'production' // Using production mode for live payments
+        mode: cashfreeMode
       });
 
       // Open checkout
