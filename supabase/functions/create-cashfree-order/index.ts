@@ -1,59 +1,246 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Declare global Deno for TypeScript
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
+// Type definitions
+interface PricingData {
+  price: number;
+  currency: string;
+  country_code: string;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+// Input validation helpers
+const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
+const isValidPhoneNumber = (phone: string): boolean => {
+  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+  return phoneRegex.test(phone.replace(/\s+/g, ''));
+};
+
+const sanitizePhoneNumber = (phone: string): string => {
+  const cleaned = phone.replace(/\D/g, '');
+  return cleaned.startsWith('91') ? `+${cleaned}` : `+91${cleaned}`;
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  const startTime = Date.now();
+  const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
+  
+  if (isDevelopment) {
+    console.log('=== CREATE CASHFREE ORDER START ===');
+    console.log('Request method:', req.method);
+  }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Validate environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing required environment variables');
+    }
 
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Validate authorization header
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('Missing authorization header');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Invalid authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (userError || !user) throw new Error('Unauthorized - Invalid token');
+    // Authenticate user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !user) {
+      if (isDevelopment) console.log('Auth error:', userError);
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (isDevelopment) console.log('User authenticated:', user.id);
 
-    const { plan_id, pricing_id, phone_number } = await req.json();
-    if (!plan_id) throw new Error('Missing required field: plan_id');
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (isDevelopment) console.log('Request body:', requestBody);
+    
+    const { plan_id, pricing_id, phone_number } = requestBody;
+    
+    // Validate required fields
+    if (!plan_id || typeof plan_id !== 'string') {
+      return new Response(JSON.stringify({ error: 'Missing or invalid plan_id' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (!isValidUUID(plan_id)) {
+      return new Response(JSON.stringify({ error: 'Invalid plan_id format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (pricing_id && (!isValidUUID(pricing_id))) {
+      return new Response(JSON.stringify({ error: 'Invalid pricing_id format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (!phone_number || typeof phone_number !== 'string' || !isValidPhoneNumber(phone_number)) {
+      return new Response(JSON.stringify({ error: 'Missing or invalid phone_number' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
+    // Fetch and validate subscription plan
     const { data: plan, error: planError } = await supabaseClient
       .from('subscription_plans')
-      .select('*')
+      .select('id, name, duration_months, is_active')
       .eq('id', plan_id)
+      .eq('is_active', true)
       .single();
-    if (planError || !plan) throw new Error('Plan not found');
+      
+    if (planError || !plan) {
+      if (isDevelopment) {
+        console.log('Plan error:', planError);
+        console.log('Plan ID searched:', plan_id);
+      }
+      return new Response(JSON.stringify({ error: 'Plan not found or inactive' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (isDevelopment) console.log('Plan found:', plan.name);
 
-    let pricing = null;
+    // Fetch pricing information
+    let pricing: PricingData | null = null;
     try {
-      let query = supabaseClient.from('plan_pricing').select('*').eq('plan_id', plan_id).eq('is_active', true);
-      if (pricing_id) query = query.eq('id', pricing_id);
-      else query = query.eq('country_code', 'IN');
-      pricing = (await query.maybeSingle()).data;
-    } catch { }
-    if (!pricing) pricing = { price: 89, currency: 'INR', country_code: 'IN' };
+      let query = supabaseClient
+        .from('plan_pricing')
+        .select('price, currency, country_code')
+        .eq('plan_id', plan_id)
+        .eq('is_active', true);
+        
+      if (pricing_id) {
+        query = query.eq('id', pricing_id);
+      } else {
+        query = query.eq('country_code', 'IN');
+      }
+      
+      const pricingResult = await query.maybeSingle();
+      pricing = pricingResult.data as PricingData | null;
+      
+      if (isDevelopment) console.log('Pricing query result:', pricingResult);
+    } catch (pricingError) {
+      if (isDevelopment) console.log('Pricing query error:', pricingError);
+    }
+    
+    // Use fallback pricing if not found
+    if (!pricing) {
+      pricing = { price: 89, currency: 'INR', country_code: 'IN' };
+      if (isDevelopment) console.log('Using fallback pricing:', pricing);
+    } else {
+      if (isDevelopment) console.log('Using database pricing:', pricing);
+    }
+    
+    // Validate pricing data (pricing is guaranteed to be non-null here)
+    if (!pricing.price || pricing.price <= 0) {
+      return new Response(JSON.stringify({ error: 'Invalid pricing configuration' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
+    // Validate Cashfree configuration
     const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
     const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'production';
-    if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) throw new Error('Payment gateway configuration error');
+    
+    if (isDevelopment) {
+      console.log('Environment variables check:');
+      console.log('CASHFREE_APP_ID:', CASHFREE_APP_ID ? 'Present' : 'Missing');
+      console.log('CASHFREE_SECRET_KEY:', CASHFREE_SECRET_KEY ? 'Present' : 'Missing');
+      console.log('CASHFREE_ENVIRONMENT:', CASHFREE_ENVIRONMENT);
+    }
+    
+    if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
+      return new Response(JSON.stringify({ error: 'Payment gateway configuration error' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
+    // Generate order details
     const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substr(2, 9);
+    const randomStr = crypto.randomUUID().split('-')[0]; // More secure random string
     const orderId = `examtrakr_${timestamp}_${randomStr}`;
-    const orderAmount = Number(pricing.price);
+    const orderAmount = Math.round(Number(pricing.price) * 100) / 100; // Round to 2 decimal places
     const orderCurrency = pricing.currency || 'INR';
-    const customerPhone = phone_number?.startsWith('+91') 
-      ? phone_number 
-      : '+91' + (phone_number?.replace(/\D/g, '') || '9999999999');
+    const customerPhone = sanitizePhoneNumber(phone_number);
 
+    // Validate order amount
+    if (orderAmount < 1 || orderAmount > 100000) {
+      return new Response(JSON.stringify({ error: 'Invalid order amount' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (isDevelopment) {
+      console.log('Order details:');
+      console.log('Order ID:', orderId);
+      console.log('Amount:', orderAmount);
+      console.log('Currency:', orderCurrency);
+      console.log('Phone:', customerPhone);
+    }
+
+    // Create payment record
     const { data: payment, error: paymentError } = await supabaseClient
       .from('payments')
       .insert({
@@ -68,47 +255,134 @@ serve(async (req) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .select()
+      .select('id')
       .single();
-    if (paymentError) throw new Error('Failed to create payment record');
+      
+    if (paymentError) {
+      if (isDevelopment) console.log('Payment record creation error:', paymentError);
+      return new Response(JSON.stringify({ error: 'Failed to create payment record' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (isDevelopment) console.log('Payment record created:', payment.id);
 
+    // Prepare Cashfree order payload
+    const baseUrl = Deno.env.get('SITE_URL') || 'https://www.examtrakr.com';
+    const webhookUrl = Deno.env.get('WEBHOOK_URL') || 'https://bjndsotwbzmuqwdikdaq.supabase.co/functions/v1/cashfree-webhook';
+    
     const orderPayload = {
       order_id: orderId,
       order_amount: orderAmount,
       order_currency: orderCurrency,
       customer_details: {
-        customer_id: user.id,
-        customer_email: user.email || `user_${user.id}@examtrakr.com`,
+        customer_id: user.id.substring(0, 50), // Limit length for Cashfree
+        customer_email: user.email || `user_${user.id.substring(0, 8)}@examtrakr.com`,
         customer_phone: customerPhone,
       },
       order_meta: {
-        return_url: 'https://www.examtrakr.com/profile?payment_status=success',
-        notify_url: 'https://bjndsotwbzmuqwdikdaq.supabase.co/functions/v1/cashfree-webhook',
+        return_url: `${baseUrl}/profile?payment_status=success`,
+        notify_url: webhookUrl,
       },
-      order_note: `Subscription: ${plan.name} - User: ${user.id}`,
+      order_note: `Subscription: ${plan.name.substring(0, 100)} - User: ${user.id.substring(0, 8)}`,
     };
 
     const apiUrl = CASHFREE_ENVIRONMENT === 'production' 
       ? 'https://api.cashfree.com/pg/orders' 
       : 'https://sandbox.cashfree.com/pg/orders';
 
-    const cfRes = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-version': '2023-08-01',
-        'x-client-id': CASHFREE_APP_ID,
-        'x-client-secret': CASHFREE_SECRET_KEY,
-      },
-      body: JSON.stringify(orderPayload),
-    });
-    const cfData = await cfRes.json();
-
-    if (!cfRes.ok || !cfData.payment_session_id || !cfData.order_token) {
-      await supabaseClient.from('payments').update({ payment_status: 'failed', updated_at: new Date().toISOString() }).eq('id', payment.id);
-      throw new Error('Cashfree API error or invalid response');
+    if (isDevelopment) {
+      console.log('Cashfree API URL:', apiUrl);
+      console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
     }
 
+    // Call Cashfree API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    let cfRes;
+    try {
+      cfRes = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-version': '2023-08-01',
+          'x-client-id': CASHFREE_APP_ID,
+          'x-client-secret': CASHFREE_SECRET_KEY,
+        },
+        body: JSON.stringify(orderPayload),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      await supabaseClient.from('payments')
+        .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
+        .eq('id', payment.id);
+      
+      return new Response(JSON.stringify({ error: 'Payment gateway timeout or network error' }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    clearTimeout(timeoutId);
+    
+    if (isDevelopment) {
+      console.log('Cashfree API response status:', cfRes.status);
+      console.log('Cashfree API response headers:', Object.fromEntries(cfRes.headers.entries()));
+    }
+    
+    let cfData;
+    try {
+      cfData = await cfRes.json();
+    } catch {
+      await supabaseClient.from('payments')
+        .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
+        .eq('id', payment.id);
+      
+      return new Response(JSON.stringify({ error: 'Invalid response from payment gateway' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (isDevelopment) {
+      console.log('Cashfree API response data:', JSON.stringify(cfData, null, 2));
+    }
+
+    // Handle Cashfree API errors
+    if (!cfRes.ok) {
+      await supabaseClient.from('payments')
+        .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
+        .eq('id', payment.id);
+      
+      const errorMessage = cfData?.message || cfData?.error || 'Payment gateway error';
+      return new Response(JSON.stringify({ error: errorMessage }), {
+        status: cfRes.status === 400 ? 400 : 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Validate required response fields
+    if (!cfData.payment_session_id || !cfData.order_token) {
+      await supabaseClient.from('payments')
+        .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
+        .eq('id', payment.id);
+      
+      return new Response(JSON.stringify({ error: 'Invalid payment session response' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Return success response
+    const responseTime = Date.now() - startTime;
+    
+    if (isDevelopment) {
+      console.log(`Request completed in ${responseTime}ms`);
+    }
+    
     return new Response(JSON.stringify({
       success: true,
       payment_session_id: cfData.payment_session_id,
@@ -119,13 +393,56 @@ serve(async (req) => {
       plan_name: plan.name,
       environment: CASHFREE_ENVIRONMENT,
       payment_id: payment.id,
-    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }), { 
+      status: 200, 
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'X-Response-Time': `${responseTime}ms`
+      } 
+    });
 
   } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
+    if (isDevelopment) {
+      console.log('=== ERROR OCCURRED ===');
+      console.log('Error type:', typeof error);
+      console.log('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.log(`Request failed in ${responseTime}ms`);
+    }
+    
+    // Determine appropriate status code
+    let statusCode = 500;
+    let errorMessage = 'Internal server error';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {
+        statusCode = 401;
+        errorMessage = 'Unauthorized';
+      } else if (error.message.includes('not found') || error.message.includes('Not found')) {
+        statusCode = 404;
+        errorMessage = 'Resource not found';
+      } else if (error.message.includes('Invalid') || error.message.includes('Missing')) {
+        statusCode = 400;
+        errorMessage = isDevelopment ? error.message : 'Bad request';
+      } else {
+        errorMessage = isDevelopment ? error.message : 'Internal server error';
+      }
+    }
+    
     return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
       success: false,
       timestamp: new Date().toISOString()
-    }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }), { 
+      status: statusCode, 
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'X-Response-Time': `${responseTime}ms`
+      } 
+    });
   }
 });

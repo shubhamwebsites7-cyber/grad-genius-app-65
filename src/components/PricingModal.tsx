@@ -83,7 +83,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           detectedCountry = data.country_code.toUpperCase();
         }
       } catch (error) {
-        console.log('Using default country (India)');
+        // Use default country (India) if geolocation fails
       }
       
       const targetCountry = detectedCountry === 'IN' ? 'IN' : 'US';
@@ -127,7 +127,6 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       setPlans(plansWithPricing);
       setLoading(false);
     } catch (err: any) {
-      console.error('Error fetching pricing:', err);
       setError(err.message || 'Failed to load pricing information');
       setLoading(false);
     }
@@ -164,21 +163,15 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
         throw error;
       }
       
       if (!data.success) {
-        console.error('Order creation failed:', data);
         throw new Error(data.error || 'Failed to create order');
       }
 
-      console.log('Order created successfully:', data);
-      console.log('Cashfree response:', data.cashfree_response);
-
       // Validate payment session ID
       if (!data.payment_session_id) {
-        console.error('Missing payment_session_id in response:', data);
         throw new Error('Payment session ID not received from server');
       }
 
@@ -187,12 +180,9 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
         throw new Error('Cashfree SDK not loaded. Please refresh the page and try again.');
       }
 
-      console.log('Initializing Cashfree SDK in sandbox mode...');
       const cashfree = await window.Cashfree({
-        mode: 'sandbox' // Change to 'production' for live payments
+        mode: 'production' // Production mode for live payments
       });
-
-      console.log('Opening Cashfree checkout with session ID:', data.payment_session_id);
 
       // Open payment modal
       const checkoutResult = await cashfree.checkout({
@@ -200,16 +190,12 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
         returnUrl: `${window.location.origin}/profile?payment=success`,
       });
 
-      console.log('Cashfree checkout result:', checkoutResult);
-
       toast({
         title: 'Payment Initiated',
         description: 'Complete your payment in the Cashfree window.',
       });
 
     } catch (err: any) {
-      console.error('Payment error details:', err);
-      
       let errorMessage = 'Failed to initiate payment. Please try again.';
       
       if (err.message?.includes('payment_session_id')) {
