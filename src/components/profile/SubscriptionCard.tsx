@@ -77,7 +77,7 @@ export const SubscriptionCard = () => {
             id,
             duration_months
           ),
-          plan_pricing!inner (
+          plan_pricing (
             price,
             currency,
             country_code,
@@ -94,8 +94,6 @@ export const SubscriptionCard = () => {
         `)
         .eq('user_id', user?.id)
         .eq('status', 'active')
-        .eq('plan_pricing.country_code', 'IN')
-        .eq('plan_pricing.is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
