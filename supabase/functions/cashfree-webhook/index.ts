@@ -69,6 +69,26 @@ serve(async (req) => {
       );
     }
 
+    // Check if this is a test webhook from Cashfree
+    const isTestWebhook = webhookData?.type === 'TEST' || !webhookData?.data?.order?.order_id;
+    if (isTestWebhook) {
+      console.log('✅ Test webhook received from Cashfree');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Test webhook received successfully',
+          timestamp: new Date().toISOString()
+        }),
+        {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    }
+
     // Verify Cashfree signature (optional for test requests)
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
     const signature = req.headers.get('x-webhook-signature');
