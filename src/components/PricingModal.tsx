@@ -154,11 +154,16 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
     try {
       setProcessingPayment(plan.id);
 
+      // Format phone to E.164 based on detected country
+      const digits = phoneNumber.replace(/\D/g, '');
+      const countryCode = userCountry === 'US' ? '+1' : '+91';
+      const e164Phone = `${countryCode}${digits}`;
+
       // Create order via edge function
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           plan_id: plan.id,
-          phone_number: phoneNumber,
+          phone_number: e164Phone,
         }
       });
 
