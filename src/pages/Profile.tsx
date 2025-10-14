@@ -11,6 +11,7 @@ import { SubscriptionCard } from '@/components/profile/SubscriptionCard';
 import { SupportCard } from '@/components/profile/SupportCard';
 import { ProfileLoadingSkeleton } from '@/components/profile/ProfileLoadingSkeleton';
 import { PaymentHistoryCard } from '@/components/profile/PaymentHistoryCard';
+import { convertToE164Format, isValidIndianPhoneNumber, extractDisplayNumber } from '@/utils/phoneUtils';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -76,8 +77,6 @@ const Profile = () => {
         .maybeSingle();
 
       console.log('Query error:', error);
-      console.log('Query data:', data);
-
       if (error) throw error;
 
       if (data) {
@@ -85,7 +84,7 @@ const Profile = () => {
         setProfileData({
           full_name: userData.full_name || '',
           email: userData.email || '',
-          phone_number: userData.phone_number || '',
+          phone_number: userData.phone_number ? extractDisplayNumber(userData.phone_number) : '',
           country_code: userData.country_code || 'US',
           timezone: userData.timezone || 'UTC',
           created_at: userData.created_at || '',
@@ -137,16 +136,18 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     try {
       // Validate phone number if provided
+      let phoneNumberToSave = null;
       if (profileData.phone_number) {
-        const cleanPhone = profileData.phone_number.replace(/\D/g, '');
-        if (cleanPhone.length !== 10) {
+        if (!isValidIndianPhoneNumber(profileData.phone_number)) {
           toast({
             title: "Invalid phone number",
-            description: "Please enter a valid 10-digit phone number.",
+            description: "Please enter a valid 10-digit Indian mobile number.",
             variant: "destructive",
           });
           return;
         }
+        // Convert to E.164 format for Cashfree compatibility
+        phoneNumberToSave = convertToE164Format(profileData.phone_number);
       }
 
       const { error } = await supabase
@@ -154,7 +155,7 @@ const Profile = () => {
         // @ts-ignore - Supabase type inference issue
         .update({
           full_name: profileData.full_name,
-          phone_number: profileData.phone_number || null,
+          phone_number: phoneNumberToSave,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user?.id);

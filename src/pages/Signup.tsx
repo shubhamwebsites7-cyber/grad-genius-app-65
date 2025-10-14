@@ -12,6 +12,7 @@ import { BookOpen, User, Mail, Lock, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { convertToE164Format, isValidIndianPhoneNumber } from '@/utils/phoneUtils';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -45,15 +46,17 @@ const Signup = () => {
     }
 
     // Validate phone number
-    const cleanPhone = formData.phoneNumber.replace(/\D/g, '');
-    if (cleanPhone.length !== 10) {
+    if (!isValidIndianPhoneNumber(formData.phoneNumber)) {
       toast({
         title: "Invalid phone number",
-        description: "Please enter a valid 10-digit phone number.",
+        description: "Please enter a valid 10-digit Indian mobile number.",
         variant: "destructive",
       });
       return;
     }
+
+    // Convert phone number to E.164 format for Cashfree compatibility
+    const e164PhoneNumber = convertToE164Format(formData.phoneNumber);
 
     setIsLoading(true);
     
@@ -67,7 +70,7 @@ const Signup = () => {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: formData.name,
-            phone_number: cleanPhone,
+            phone_number: e164PhoneNumber,
           },
         },
       });
