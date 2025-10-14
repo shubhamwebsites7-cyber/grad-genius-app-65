@@ -76,7 +76,7 @@ export const PaymentProcessor = ({
         throw new Error(error.message || 'Failed to create payment order');
       }
 
-      if (!data.success || !data.order_token) {
+      if (!data.success || !data.payment_session_id) {
         throw new Error('Invalid response from payment gateway');
       }
 
@@ -84,8 +84,12 @@ export const PaymentProcessor = ({
       
       setOrderId(data.order_id);
       
-      // Create Cashfree payment URL
-      const cashfreePaymentUrl = `https://payments.cashfree.com/pay/${data.order_token}`;
+      // Create Cashfree payment URL using production checkout endpoint
+      const environment = data.environment || 'production';
+      const baseUrl = environment === 'sandbox' 
+        ? 'https://sandbox.cashfree.com' 
+        : 'https://www.cashfree.com';
+      const cashfreePaymentUrl = `${baseUrl}/pg/checkout/payment-session/${data.payment_session_id}`;
       setPaymentUrl(cashfreePaymentUrl);
       
       toast.success('Payment order created! Redirecting to payment page...');
