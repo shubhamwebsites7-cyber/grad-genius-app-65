@@ -58,7 +58,7 @@ export const SubscriptionCard = () => {
     try {
       setLoading(true);
 
-      // Direct query to user_subscriptions now that schema is fixed
+      // Query user_subscriptions with actual schema
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select(`
@@ -76,13 +76,6 @@ export const SubscriptionCard = () => {
             description,
             id,
             duration_months
-          ),
-          plan_pricing (
-            price,
-            currency,
-            country_code,
-            original_price,
-            discount_percentage
           ),
           payments!last_payment_id (
             amount,
@@ -106,21 +99,20 @@ export const SubscriptionCard = () => {
       if (data) {
         const subscriptionRecord = data as any;
         const plan = subscriptionRecord.subscription_plans;
-        const pricing = subscriptionRecord.plan_pricing;
         const lastPayment = subscriptionRecord.payments;
         
         // Check if subscription is still valid
         const expiresAt = new Date(subscriptionRecord.expires_at);
         const isValid = expiresAt > new Date();
 
-        if (isValid && pricing) {
-          // Use last payment amount if available, otherwise use pricing
-          const currency = (lastPayment?.currency || pricing.currency || 'INR');
+        if (isValid && lastPayment) {
+          // Get pricing from last payment
+          const currency = lastPayment.currency || 'INR';
           const currencySymbol = currency === 'INR' ? '₹' : '$';
-          const amount = Number(lastPayment?.amount || pricing.price || 0);
+          const amount = Number(lastPayment.amount || 0);
 
           setSubscriptionData({
-            plan: plan.name || 'Premium Plan',
+            plan: plan?.name || 'Premium Plan',
             status: 'Active',
             nextBilling: expiresAt.toLocaleDateString('en-US', {
               year: 'numeric',
@@ -128,6 +120,19 @@ export const SubscriptionCard = () => {
               day: 'numeric'
             }),
             price: `${currencySymbol}${amount.toFixed(2)}`,
+            isPremium: true
+          });
+        } else if (isValid) {
+          // Valid subscription but no payment info
+          setSubscriptionData({
+            plan: plan?.name || 'Premium Plan',
+            status: 'Active',
+            nextBilling: expiresAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            }),
+            price: '-',
             isPremium: true
           });
         } else {
