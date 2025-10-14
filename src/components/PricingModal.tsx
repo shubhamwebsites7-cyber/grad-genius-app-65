@@ -162,25 +162,44 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
         }
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error || 'Failed to create order');
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error('Order creation failed:', data);
+        throw new Error(data.error || 'Failed to create order');
+      }
 
-      console.log('Order created:', data);
+      console.log('Order created successfully:', data);
+      console.log('Cashfree response:', data.cashfree_response);
+
+      // Validate payment session ID
+      if (!data.payment_session_id) {
+        console.error('Missing payment_session_id in response:', data);
+        throw new Error('Payment session ID not received from server');
+      }
 
       // Initialize Cashfree SDK
       if (!window.Cashfree) {
-        throw new Error('Cashfree SDK not loaded');
+        throw new Error('Cashfree SDK not loaded. Please refresh the page and try again.');
       }
 
+      console.log('Initializing Cashfree SDK in sandbox mode...');
       const cashfree = await window.Cashfree({
         mode: 'sandbox' // Change to 'production' for live payments
       });
 
+      console.log('Opening Cashfree checkout with session ID:', data.payment_session_id);
+
       // Open payment modal
-      await cashfree.checkout({
+      const checkoutResult = await cashfree.checkout({
         paymentSessionId: data.payment_session_id,
         returnUrl: `${window.location.origin}/profile?payment=success`,
       });
+
+      console.log('Cashfree checkout result:', checkoutResult);
 
       toast({
         title: 'Payment Initiated',
@@ -188,10 +207,21 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       });
 
     } catch (err: any) {
-      console.error('Payment error:', err);
+      console.error('Payment error details:', err);
+      
+      let errorMessage = 'Failed to initiate payment. Please try again.';
+      
+      if (err.message?.includes('payment_session_id')) {
+        errorMessage = 'Payment session expired. Please try again.';
+      } else if (err.message?.includes('Cashfree SDK')) {
+        errorMessage = 'Payment system not loaded. Please refresh the page and try again.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
       toast({
         title: 'Payment Failed',
-        description: err.message || 'Failed to initiate payment. Please try again.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {

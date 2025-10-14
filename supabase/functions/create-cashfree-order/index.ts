@@ -116,24 +116,26 @@ serve(async (req) => {
     if (paymentError || !payment) {
       throw new Error('Failed to create payment record');
     }
-
     console.log('Payment record created:', payment.id);
 
-    // Get Cashfree credentials
+    // GetCashfree credentials
     const CASHFREE_APP_ID = Deno.env.get('CASHFREE_APP_ID');
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
-    const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'production';
+    const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'sandbox';
 
     if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
       throw new Error('Cashfree credentials not configured');
     }
 
-    console.log('Using Cashfree environment:', CASHFREE_ENVIRONMENT);
+    console.log('Using cashfree environment:', CASHFREE_ENVIRONMENT);
+    console.log('Cashfree App ID:', CASHFREE_APP_ID ? 'Present' : 'Missing');
 
     // Use appropriate API endpoint based on environment
     const cashfreeApiUrl = CASHFREE_ENVIRONMENT === 'production' 
-      ? 'https://api.cashfree.com/pg/orders'
+      ? 'https://api.cashfree.com/pg/orders' 
       : 'https://sandbox.cashfree.com/pg/orders';
+    
+    console.log('Using cashfree API URL:', cashfreeApiUrl);
 
     // Get origin for return URL
     const origin = req.headers.get('origin') || 'https://examtrakr.com';
@@ -154,6 +156,7 @@ serve(async (req) => {
     };
 
     console.log('Calling Cashfree API with order:', orderId);
+    console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
 
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: 'POST',
@@ -166,27 +169,32 @@ serve(async (req) => {
       body: JSON.stringify(orderPayload),
     });
 
-    const cashfreeData = await cashfreeResponse.json();
+    console.log('Cashfree response status:', cashfreeResponse.status);
+    console.log('Cashfree response headers:', Object.fromEntries(cashfreeResponse.headers.entries()));
 
+    const cashfreeData = await cashfreeResponse.json();
     if (!cashfreeResponse.ok) {
-      console.error('Cashfree API error:', cashfreeData);
+      console.error('Cashfree API error response:', cashfreeData);
+      console.error('Request payload that failed:', orderPayload);
       throw new Error(`Cashfree API error: ${cashfreeData.message || JSON.stringify(cashfreeData)}`);
     }
 
     console.log('Cashfree order created successfully:', orderId);
+    console.log('Cashfree response data:', JSON.stringify(cashfreeData, null, 2));
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        order_id: orderId,
-        payment_session_id: cashfreeData.payment_session_id,
-        order_token: cashfreeData.order_token,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      order_id: orderId,
+      payment_session_id: cashfreeData.payment_session_id,
+      order_token: cashfreeData.order_token,
+      cashfree_response: cashfreeData // Include full response for debugging
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      },
+      status: 200
+    });
   } catch (error) {
     console.error('Error in create-cashfree-order:', error);
     return new Response(
