@@ -54,17 +54,24 @@ serve(async (req) => {
   const startTime = Date.now();
   const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
   
-  if (isDevelopment) {
-    console.log('=== CREATE CASHFREE ORDER START ===');
-    console.log('Request method:', req.method);
-  }
+  // ALWAYS log in production for debugging
+  console.log('=== CREATE CASHFREE ORDER START ===');
+  console.log('Request method:', req.method);
+  console.log('Environment:', Deno.env.get('ENVIRONMENT'));
+  console.log('Timestamp:', new Date().toISOString());
 
   try {
     // Validate environment variables
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey
+    });
+    
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('❌ Missing Supabase environment variables');
       throw new Error('Missing required environment variables');
     }
 
@@ -72,7 +79,10 @@ serve(async (req) => {
 
     // Validate authorization header
     const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('❌ Invalid or missing authorization header');
       return new Response(JSON.stringify({ error: 'Invalid authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -84,27 +94,32 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !user) {
-      if (isDevelopment) console.log('Auth error:', userError);
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('❌ Auth error:', userError?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
-    if (isDevelopment) console.log('User authenticated:', user.id);
+    console.log('✅ User authenticated:', user.id);
 
     // Parse and validate request body
     let requestBody;
     try {
       requestBody = await req.json();
-    } catch {
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError);
       return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
     
-    if (isDevelopment) console.log('Request body:', requestBody);
+    console.log('📦 Request body received:', {
+      has_plan_id: !!requestBody.plan_id,
+      has_pricing_id: !!requestBody.pricing_id,
+      has_phone_number: !!requestBody.phone_number
+    });
     
     const { plan_id, pricing_id, phone_number } = requestBody;
     
@@ -202,15 +217,17 @@ serve(async (req) => {
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
     const CASHFREE_ENVIRONMENT = Deno.env.get('CASHFREE_ENVIRONMENT') || 'production';
     
-    if (isDevelopment) {
-      console.log('Environment variables check:');
-      console.log('CASHFREE_APP_ID:', CASHFREE_APP_ID ? 'Present' : 'Missing');
-      console.log('CASHFREE_SECRET_KEY:', CASHFREE_SECRET_KEY ? 'Present' : 'Missing');
-      console.log('CASHFREE_ENVIRONMENT:', CASHFREE_ENVIRONMENT);
-    }
+    console.log('💳 Cashfree configuration check:');
+    console.log('CASHFREE_APP_ID:', CASHFREE_APP_ID ? 'Present' : '❌ MISSING');
+    console.log('CASHFREE_SECRET_KEY:', CASHFREE_SECRET_KEY ? 'Present' : '❌ MISSING');
+    console.log('CASHFREE_ENVIRONMENT:', CASHFREE_ENVIRONMENT);
     
     if (!CASHFREE_APP_ID || !CASHFREE_SECRET_KEY) {
-      return new Response(JSON.stringify({ error: 'Payment gateway configuration error' }), {
+      console.error('❌ Missing Cashfree credentials');
+      return new Response(JSON.stringify({ 
+        error: 'Payment gateway configuration error',
+        details: 'Missing Cashfree APP_ID or SECRET_KEY'
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -292,10 +309,8 @@ serve(async (req) => {
       ? 'https://api.cashfree.com/pg/orders' 
       : 'https://sandbox.cashfree.com/pg/orders';
 
-    if (isDevelopment) {
-      console.log('Cashfree API URL:', apiUrl);
-      console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
-    }
+    console.log('🚀 Calling Cashfree API:', apiUrl);
+    console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
 
     // Call Cashfree API with timeout
     const controller = new AbortController();
@@ -316,11 +331,16 @@ serve(async (req) => {
       });
     } catch (fetchError) {
       clearTimeout(timeoutId);
+      console.error('❌ Cashfree API fetch error:', fetchError);
+      
       await supabaseClient.from('payments')
         .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
         .eq('id', payment.id);
       
-      return new Response(JSON.stringify({ error: 'Payment gateway timeout or network error' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Payment gateway timeout or network error',
+        details: fetchError instanceof Error ? fetchError.message : 'Unknown error'
+      }), {
         status: 503,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -328,15 +348,15 @@ serve(async (req) => {
     
     clearTimeout(timeoutId);
     
-    if (isDevelopment) {
-      console.log('Cashfree API response status:', cfRes.status);
-      console.log('Cashfree API response headers:', Object.fromEntries(cfRes.headers.entries()));
-    }
+    console.log('📨 Cashfree API response status:', cfRes.status);
+    console.log('Response headers:', Object.fromEntries(cfRes.headers.entries()));
     
     let cfData;
     try {
       cfData = await cfRes.json();
-    } catch {
+    } catch (jsonError) {
+      console.error('❌ Failed to parse Cashfree response:', jsonError);
+      
       await supabaseClient.from('payments')
         .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
         .eq('id', payment.id);
@@ -347,18 +367,26 @@ serve(async (req) => {
       });
     }
     
-    if (isDevelopment) {
-      console.log('Cashfree API response data:', JSON.stringify(cfData, null, 2));
-    }
+    console.log('📋 Cashfree API response data:', JSON.stringify(cfData, null, 2));
 
     // Handle Cashfree API errors
     if (!cfRes.ok) {
+      console.error('❌ Cashfree API error:', {
+        status: cfRes.status,
+        message: cfData?.message,
+        error: cfData?.error,
+        fullResponse: cfData
+      });
+      
       await supabaseClient.from('payments')
         .update({ payment_status: 'failed', updated_at: new Date().toISOString() })
         .eq('id', payment.id);
       
       const errorMessage = cfData?.message || cfData?.error || 'Payment gateway error';
-      return new Response(JSON.stringify({ error: errorMessage }), {
+      return new Response(JSON.stringify({ 
+        error: errorMessage,
+        cashfree_error: cfData
+      }), {
         status: cfRes.status === 400 ? 400 : 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -379,9 +407,7 @@ serve(async (req) => {
     // Return success response
     const responseTime = Date.now() - startTime;
     
-    if (isDevelopment) {
-      console.log(`Request completed in ${responseTime}ms`);
-    }
+    console.log(`✅ Request completed successfully in ${responseTime}ms`);
     
     return new Response(JSON.stringify({
       success: true,
@@ -405,13 +431,11 @@ serve(async (req) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    if (isDevelopment) {
-      console.log('=== ERROR OCCURRED ===');
-      console.log('Error type:', typeof error);
-      console.log('Error message:', error instanceof Error ? error.message : 'Unknown error');
-      console.log('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      console.log(`Request failed in ${responseTime}ms`);
-    }
+    console.error('=== ❌ ERROR OCCURRED ===');
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error(`Request failed in ${responseTime}ms`);
     
     // Determine appropriate status code
     let statusCode = 500;
