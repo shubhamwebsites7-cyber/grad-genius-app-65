@@ -12,8 +12,13 @@ interface Payment {
   amount: number;
   currency: string;
   payment_status: string;
+  payment_method: string;
   created_at: string;
+  updated_at: string;
   plan_name: string;
+  external_payment_id: string;
+  phone_number: string;
+  subscription_status: string | null;
 }
 
 export const PaymentHistoryCard = () => {
@@ -41,6 +46,7 @@ export const PaymentHistoryCard = () => {
       setLoading(true);
       setError(null);
 
+      // Updated query to work with new schema - join through plan_id
       const { data, error } = await supabase
         .from('payments')
         .select(`
@@ -48,22 +54,43 @@ export const PaymentHistoryCard = () => {
           amount,
           currency,
           payment_status,
+          payment_method,
           created_at,
-          subscription_plans(name)
+          updated_at,
+          external_payment_id,
+          phone_number,
+          subscription_id,
+          subscription_plans!plan_id (
+            name,
+            description
+          ),
+          user_subscriptions!subscription_id (
+            status,
+            starts_at,
+            expires_at
+          )
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Payment history query error:', error);
+        throw error;
+      }
 
       const formattedPayments = data?.map((payment: any) => ({
         id: payment.id,
         amount: payment.amount,
         currency: payment.currency,
         payment_status: payment.payment_status,
+        payment_method: payment.payment_method,
         created_at: payment.created_at,
-        plan_name: payment.subscription_plans?.name || 'Unknown Plan'
+        updated_at: payment.updated_at,
+        plan_name: payment.subscription_plans?.name || 'Plan Purchase',
+        external_payment_id: payment.external_payment_id,
+        phone_number: payment.phone_number,
+        subscription_status: payment.user_subscriptions?.status || null
       })) || [];
 
       setPayments(formattedPayments);
@@ -159,6 +186,21 @@ export const PaymentHistoryCard = () => {
                     <Calendar className="h-3 w-3" />
                     {formatDate(payment.created_at)}
                   </div>
+                  {payment.external_payment_id && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Order: {payment.external_payment_id}
+                    </div>
+                  )}
+                  {payment.payment_method && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Method: {payment.payment_method}
+                    </div>
+                  )}
+                  {payment.subscription_status && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Subscription: {payment.subscription_status}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">

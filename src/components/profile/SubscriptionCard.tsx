@@ -58,38 +58,68 @@ export const SubscriptionCard = () => {
     try {
       setLoading(true);
 
+      // Updated query to work with new schema including last_payment relationship
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .select('*, subscription_plans(name, id)')
+        .select(`
+          id,
+          status,
+          starts_at,
+          expires_at,
+          auto_renew,
+          payment_method,
+          external_subscription_id,
+          created_at,
+          updated_at,
+          subscription_plans!plan_id (
+            name,
+            description,
+            id,
+            duration_months
+          ),
+          plan_pricing!inner (
+            price,
+            currency,
+            country_code,
+            original_price,
+            discount_percentage
+          ),
+          payments!last_payment_id (
+            amount,
+            currency,
+            payment_status,
+            created_at,
+            payment_method
+          )
+        `)
         .eq('user_id', user?.id)
         .eq('status', 'active')
+        .eq('plan_pricing.country_code', 'IN')
+        .eq('plan_pricing.is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Subscription query error:', error);
+        throw error;
+      }
 
       if (data) {
         const subscriptionRecord = data as any;
-        const plan = subscriptionRecord.subscription_plans || {};
-        
-        // Get pricing for the plan
-        const { data: pricingData } = await supabase
-          .from('plan_pricing')
-          .select('price, currency')
-          .eq('plan_id', plan.id)
-          .eq('is_active', true)
-          .maybeSingle();
+        const plan = subscriptionRecord.subscription_plans;
+        const pricing = subscriptionRecord.plan_pricing;
+        const lastPayment = subscriptionRecord.payments;
         
         // Check if subscription is still valid
         const expiresAt = new Date(subscriptionRecord.expires_at);
         const isValid = expiresAt > new Date();
 
-        if (isValid && pricingData) {
-          const priceInfo = pricingData as any;
-          const currency = priceInfo.currency || 'INR';
+        if (isValid && pricing) {
+          // Use last payment amount if available, otherwise use pricing
+          const currency = (lastPayment?.currency || pricing.currency || 'INR');
           const currencySymbol = currency === 'INR' ? '₹' : '$';
-          const amount = Number(priceInfo.price || 0);
+          const amount = Number(lastPayment?.amount || pricing.price || 0);
 
           setSubscriptionData({
             plan: plan.name || 'Premium Plan',
@@ -99,11 +129,11 @@ export const SubscriptionCard = () => {
               month: 'short',
               day: 'numeric'
             }),
-            price: `${currencySymbol}${Number(amount).toFixed(2)}`,
+            price: `${currencySymbol}${amount.toFixed(2)}`,
             isPremium: true
           });
         } else {
-          // Expired
+          // Expired subscription
           setSubscriptionData({
             plan: 'Free Plan',
             status: 'Expired',
@@ -113,7 +143,7 @@ export const SubscriptionCard = () => {
           });
         }
       } else {
-        // No subscription
+        // No active subscription found
         setSubscriptionData({
           plan: 'Free Plan',
           status: 'Active',
@@ -124,6 +154,14 @@ export const SubscriptionCard = () => {
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
+      // Fallback to free plan on error
+      setSubscriptionData({
+        plan: 'Free Plan',
+        status: 'Active',
+        nextBilling: '-',
+        price: '₹0',
+        isPremium: false
+      });
     } finally {
       setLoading(false);
     }

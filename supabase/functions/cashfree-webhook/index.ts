@@ -198,7 +198,8 @@ serve(async (req) => {
           .eq('id', existingSubscription.id);
       }
 
-      const { error: subscriptionError } = await supabaseClient
+      // Create subscription with last_payment_id reference
+      const { data: newSubscription, error: subscriptionError } = await supabaseClient
         .from('user_subscriptions')
         .insert({
           user_id: payment.user_id,
@@ -209,9 +210,21 @@ serve(async (req) => {
           payment_method: 'cashfree',
           external_subscription_id: order_id,
           auto_renew: false,
-        });
+          last_payment_id: payment.id,
+        })
+        .select()
+        .single();
 
       if (subscriptionError) throw new Error(`Failed to create subscription: ${subscriptionError.message}`);
+
+      // Update payment record with subscription_id
+      await supabaseClient
+        .from('payments')
+        .update({
+          subscription_id: newSubscription.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', payment.id);
     }
 
     return new Response(
