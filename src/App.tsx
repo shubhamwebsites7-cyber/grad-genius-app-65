@@ -10,7 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Loader2 } from "lucide-react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { AuthDebugger } from "@/components/AuthDebugger";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Preload critical routes
@@ -94,7 +94,7 @@ const App = () => (
                 </Routes>
               </Suspense>
             </BrowserRouter>
-            <AuthDebugger enabled={process.env.NODE_ENV === 'development'} />
+            
             <Analytics />
             <SpeedInsights />
           </TooltipProvider>
