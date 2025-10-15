@@ -49,8 +49,12 @@ interface ExamCategory {
 interface Exam {
   id: string;
   name: string;
+  full_name?: string;
+  description?: string;
   type: string;
   categoryName: string;
+  categoryIcon?: string;
+  categoryColor?: string;
   subjects: Subject[];
   enrolledStudents: string;
   isEnrolled: boolean;
@@ -187,14 +191,21 @@ const Exams = () => {
         const isEnrolled = enrollmentsMap.has(exam.id);
         const progress = progressMap.get(exam.id);
         
-        // Get category name from the join
-        const categoryName = exam.exam_categories?.name || exam.exam_type || 'General';
+        // Get category data from the join
+        const categoryData = exam.exam_categories || {};
+        const categoryName = categoryData.name || exam.exam_type || 'General';
+        const categoryIcon = categoryData.icon || undefined;
+        const categoryColor = categoryData.color || undefined;
 
         return {
           id: exam.id,
           name: exam.name,
-          type: exam.exam_type,
+          full_name: exam.full_name || undefined,
+          description: exam.description || undefined,
+          type: exam.exam_type || 'General',
           categoryName,
+          categoryIcon,
+          categoryColor,
           subjects,
           enrolledStudents: exam.enrollment_count > 0 ? `${exam.enrollment_count.toLocaleString()}+` : '0',
           isEnrolled,
@@ -295,13 +306,18 @@ const Exams = () => {
 
     // Apply search filter
     if (searchQuery) {
-      filtered = filtered.filter(exam =>
-        exam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exam.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exam.subjects.some(subject =>
-          subject.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      );
+      filtered = filtered.filter(exam => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          (exam.name || '').toLowerCase().includes(searchLower) ||
+          (exam.full_name || '').toLowerCase().includes(searchLower) ||
+          (exam.categoryName || '').toLowerCase().includes(searchLower) ||
+          (exam.description || '').toLowerCase().includes(searchLower) ||
+          (exam.subjects || []).some(subject =>
+            (subject.name || '').toLowerCase().includes(searchLower)
+          )
+        );
+      });
     }
 
     // Apply category filter
@@ -491,47 +507,75 @@ const Exams = () => {
               {paginatedExams.map((exam) => (
                 <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
                   <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                          {exam.name}
-                        </CardTitle>
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-start gap-2">
+                          {exam.categoryIcon && (
+                            <span 
+                              className="text-2xl mt-1 flex-shrink-0"
+                              style={{ color: exam.categoryColor || undefined }}
+                            >
+                              {exam.categoryIcon}
+                            </span>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-xl group-hover:text-primary transition-colors break-words">
+                              {exam.name}
+                            </CardTitle>
+                            {exam.full_name && exam.full_name !== exam.name && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                                {exam.full_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                         <CardDescription className="mt-2 text-muted-foreground">
                           {exam.categoryName}
                         </CardDescription>
+                        {exam.description && (
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                            {exam.description}
+                          </p>
+                        )}
                       </div>
-                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                        {exam.type.includes('Banking') ? 'Banking' : 
-                         exam.type.includes('Medical') ? 'Medical' : 
-                         exam.type.includes('Engineering') ? 'Engineering' : 
-                         exam.type.includes('Government') ? 'Government' : exam.type}
+                      <Badge 
+                        className="flex-shrink-0"
+                        style={{
+                          backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
+                          color: exam.categoryColor || undefined,
+                          borderColor: exam.categoryColor || undefined
+                        }}
+                      >
+                        {exam.type || 'General'}
                       </Badge>
                     </div>
                   </CardHeader>
                   
                   <CardContent className="space-y-6">
                     {/* Subject Tags - Show max 5 */}
-                    <div className="flex flex-wrap gap-2">
-                      {exam.subjects.slice(0, 5).map((subject) => (
-                        <Badge 
-                          key={subject.id}
-                          variant="outline"
-                          className="text-xs"
-                        >
-                          {subject.name}
-                        </Badge>
-                      ))}
-                      {exam.subjects.length > 5 && (
-                        <Link to={`/exam/${exam.id}`}>
+                    {exam.subjects && exam.subjects.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {exam.subjects.slice(0, 5).map((subject) => (
                           <Badge 
-                            variant="secondary"
-                            className="text-xs cursor-pointer hover:bg-primary/20"
+                            key={subject.id}
+                            variant="outline"
+                            className="text-xs"
                           >
-                            ...{exam.subjects.length - 5} more
+                            {subject.name}
                           </Badge>
-                        </Link>
-                      )}
-                    </div>
+                        ))}
+                        {exam.subjects.length > 5 && (
+                          <Link to={`/exam/${exam.id}`}>
+                            <Badge 
+                              variant="secondary"
+                              className="text-xs cursor-pointer hover:bg-primary/20"
+                            >
+                              ...{exam.subjects.length - 5} more
+                            </Badge>
+                          </Link>
+                        )}
+                      </div>
+                    )}
 
                     {/* Progress (if enrolled) */}
                     {exam.isEnrolled && exam.progress !== undefined && (

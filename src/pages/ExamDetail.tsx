@@ -53,8 +53,12 @@ interface Subject {
 interface Exam {
   id: string;
   name: string;
+  full_name?: string;
+  description?: string;
   type: string;
   categoryName: string;
+  categoryIcon?: string;
+  categoryColor?: string;
   subjects: Subject[];
   enrolledStudents: string;
   isEnrolled: boolean;
@@ -273,13 +277,20 @@ const ExamDetail = () => {
       const progressPercentage = allTopics.length > 0 ? Math.round((completedCount / allTopics.length) * 100) : 0;
 
       const typedExamData = examData as any;
-      const categoryName = typedExamData.exam_categories?.name || typedExamData.exam_type || 'General';
+      const categoryData = typedExamData.exam_categories || {};
+      const categoryName = categoryData.name || typedExamData.exam_type || 'General';
+      const categoryIcon = categoryData.icon || undefined;
+      const categoryColor = categoryData.color || undefined;
       
       setExam({
         id: typedExamData.id,
         name: typedExamData.name,
-        type: typedExamData.exam_type,
+        full_name: typedExamData.full_name || undefined,
+        description: typedExamData.description || undefined,
+        type: typedExamData.exam_type || 'General',
         categoryName,
+        categoryIcon,
+        categoryColor,
         subjects,
         enrolledStudents: `${typedExamData.enrollment_count || 0}+`,
         isEnrolled,
@@ -714,10 +725,42 @@ const ExamDetail = () => {
 
             {/* Top Section */}
             <div className="mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground mb-2">{exam.name}</h1>
-                  <p className="text-muted-foreground text-lg">{exam.categoryName}</p>
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div className="flex-1">
+                  <div className="flex items-start gap-3 mb-2">
+                    {exam.categoryIcon && (
+                      <span 
+                        className="text-4xl flex-shrink-0"
+                        style={{ color: exam.categoryColor || undefined }}
+                      >
+                        {exam.categoryIcon}
+                      </span>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-3xl font-bold text-foreground break-words">{exam.name}</h1>
+                      {exam.full_name && exam.full_name !== exam.name && (
+                        <p className="text-base text-muted-foreground mt-1">
+                          {exam.full_name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      style={{
+                        backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
+                        color: exam.categoryColor || undefined,
+                        borderColor: exam.categoryColor || undefined
+                      }}
+                    >
+                      {exam.categoryName}
+                    </Badge>
+                  </div>
+                  {exam.description && (
+                    <p className="text-sm text-muted-foreground mt-3 max-w-2xl">
+                      {exam.description}
+                    </p>
+                  )}
                 </div>
                 
                 {/* Desktop Stats */}
