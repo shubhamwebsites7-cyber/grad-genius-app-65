@@ -54,8 +54,14 @@ const Profile = () => {
       });
       // Remove query parameter
       setSearchParams({});
-      // Refresh subscription data
+      // Refresh both subscription and payment history data
       fetchSubscriptionData();
+      fetchProfileData(); // This will trigger a re-render that updates PaymentHistoryCard
+      
+      // Also trigger a manual refresh after a short delay to ensure data is updated
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } else if (paymentStatus === 'failed') {
       toast({
         title: "Payment Failed",

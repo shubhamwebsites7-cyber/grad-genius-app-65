@@ -1,13 +1,16 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
+
 console.info('🚀 Cashfree Webhook Initialized — LIVE PRODUCTION MODE');
-// ✅ Secure HMAC signature verification using Cashfree’s Base64URL format
-async function verifyCashfreeSignature(payload, signature, timestamp, secretKey) {
+
+// ✅ Secure HMAC signature verification using Cashfree's Base64URL format
+async function verifyCashfreeSignature(payload: string, signature: string, timestamp: string, secretKey: string): Promise<boolean> {
   try {
     const signedPayload = `${timestamp}.${payload}`;
     const encoder = new TextEncoder();
@@ -27,6 +30,7 @@ async function verifyCashfreeSignature(payload, signature, timestamp, secretKey)
     return false;
   }
 }
+
 serve(async (req)=>{
   // Handle preflight request
   if (req.method === 'OPTIONS') {
@@ -161,7 +165,7 @@ serve(async (req)=>{
     if (order_status === 'PAID' || status === 'SUCCESS') newStatus = 'completed';
     else if (status === 'FAILED' || order_status === 'CANCELLED') newStatus = 'failed';
     else if (order_status === 'EXPIRED') newStatus = 'failed';
-    const updateData = {
+    const updateData: any = {
       payment_status: newStatus,
       updated_at: new Date().toISOString()
     };

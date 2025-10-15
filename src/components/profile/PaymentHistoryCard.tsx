@@ -178,37 +178,39 @@ export const PaymentHistoryCard = () => {
             {payments.map((payment) => (
               <div
                 key={payment.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
               >
-                <div className="flex-1">
-                  <div className="font-medium">{payment.plan_name}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{payment.plan_name}</div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(payment.created_at)}
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">{formatDate(payment.created_at)}</span>
                   </div>
                   {payment.external_payment_id && (
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1 truncate">
                       Order: {payment.external_payment_id}
                     </div>
                   )}
                   {payment.payment_method && (
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1 truncate">
                       Method: {payment.payment_method}
                     </div>
                   )}
                   {payment.subscription_status && (
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1 truncate">
                       Subscription: {payment.subscription_status}
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="font-semibold">
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0">
+                  <div className="text-left sm:text-right">
+                    <div className="font-semibold whitespace-nowrap">
                       {formatAmount(payment.amount, payment.currency)}
                     </div>
                   </div>
-                  {getStatusBadge(payment.payment_status)}
+                  <div className="flex-shrink-0">
+                    {getStatusBadge(payment.payment_status)}
+                  </div>
                 </div>
               </div>
             ))}
