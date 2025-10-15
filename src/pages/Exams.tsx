@@ -39,10 +39,18 @@ interface Subject {
   topics: Topic[];
 }
 
+interface ExamCategory {
+  id: string;
+  name: string;
+  icon?: string;
+  color?: string;
+}
+
 interface Exam {
   id: string;
   name: string;
   type: string;
+  categoryName: string;
   subjects: Subject[];
   enrolledStudents: string;
   isEnrolled: boolean;
@@ -59,6 +67,7 @@ const Exams = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const { toast } = useToast();
@@ -74,10 +83,23 @@ const Exams = () => {
     try {
       setLoading(true);
       
-      // Fetch exams with subjects and topics
+      // Fetch categories first
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('exam_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (categoriesError) throw categoriesError;
+      setCategories(categoriesData || []);
+
+      // Fetch exams with category join
       const { data: examsData, error: examsError } = await supabase
         .from('exams')
-        .select('*')
+        .select(`
+          *,
+          exam_categories(id, name, icon, color)
+        `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -164,11 +186,15 @@ const Exams = () => {
         const totalTopics = subjects.reduce((sum, subject) => sum + subject.topics.length, 0);
         const isEnrolled = enrollmentsMap.has(exam.id);
         const progress = progressMap.get(exam.id);
+        
+        // Get category name from the join
+        const categoryName = exam.exam_categories?.name || exam.exam_type || 'General';
 
         return {
           id: exam.id,
           name: exam.name,
           type: exam.exam_type,
+          categoryName,
           subjects,
           enrolledStudents: exam.enrollment_count > 0 ? `${exam.enrollment_count.toLocaleString()}+` : '0',
           isEnrolled,
@@ -271,32 +297,23 @@ const Exams = () => {
     if (searchQuery) {
       filtered = filtered.filter(exam =>
         exam.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exam.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         exam.subjects.some(subject =>
           subject.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
     }
 
-    // Apply type filter
+    // Apply category filter
     if (selectedFilter !== 'all') {
-      const filterMap: { [key: string]: string } = {
-        'government': 'Government',
-        'medical': 'Medical',
-        'engineering': 'Engineering',
-        'banking': 'Banking'
-      };
-      
-      const filterType = filterMap[selectedFilter];
-      if (filterType) {
-        filtered = filtered.filter(exam =>
-          exam.type.toLowerCase().includes(filterType.toLowerCase())
-        );
-      }
+      filtered = filtered.filter(exam => {
+        const category = categories.find(c => c.id === selectedFilter);
+        return category ? exam.categoryName === category.name : true;
+      });
     }
 
     return filtered;
-  }, [exams, searchQuery, selectedFilter]);
+  }, [exams, searchQuery, selectedFilter, categories]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredExams.length / EXAMS_PER_PAGE);
@@ -373,14 +390,15 @@ const Exams = () => {
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <Select value={selectedFilter} onValueChange={setSelectedFilter}>
                     <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Filter by type" />
+                      <SelectValue placeholder="Filter by category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Exams</SelectItem>
-                      <SelectItem value="government">Government Exams</SelectItem>
-                      <SelectItem value="medical">Medical Exams</SelectItem>
-                      <SelectItem value="engineering">Engineering Exams</SelectItem>
-                      <SelectItem value="banking">Banking Exams</SelectItem>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -479,7 +497,7 @@ const Exams = () => {
                           {exam.name}
                         </CardTitle>
                         <CardDescription className="mt-2 text-muted-foreground">
-                          {exam.type}
+                          {exam.categoryName}
                         </CardDescription>
                       </div>
                       <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
@@ -492,9 +510,9 @@ const Exams = () => {
                   </CardHeader>
                   
                   <CardContent className="space-y-6">
-                    {/* Subject Tags */}
+                    {/* Subject Tags - Show max 5 */}
                     <div className="flex flex-wrap gap-2">
-                      {exam.subjects.map((subject) => (
+                      {exam.subjects.slice(0, 5).map((subject) => (
                         <Badge 
                           key={subject.id}
                           variant="outline"
@@ -503,6 +521,16 @@ const Exams = () => {
                           {subject.name}
                         </Badge>
                       ))}
+                      {exam.subjects.length > 5 && (
+                        <Link to={`/exam/${exam.id}`}>
+                          <Badge 
+                            variant="secondary"
+                            className="text-xs cursor-pointer hover:bg-primary/20"
+                          >
+                            ...{exam.subjects.length - 5} more
+                          </Badge>
+                        </Link>
+                      )}
                     </div>
 
                     {/* Progress (if enrolled) */}

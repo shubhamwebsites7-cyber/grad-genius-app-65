@@ -54,6 +54,7 @@ interface Exam {
   id: string;
   name: string;
   type: string;
+  categoryName: string;
   subjects: Subject[];
   enrolledStudents: string;
   isEnrolled: boolean;
@@ -90,10 +91,13 @@ const ExamDetail = () => {
     try {
       setLoading(true);
 
-      // Fetch exam details
+      // Fetch exam details with category
       const { data: examData, error: examError } = await supabase
         .from('exams')
-        .select('*')
+        .select(`
+          *,
+          exam_categories(id, name, icon, color)
+        `)
         .eq('id', examId)
         .eq('is_active', true)
         .single();
@@ -269,10 +273,13 @@ const ExamDetail = () => {
       const progressPercentage = allTopics.length > 0 ? Math.round((completedCount / allTopics.length) * 100) : 0;
 
       const typedExamData = examData as any;
+      const categoryName = typedExamData.exam_categories?.name || typedExamData.exam_type || 'General';
+      
       setExam({
         id: typedExamData.id,
         name: typedExamData.name,
         type: typedExamData.exam_type,
+        categoryName,
         subjects,
         enrolledStudents: `${typedExamData.enrollment_count || 0}+`,
         isEnrolled,
@@ -710,7 +717,7 @@ const ExamDetail = () => {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div>
                   <h1 className="text-3xl font-bold text-foreground mb-2">{exam.name}</h1>
-                  <p className="text-muted-foreground text-lg">{exam.type}</p>
+                  <p className="text-muted-foreground text-lg">{exam.categoryName}</p>
                 </div>
                 
                 {/* Desktop Stats */}
