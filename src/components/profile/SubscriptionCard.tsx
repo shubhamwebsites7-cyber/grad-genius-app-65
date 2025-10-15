@@ -54,6 +54,34 @@ export const SubscriptionCard = () => {
     }
   }, [user, subscription, authLoading]);
 
+  // Real-time subscription updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Subscribe to real-time changes on user_subscriptions
+    const channel = supabase
+      .channel('subscription-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_subscriptions',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔄 Subscription updated:', payload);
+          // Refresh subscription data when changes occur
+          fetchSubscriptionData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const fetchSubscriptionData = async () => {
     try {
       setLoading(true);

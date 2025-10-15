@@ -41,6 +41,34 @@ export const PaymentHistoryCard = () => {
     }
   }, [user, authLoading]);
 
+  // Real-time payment updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Subscribe to real-time changes on payments
+    const channel = supabase
+      .channel('payment-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔄 Payment updated:', payload);
+          // Refresh payment history when changes occur
+          fetchPaymentHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true);
