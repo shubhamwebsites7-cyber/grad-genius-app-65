@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -60,6 +61,7 @@ export const Navigation = memo(() => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { user, signOut } = useAuth();
+  const { countryName } = useCountryDetection();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export const Navigation = memo(() => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-background z-50">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel>My Account {countryName && `(${countryName})`}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="cursor-pointer">
@@ -275,7 +277,7 @@ export const Navigation = memo(() => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background z-50">
-                  <DropdownMenuLabel className="text-xs">My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs">My Account {countryName && `(${countryName})`}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/profile" className="cursor-pointer text-sm">
