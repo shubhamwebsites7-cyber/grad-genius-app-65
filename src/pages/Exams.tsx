@@ -101,7 +101,7 @@ const Exams = () => {
         .from('exams')
         .select(`
           *,
-          exam_categories(id, name, icon, color)
+          exam_categories(id, name, color)
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -200,7 +200,7 @@ const Exams = () => {
           name: exam.name,
           full_name: exam.full_name || undefined,
           description: exam.description || undefined,
-          type: exam.exam_type || 'General',
+          type: categoryName,
           categoryName,
           categoryColor,
           subjects,

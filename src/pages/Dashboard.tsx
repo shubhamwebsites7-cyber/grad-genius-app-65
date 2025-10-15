@@ -100,7 +100,6 @@ const Dashboard = () => {
           exams (
             id,
             name,
-            exam_type,
             enrollment_count,
             exam_categories (
               name
@@ -183,7 +182,7 @@ const Dashboard = () => {
         return {
           id: exam.id,
           name: exam.name,
-          type: exam.exam_categories?.name || exam.exam_type,
+          type: exam.exam_categories?.name || 'General',
           progress: examProgress,
           completedTopics,
           totalTopics,
