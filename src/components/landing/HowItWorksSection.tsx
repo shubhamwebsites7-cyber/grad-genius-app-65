@@ -8,28 +8,28 @@ export const HowItWorksSection: React.FC = () => {
       icon: UserPlus,
       step: '01',
       title: 'Create Free Account',
-      description: 'Sign up in seconds and start your exam preparation journey with zero cost.',
+      description: 'Sign up quickly and start tracking your preparation.',
       color: 'from-blue-500 to-cyan-500'
     },
     {
       icon: BookOpen,
       step: '02',
       title: 'Choose Your Exam',
-      description: 'Select from 150+ competitive exams including NEET, JEE, IBPS, SSC, and more.',
+      description: 'Select from 150+ exams worldwide.',
       color: 'from-purple-500 to-pink-500'
     },
     {
       icon: TrendingUp,
       step: '03',
       title: 'Track Progress',
-      description: 'Monitor topic-wise completion, get AI insights, and identify weak areas instantly.',
+      description: 'Monitor your improvement and identify weak areas.',
       color: 'from-orange-500 to-red-500'
     },
     {
       icon: Award,
       step: '04',
       title: 'Achieve Success',
-      description: 'Stay consistent, follow data-driven insights, and crack your target exam with confidence.',
+      description: 'Stay consistent and reach your goals.',
       color: 'from-green-500 to-teal-500'
     }
   ];
@@ -56,7 +56,7 @@ export const HowItWorksSection: React.FC = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Get started in 4 simple steps and transform your exam preparation
+            Get started in seconds and achieve your exam goals
           </p>
         </div>
 

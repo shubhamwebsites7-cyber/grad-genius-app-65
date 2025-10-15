@@ -3,11 +3,20 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, TrendingUp, Target, Zap } from 'lucide-react';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 import heroImage from '@/assets/hero-image.jpg';
 
 export const HeroSection: React.FC = () => {
-  // Preload the hero image for optimal performance
+  const { isIndia } = useCountryDetection();
   useImageOptimization([heroImage]);
+
+  const heroSubtitle = isIndia 
+    ? "Track your progress subject-wise and overall performance for all competitive, job, and entrance exams."
+    : "Track your progress subject-wise and overall performance for global exams, certifications, and entrance tests.";
+
+  const examNames = isIndia
+    ? ['NEET', 'JEE', 'IBPS PO', 'SSC CGL', 'UPSC', 'CAT', 'GATE', 'CLAT', 'SBI PO', 'TET', 'NDA']
+    : ['SAT', 'ACT', 'IELTS', 'TOEFL', 'GRE', 'GMAT', 'CFA', 'PMP', 'AWS', 'CPA', 'LSAT'];
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-background via-accent/30 to-primary/5">
@@ -24,7 +33,7 @@ export const HeroSection: React.FC = () => {
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 bg-primary/10 px-4 py-2 rounded-full">
               <Zap className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">AI-Powered Exam Tracking</span>
+              <span className="text-sm font-semibold text-primary">Track Your Success</span>
             </div>
 
             <div className="space-y-6">
@@ -37,7 +46,7 @@ export const HeroSection: React.FC = () => {
                 </span>
               </h1>
               <p className="text-xl sm:text-2xl text-muted-foreground max-w-2xl leading-relaxed">
-                Track your progress subject-wise by topics and overall performance based on the complete syllabus — for all exams, including competitive, job, and entrance exams.
+                {heroSubtitle}
               </p>
             </div>
 
@@ -129,22 +138,29 @@ export const HeroSection: React.FC = () => {
             </div>
             
             <div className="absolute -bottom-6 -left-6 bg-card p-5 rounded-2xl shadow-xl border border-border backdrop-blur-sm">
-              <div className="text-sm font-semibold text-muted-foreground mb-1">Next Exam</div>
-              <div className="text-lg font-bold text-foreground">IBPS PO</div>
+              <div className="text-sm font-semibold text-muted-foreground mb-1">Your Goal</div>
+              <div className="text-lg font-bold text-foreground">Track & Succeed</div>
               <div className="text-xs text-success flex items-center mt-1">
                 <Target className="h-3 w-3 mr-1" />
-                On Track
+                Stay Focused
               </div>
             </div>
           </div>
         </div>
         
         {/* Continuous Scrolling Exam Names */}
-        <div className="mt-20 overflow-hidden">
+        <div className="mt-20 overflow-hidden relative">
+          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent z-10"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent z-10"></div>
           <div className="flex whitespace-nowrap animate-scroll">
-            <div className="flex items-center space-x-12 text-2xl font-bold text-muted-foreground/40">
-              {['NEET', 'JEE', 'IBPS-PO', 'IBPS-SO', 'SBI', 'SSC', 'GATE', 'UPSC', 'CAT', 'CLAT', 'NEET', 'JEE', 'IBPS-PO', 'IBPS-SO', 'SBI', 'SSC', 'GATE', 'UPSC', 'CAT', 'CLAT'].map((exam, i) => (
-                <span key={i} className="hover:text-primary transition-colors">{exam}</span>
+            <div className="flex items-center space-x-8 text-xl sm:text-2xl font-bold">
+              {[...examNames, ...examNames].map((exam, i) => (
+                <span 
+                  key={i} 
+                  className="text-muted-foreground/50 hover:text-primary transition-colors px-4 py-2 rounded-lg hover:bg-primary/5"
+                >
+                  {exam}
+                </span>
               ))}
             </div>
           </div>

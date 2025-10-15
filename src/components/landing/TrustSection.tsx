@@ -1,88 +1,63 @@
 import React from 'react';
-import { Shield, Lock, Award, Zap, Smartphone, Cloud } from 'lucide-react';
+import { Globe, Smartphone, Cloud, Lock } from 'lucide-react';
 
 export const TrustSection: React.FC = () => {
   const features = [
     {
-      icon: Shield,
-      title: 'Secure & Private',
-      description: 'Bank-level encryption'
-    },
-    {
-      icon: Lock,
-      title: 'Data Protection',
-      description: 'GDPR Compliant'
-    },
-    {
-      icon: Award,
-      title: 'Trusted Platform',
-      description: '50,000+ Students'
-    },
-    {
-      icon: Zap,
-      title: 'Lightning Fast',
-      description: '99.9% Uptime'
+      icon: Globe,
+      title: 'Trusted by 50,000+ students worldwide',
+      description: 'Join thousands of successful students'
     },
     {
       icon: Smartphone,
-      title: 'Mobile First',
-      description: 'Works Offline'
+      title: 'Learn anywhere — works offline & mobile-ready',
+      description: 'Study on-the-go without internet'
     },
     {
       icon: Cloud,
-      title: 'Auto Sync',
-      description: 'Cloud Backup'
+      title: 'Auto-save & cloud backup — never lose progress',
+      description: 'Your data is always safe'
+    },
+    {
+      icon: Lock,
+      title: 'Fully secure & private — your data is safe',
+      description: 'Complete privacy protection'
     }
   ];
 
   return (
-    <section className="py-16 bg-muted/30 border-y border-border">
+    <section className="py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h3 className="text-2xl font-bold text-foreground mb-2">
-            Why Students Trust Examtrakr
-          </h3>
-          <p className="text-muted-foreground">
-            Built with security, reliability, and student success in mind
+        <div className="text-center mb-14 animate-fade-in">
+          <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+            Why Students Trust{' '}
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Examtrakr
+            </span>
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Reliable, secure, and built for your success
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="flex flex-col items-center text-center p-4 rounded-lg bg-background/50 border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 group animate-fade-in"
+              className="flex flex-col items-center text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border hover:border-primary/50 hover:shadow-xl transition-all duration-300 group animate-fade-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 group-hover:scale-110 transition-all">
-                <feature.icon className="h-6 w-6 text-primary" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <feature.icon className="h-8 w-8 text-primary" />
               </div>
-              <h4 className="font-semibold text-foreground text-sm mb-1">
+              <h3 className="font-bold text-foreground text-base mb-2 leading-snug">
                 {feature.title}
-              </h4>
-              <p className="text-xs text-muted-foreground">
+              </h3>
+              <p className="text-sm text-muted-foreground">
                 {feature.description}
               </p>
             </div>
           ))}
-        </div>
-
-        {/* Trust badges */}
-        <div className="mt-12 flex flex-wrap justify-center items-center gap-8 opacity-60">
-          <div className="flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-foreground">SSL Secured</span>
-          </div>
-          <div className="hidden sm:block w-px h-6 bg-border"></div>
-          <div className="flex items-center space-x-2">
-            <Award className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-foreground">ISO Certified</span>
-          </div>
-          <div className="hidden sm:block w-px h-6 bg-border"></div>
-          <div className="flex items-center space-x-2">
-            <Lock className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium text-foreground">GDPR Compliant</span>
-          </div>
         </div>
       </div>
     </section>

@@ -7,22 +7,17 @@ export const FeaturesSection: React.FC = () => {
     {
       icon: Target,
       title: 'Syllabus-Based Tracking',
-      description: 'Complete exam syllabus with marks, subject, and topic-wise breakdown. Track every aspect of your preparation with precision.',
+      description: 'Track every topic and subject easily with comprehensive coverage.',
     },
     {
       icon: BarChart3,
       title: 'Progress Analytics',
-      description: 'Comprehensive marks-wise and difficulty-wise progress tracking. Monitor your performance across easy, medium, and hard topics.',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Smart Filters & Voting',
-      description: 'Filter topics by difficulty level and vote on topic difficulty to help the community. Access rating-based filters for better preparation.',
+      description: 'Monitor improvement and identify weak areas with detailed insights.',
     },
     {
       icon: Crown,
-      title: 'Free Resources & Leaderboard',
-      description: 'Access free resources for each subject with topic-based ratings. Compete on exam-specific leaderboards with enrolled students.',
+      title: 'Free Resources & Leaderboards',
+      description: 'Access study materials and compete with peers to stay motivated.',
     },
   ];
 
@@ -37,11 +32,11 @@ export const FeaturesSection: React.FC = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our AI-powered platform provides comprehensive tools to help you prepare effectively for competitive exams.
+            Simple, powerful tools to help you prepare effectively and stay on track.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Card 
               key={index} 

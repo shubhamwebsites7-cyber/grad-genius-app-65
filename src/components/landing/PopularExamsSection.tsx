@@ -4,9 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Users, BookOpen, Clock } from 'lucide-react';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 
 export const PopularExamsSection: React.FC = () => {
-  const exams = [
+  const { isIndia } = useCountryDetection();
+
+  const indiaExams = [
     {
       name: 'NEET',
       fullName: 'National Eligibility cum Entrance Test',
@@ -63,6 +66,65 @@ export const PopularExamsSection: React.FC = () => {
     }
   ];
 
+  const globalExams = [
+    {
+      name: 'SAT',
+      fullName: 'Scholastic Assessment Test',
+      students: '2M+',
+      topics: '200+',
+      duration: '6 months',
+      gradient: 'from-blue-500 to-cyan-600',
+      bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20'
+    },
+    {
+      name: 'ACT',
+      fullName: 'American College Testing',
+      students: '1.8M+',
+      topics: '180+',
+      duration: '6 months',
+      gradient: 'from-purple-500 to-pink-600',
+      bgGradient: 'from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20'
+    },
+    {
+      name: 'IELTS',
+      fullName: 'International English Language Testing',
+      students: '3M+',
+      topics: '150+',
+      duration: '3 months',
+      gradient: 'from-rose-500 to-pink-600',
+      bgGradient: 'from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20'
+    },
+    {
+      name: 'TOEFL',
+      fullName: 'Test of English as a Foreign Language',
+      students: '2M+',
+      topics: '140+',
+      duration: '3 months',
+      gradient: 'from-orange-500 to-amber-600',
+      bgGradient: 'from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20'
+    },
+    {
+      name: 'GRE',
+      fullName: 'Graduate Record Examination',
+      students: '500K+',
+      topics: '250+',
+      duration: '4 months',
+      gradient: 'from-emerald-500 to-teal-600',
+      bgGradient: 'from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20'
+    },
+    {
+      name: 'GMAT',
+      fullName: 'Graduate Management Admission Test',
+      students: '250K+',
+      topics: '220+',
+      duration: '4 months',
+      gradient: 'from-indigo-500 to-blue-600',
+      bgGradient: 'from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20'
+    }
+  ];
+
+  const exams = isIndia ? indiaExams : globalExams;
+
   return (
     <section className="py-24 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,7 +145,7 @@ export const PopularExamsSection: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {exams.map((exam, index) => (
             <Card 
               key={index} 

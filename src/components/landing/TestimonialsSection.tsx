@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, Quote } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 
 export const TestimonialsSection: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { isIndia } = useCountryDetection();
 
-  const testimonials = [
+  const indiaTestimonials = [
     {
       name: 'Priya Sharma',
       exam: 'NEET 2024',
@@ -62,6 +64,56 @@ export const TestimonialsSection: React.FC = () => {
     },
   ];
 
+  const globalTestimonials = [
+    {
+      name: 'Emily Carter',
+      exam: 'GRE 2024',
+      rating: 5,
+      comment: 'Examtrakr helped me track my GRE prep efficiently. I could monitor weak areas and improve day by day. Highly recommend for international exams!',
+      avatar: '👩‍🎓',
+      location: 'New York, USA',
+      result: '330/340'
+    },
+    {
+      name: 'Liam Johnson',
+      exam: 'SAT 2023',
+      rating: 5,
+      comment: 'The platform made SAT preparation so simple and organized. Tracking topics and practicing regularly really boosted my confidence.',
+      avatar: '👨‍🎓',
+      location: 'London, UK',
+      result: '1550/1600'
+    },
+    {
+      name: 'Sophia Lee',
+      exam: 'IELTS 2024',
+      rating: 5,
+      comment: 'With Examtrakr, I could track IELTS practice and focus on my weak sections. Finally got the band I needed for my university application.',
+      avatar: '🧑‍💼',
+      location: 'Sydney, Australia',
+      result: 'Band 8.5'
+    },
+    {
+      name: 'Raj Patel',
+      exam: 'CFA Level 1',
+      rating: 5,
+      comment: 'Using Examtrakr for CFA Level 1 prep was amazing. The progress tracking and resource access helped me pass on my first attempt!',
+      avatar: '👨‍💻',
+      location: 'Toronto, Canada',
+      result: 'Pass'
+    },
+    {
+      name: 'Olivia Smith',
+      exam: 'GMAT 2023',
+      rating: 5,
+      comment: 'Tracking my GMAT prep with Examtrakr kept me disciplined and focused. Highly recommend for all MBA aspirants!',
+      avatar: '👩‍💼',
+      location: 'Singapore',
+      result: '740'
+    },
+  ];
+
+  const testimonials = isIndia ? indiaTestimonials : globalTestimonials;
+  
   // Duplicate testimonials for seamless loop
   const duplicatedTestimonials = [...testimonials, ...testimonials];
 

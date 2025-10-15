@@ -59,12 +59,12 @@ const Index = () => {
         
         <main className="flex-1">
           <HeroSection />
-          <TrustSection />
           <FeaturesSection />
           <HowItWorksSection />
           <PopularExamsSection />
           <StatsSection />
           <TestimonialsSection />
+          <TrustSection />
           <FAQSection />
           <CTASection />
         </main>
