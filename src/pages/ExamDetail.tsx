@@ -28,7 +28,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ExamDetailLoadingSkeleton } from '@/components/exam-detail/LoadingSkeleton';
-import { PricingModal } from '@/components/PricingModal';
+import { useNavigate } from 'react-router-dom';
 
 interface Topic {
   id: string;
@@ -66,6 +66,7 @@ const ExamDetail = () => {
   const { examId } = useParams<{ examId: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState('default');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'pending'>('all');
@@ -78,8 +79,6 @@ const ExamDetail = () => {
   const [enrolling, setEnrolling] = useState(false);
   const [topicVoteCounts, setTopicVoteCounts] = useState<{ [key: string]: number }>({});
   const [userTopicRatings, setUserTopicRatings] = useState<{ [key: string]: string }>({});
-  const [showPricingModal, setShowPricingModal] = useState(false);
-  const [pricingModalTrigger, setPricingModalTrigger] = useState<'enrollment' | 'topic_access'>('enrollment');
 
   useEffect(() => {
     if (examId) {
@@ -495,8 +494,7 @@ const ExamDetail = () => {
         // Free users can only enroll in 1 exam
         if (enrollmentsData && enrollmentsData.length >= 1) {
           setEnrolling(false);
-          setPricingModalTrigger('enrollment');
-          setShowPricingModal(true);
+          navigate('/pricing');
           return;
         }
       }
@@ -531,8 +529,7 @@ const ExamDetail = () => {
   };
 
   const handleLockedTopicClick = () => {
-    setPricingModalTrigger('topic_access');
-    setShowPricingModal(true);
+    navigate('/pricing');
   };
 
 
@@ -1313,14 +1310,6 @@ const ExamDetail = () => {
         
         <Footer />
       </div>
-
-      {/* Pricing Modal */}
-      <PricingModal 
-        open={showPricingModal}
-        onOpenChange={setShowPricingModal}
-        trigger={pricingModalTrigger}
-        examName={exam?.name}
-      />
     </>
   );
 };

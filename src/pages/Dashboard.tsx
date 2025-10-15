@@ -503,8 +503,8 @@ const Dashboard = () => {
                       Get access to unlimited practice tests, detailed analytics, and more!
                     </p>
                   </div>
-                  <Button variant="cta" size="lg" className="sm:shrink-0">
-                    Upgrade Plan
+                  <Button asChild variant="cta" size="lg" className="sm:shrink-0">
+                    <Link to="/pricing">Upgrade Plan</Link>
                   </Button>
                 </div>
               </CardContent>

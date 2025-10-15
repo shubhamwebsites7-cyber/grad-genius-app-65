@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertCircle, Loader2, Phone, Sparkles } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Phone, Sparkles, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -495,32 +496,55 @@ const Pricing = () => {
               <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
                 <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Can I change my plan later?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <Collapsible className="border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <h3 className="text-lg font-semibold text-left">Can I change my plan later?</h3>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-6 pb-6">
                     <p className="text-muted-foreground">Yes, you can upgrade to a longer duration plan at any time. Contact support for assistance.</p>
-                  </CardContent>
-                </Card>
+                  </CollapsibleContent>
+                </Collapsible>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Is my payment secure?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <Collapsible className="border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <h3 className="text-lg font-semibold text-left">Is my payment secure?</h3>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-6 pb-6">
                     <p className="text-muted-foreground">Absolutely! We use Cashfree, a trusted payment gateway with bank-level security and encryption.</p>
-                  </CardContent>
-                </Card>
+                  </CollapsibleContent>
+                </Collapsible>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">What payment methods do you accept?</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                <Collapsible className="border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <h3 className="text-lg font-semibold text-left">What payment methods do you accept?</h3>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-6 pb-6">
                     <p className="text-muted-foreground">We accept all major payment methods including credit/debit cards, UPI, net banking, and wallets.</p>
-                  </CardContent>
-                </Card>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                <Collapsible className="border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <h3 className="text-lg font-semibold text-left">What happens if I don't renew my subscription?</h3>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-6 pb-6">
+                    <p className="text-muted-foreground">Your access to premium features will expire, but your progress data will be preserved. You can renew anytime to regain full access.</p>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                <Collapsible className="border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <h3 className="text-lg font-semibold text-left">Can I get a refund?</h3>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-6 pb-6">
+                    <p className="text-muted-foreground">We offer refunds within 7 days of purchase if you haven't used the premium features extensively. Please contact support for refund requests.</p>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </div>
           )}
