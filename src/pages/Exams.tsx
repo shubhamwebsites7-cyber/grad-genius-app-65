@@ -53,7 +53,6 @@ interface Exam {
   description?: string;
   type: string;
   categoryName: string;
-  categoryIcon?: string;
   categoryColor?: string;
   subjects: Subject[];
   enrolledStudents: string;
@@ -193,8 +192,7 @@ const Exams = () => {
         
         // Get category data from the join
         const categoryData = exam.exam_categories || {};
-        const categoryName = categoryData.name || exam.exam_type || 'General';
-        const categoryIcon = categoryData.icon || undefined;
+        const categoryName = categoryData.name || 'General';
         const categoryColor = categoryData.color || undefined;
 
         return {
@@ -204,7 +202,6 @@ const Exams = () => {
           description: exam.description || undefined,
           type: exam.exam_type || 'General',
           categoryName,
-          categoryIcon,
           categoryColor,
           subjects,
           enrolledStudents: exam.enrollment_count > 0 ? `${exam.enrollment_count.toLocaleString()}+` : '0',
@@ -507,27 +504,17 @@ const Exams = () => {
               {paginatedExams.map((exam) => (
                 <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
                   <CardHeader>
-                    <div className="flex justify-between items-start gap-3">
+                  <div className="flex justify-between items-start gap-3">
                       <div className="flex-1">
-                        <div className="flex items-start gap-2">
-                          {exam.categoryIcon && (
-                            <span 
-                              className="text-2xl mt-1 flex-shrink-0"
-                              style={{ color: exam.categoryColor || undefined }}
-                            >
-                              {exam.categoryIcon}
-                            </span>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-xl group-hover:text-primary transition-colors break-words">
+                            {exam.name}
+                          </CardTitle>
+                          {exam.full_name && exam.full_name !== exam.name && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                              {exam.full_name}
+                            </p>
                           )}
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-xl group-hover:text-primary transition-colors break-words">
-                              {exam.name}
-                            </CardTitle>
-                            {exam.full_name && exam.full_name !== exam.name && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                                {exam.full_name}
-                              </p>
-                            )}
-                          </div>
                         </div>
                         <CardDescription className="mt-2 text-muted-foreground">
                           {exam.categoryName}

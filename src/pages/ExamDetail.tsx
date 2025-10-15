@@ -57,7 +57,6 @@ interface Exam {
   description?: string;
   type: string;
   categoryName: string;
-  categoryIcon?: string;
   categoryColor?: string;
   subjects: Subject[];
   enrolledStudents: string;
@@ -100,7 +99,7 @@ const ExamDetail = () => {
         .from('exams')
         .select(`
           *,
-          exam_categories(id, name, icon, color)
+          exam_categories(id, name, color)
         `)
         .eq('id', examId)
         .eq('is_active', true)
@@ -278,8 +277,7 @@ const ExamDetail = () => {
 
       const typedExamData = examData as any;
       const categoryData = typedExamData.exam_categories || {};
-      const categoryName = categoryData.name || typedExamData.exam_type || 'General';
-      const categoryIcon = categoryData.icon || undefined;
+      const categoryName = categoryData.name || 'General';
       const categoryColor = categoryData.color || undefined;
       
       setExam({
@@ -289,7 +287,6 @@ const ExamDetail = () => {
         description: typedExamData.description || undefined,
         type: typedExamData.exam_type || 'General',
         categoryName,
-        categoryIcon,
         categoryColor,
         subjects,
         enrolledStudents: `${typedExamData.enrollment_count || 0}+`,
@@ -727,24 +724,14 @@ const ExamDetail = () => {
             <div className="mb-8">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                 <div className="flex-1">
-                  <div className="flex items-start gap-3 mb-2">
-                    {exam.categoryIcon && (
-                      <span 
-                        className="text-4xl flex-shrink-0"
-                        style={{ color: exam.categoryColor || undefined }}
-                      >
-                        {exam.categoryIcon}
-                      </span>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h1 className="text-3xl font-bold text-foreground break-words">{exam.name}</h1>
+                  <div className="flex-1 min-w-0 mb-2">
+                    <h1 className="text-3xl font-bold text-foreground break-words">{exam.name}</h1>
                       {exam.full_name && exam.full_name !== exam.name && (
                         <p className="text-base text-muted-foreground mt-1">
                           {exam.full_name}
                         </p>
                       )}
                     </div>
-                  </div>
                   <div className="flex items-center gap-2">
                     <Badge
                       style={{
