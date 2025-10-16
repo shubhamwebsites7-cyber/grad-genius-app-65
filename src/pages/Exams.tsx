@@ -588,7 +588,7 @@ const Exams = () => {
                             <Badge 
                               variant="secondary"
                               className="text-xs cursor-pointer hover:bg-primary/20"
-                              onClick={() => navigate(`/exams/${exam.id}`)}
+                              onClick={() => navigate(`/exam/${exam.id}`)}
                             >
                               ...more
                             </Badge>
@@ -641,7 +641,7 @@ const Exams = () => {
                             <Badge 
                               variant="secondary"
                               className="text-xs cursor-pointer hover:bg-primary/20"
-                              onClick={() => navigate(`/exams/${exam.id}`)}
+                              onClick={() => navigate(`/exam/${exam.id}`)}
                             >
                               ...more
                             </Badge>
@@ -707,7 +707,7 @@ const Exams = () => {
                       <Button 
                         variant="outline"
                         className="flex-1"
-                        onClick={() => navigate(`/exams/${exam.id}`)}
+                        onClick={() => navigate(`/exam/${exam.id}`)}
                       >
                         View Details
                       </Button>
