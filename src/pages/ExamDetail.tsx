@@ -309,7 +309,24 @@ const ExamDetail = () => {
   };
 
   const handleTopicToggle = async (topicId: string) => {
-    if (!user || !exam) return;
+    if (!user || !exam) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to track your progress.',
+        variant: 'destructive'
+      });
+      navigate('/login');
+      return;
+    }
+
+    if (!exam.isEnrolled) {
+      toast({
+        title: 'Enrollment Required',
+        description: 'Please enroll in this exam to track your progress.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     const isCurrentlyCompleted = completedTopicIds.has(topicId);
     const newCompletedIds = new Set(completedTopicIds);
@@ -713,11 +730,13 @@ const ExamDetail = () => {
         <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
             {/* Back Button */}
-            <Button asChild variant="ghost" className="mb-6">
-              <Link to="/exams" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Exams
-              </Link>
+            <Button 
+              variant="ghost" 
+              className="mb-6 flex items-center gap-2"
+              onClick={() => navigate('/exams')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Exams
             </Button>
 
             {/* Top Section */}
@@ -767,24 +786,38 @@ const ExamDetail = () => {
                 </div>
               </div>
 
-              {/* Progress Section */}
-              {exam.isEnrolled && exam.progress !== undefined && (
-                <Card className="mt-6">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
+              {/* Progress Section - Show for all users */}
+              <Card className="mt-6">
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
+                        {exam.isEnrolled ? (
                           <span className="text-2xl font-bold text-primary">{exam.progress}%</span>
-                        </div>
-                         <Progress 
-                           value={exam.progress} 
-                           variant={getProgressVariant(exam.progress || 0)}
-                           className="h-3" 
-                         />
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {exam.completedTopics} of {exam.totalTopics} topics completed
-                        </p>
+                        ) : (
+                          <span className="text-lg font-medium text-muted-foreground">Not enrolled</span>
+                        )}
+                      </div>
+                      {exam.isEnrolled ? (
+                        <>
+                          <Progress 
+                            value={exam.progress} 
+                            variant={getProgressVariant(exam.progress || 0)}
+                            className="h-3" 
+                          />
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {exam.completedTopics} of {exam.totalTopics} topics completed
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <Progress value={0} className="h-3" />
+                          <p className="text-sm text-muted-foreground mt-2">
+                            0 of {exam.totalTopics} topics completed
+                          </p>
+                        </>
+                      )}
                         
                         {/* Mobile Stats - shown in progress container */}
                         <div className="flex sm:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-border">
@@ -805,7 +838,6 @@ const ExamDetail = () => {
                     </div>
                   </CardContent>
                 </Card>
-              )}
             </div>
 
             {/* Filters Section */}
@@ -1110,13 +1142,13 @@ const ExamDetail = () => {
                                    <div className="block sm:hidden">
                                      <div className={topic.isAccessible ? '' : 'opacity-50'}>
                                        {/* First row: Checkbox + Topic name + Marks */}
-                                       <div className="flex items-center gap-3 mb-3">
-                                         <Checkbox
-                                           checked={topic.isCompleted}
-                                           onCheckedChange={() => topic.isAccessible && handleTopicToggle(topic.id)}
-                                           disabled={!topic.isAccessible}
-                                           className="h-5 w-5"
-                                         />
+                                        <div className="flex items-center gap-3 mb-3">
+                                          <Checkbox
+                                            checked={topic.isCompleted}
+                                            onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
+                                            disabled={!topic.isAccessible || !exam.isEnrolled}
+                                            className="h-5 w-5"
+                                          />
                                          <h4 className="font-medium text-foreground flex-1">
                                            {topic.name}
                                          </h4>
@@ -1207,13 +1239,13 @@ const ExamDetail = () => {
                                    {/* Desktop Layout */}
                                    <div className="hidden sm:block">
                                      <div className="flex items-center justify-between">
-                                       <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
-                                         <Checkbox
-                                           checked={topic.isCompleted}
-                                           onCheckedChange={() => topic.isAccessible && handleTopicToggle(topic.id)}
-                                           disabled={!topic.isAccessible}
-                                           className="h-5 w-5"
-                                         />
+                                        <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                          <Checkbox
+                                            checked={topic.isCompleted}
+                                            onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
+                                            disabled={!topic.isAccessible || !exam.isEnrolled}
+                                            className="h-5 w-5"
+                                          />
                                          <div>
                                            <h4 className="font-medium text-foreground flex items-center gap-2">
                                              {topic.name}

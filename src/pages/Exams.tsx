@@ -424,7 +424,7 @@ const Exams = () => {
                   </Select>
                 </div>
                 
-                <div className="flex gap-3">
+                  <div className="flex gap-3">
                   <Button 
                     variant="outline" 
                     className="flex items-center gap-2"
@@ -434,11 +434,43 @@ const Exams = () => {
                     <span className="hidden sm:inline">Request New Exam</span>
                     <span className="sm:hidden">Request</span>
                   </Button>
-                  <Button asChild variant="hero" className="flex items-center gap-2">
-                    <Link to="/exams/add">
-                      <Plus className="h-4 w-4" />
-                      Add Exam
-                    </Link>
+                  <Button 
+                    variant="hero" 
+                    className="flex items-center gap-2"
+                    onClick={async () => {
+                      if (!user) {
+                        toast({
+                          title: 'Login Required',
+                          description: 'Please login to add custom exams.',
+                          variant: 'destructive'
+                        });
+                        navigate('/login');
+                        return;
+                      }
+
+                      // Check subscription
+                      const { data: subscriptionData } = await supabase
+                        .from('user_subscriptions')
+                        .select('status')
+                        .eq('user_id', user.id)
+                        .eq('status', 'active')
+                        .maybeSingle();
+
+                      if (!subscriptionData) {
+                        toast({
+                          title: 'Premium Feature',
+                          description: 'Adding custom exams is only available for premium users.',
+                          variant: 'destructive'
+                        });
+                        navigate('/pricing');
+                        return;
+                      }
+
+                      navigate('/exams/add');
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Exam
                   </Button>
                 </div>
               </div>
@@ -514,17 +546,19 @@ const Exams = () => {
                   <CardHeader className="pb-4">
                     {/* Mobile Layout */}
                     <div className="md:hidden space-y-3">
-                      {/* Category Badge - Full Width */}
-                      <Badge 
-                        className="w-full justify-center"
-                        style={{
-                          backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
-                          color: exam.categoryColor || undefined,
-                          borderColor: exam.categoryColor || undefined
-                        }}
-                      >
-                        {exam.type || 'General'}
-                      </Badge>
+                      {/* Category Badge - Left Aligned */}
+                      <div className="flex">
+                        <Badge 
+                          className="w-fit"
+                          style={{
+                            backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
+                            color: exam.categoryColor || undefined,
+                            borderColor: exam.categoryColor || undefined
+                          }}
+                        >
+                          {exam.categoryName}
+                        </Badge>
+                      </div>
                       
                       {/* Exam Name */}
                       <CardTitle className="text-xl group-hover:text-primary transition-colors">
@@ -551,14 +585,13 @@ const Exams = () => {
                             </Badge>
                           ))}
                           {exam.subjects.length > 5 && (
-                            <Link to={`/exam/${exam.id}`}>
-                              <Badge 
-                                variant="secondary"
-                                className="text-xs cursor-pointer hover:bg-primary/20"
-                              >
-                                ...{exam.subjects.length - 5} more
-                              </Badge>
-                            </Link>
+                            <Badge 
+                              variant="secondary"
+                              className="text-xs cursor-pointer hover:bg-primary/20"
+                              onClick={() => navigate(`/exams/${exam.id}`)}
+                            >
+                              ...more
+                            </Badge>
                           )}
                         </div>
                       )}
@@ -605,14 +638,13 @@ const Exams = () => {
                             </Badge>
                           ))}
                           {exam.subjects.length > 5 && (
-                            <Link to={`/exam/${exam.id}`}>
-                              <Badge 
-                                variant="secondary"
-                                className="text-xs cursor-pointer hover:bg-primary/20"
-                              >
-                                ...{exam.subjects.length - 5} more
-                              </Badge>
-                            </Link>
+                            <Badge 
+                              variant="secondary"
+                              className="text-xs cursor-pointer hover:bg-primary/20"
+                              onClick={() => navigate(`/exams/${exam.id}`)}
+                            >
+                              ...more
+                            </Badge>
                           )}
                         </div>
                       )}
@@ -640,10 +672,11 @@ const Exams = () => {
                         <Users className="h-4 w-4 text-primary" />
                         <span className="font-semibold text-foreground">{exam.enrolledStudents}</span>
                         <span className="hidden sm:inline ml-1">Enrolled Students</span>
+                        <span className="sm:hidden ml-1">Students</span>
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <BookOpen className="h-4 w-4 text-primary" />
-                        <span className="font-semibold text-foreground">{exam.totalTopics}+</span>
+                        <span className="font-semibold text-foreground">{exam.totalTopics}</span>
                         <span className="ml-1">Topics</span>
                       </div>
                     </div>
@@ -674,9 +707,9 @@ const Exams = () => {
                       <Button 
                         variant="outline"
                         className="flex-1"
-                        asChild
+                        onClick={() => navigate(`/exams/${exam.id}`)}
                       >
-                        <Link to={`/exam/${exam.id}`}>View</Link>
+                        View Details
                       </Button>
                     </div>
                   </CardContent>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Navigation } from '@/components/Navigation';
@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Topic {
   id: string;
@@ -26,10 +28,48 @@ interface Subject {
 const AddExam = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [examName, setExamName] = useState('');
   const [examType, setExamType] = useState('');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!user) {
+        toast({
+          title: 'Login Required',
+          description: 'Please login to add custom exams.',
+          variant: 'destructive'
+        });
+        navigate('/login');
+        return;
+      }
+
+      // Check subscription
+      const { data: subscriptionData } = await supabase
+        .from('user_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (!subscriptionData) {
+        toast({
+          title: 'Premium Feature',
+          description: 'Adding custom exams is only available for premium users.',
+          variant: 'destructive'
+        });
+        navigate('/pricing');
+        return;
+      }
+
+      setCheckingAccess(false);
+    };
+
+    checkSubscription();
+  }, [user, navigate, toast]);
 
   const addSubject = () => {
     const newSubject: Subject = {
@@ -151,6 +191,23 @@ const AddExam = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (checkingAccess) {
+    return (
+      <>
+        <Helmet>
+          <title>Add Custom Exam - Examtrakr | Create Custom Exam Structure</title>
+        </Helmet>
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          <main className="flex-1 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
