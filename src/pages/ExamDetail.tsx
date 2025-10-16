@@ -64,6 +64,7 @@ interface Exam {
   progress?: number;
   completedTopics?: number;
   totalTopics: number;
+  total_marks?: number;
 }
 
 const ExamDetail = () => {
@@ -293,7 +294,8 @@ const ExamDetail = () => {
         isEnrolled,
         progress: progressPercentage,
         completedTopics: completedCount,
-        totalTopics: allTopics.length
+        totalTopics: allTopics.length,
+        total_marks: typedExamData.total_marks || undefined
       });
 
     } catch (error) {
@@ -628,6 +630,10 @@ const ExamDetail = () => {
         newSet.delete(sectionId);
       } else {
         newSet.add(sectionId);
+      }
+      // Update allExpanded based on whether all sections are expanded
+      if (exam) {
+        setAllExpanded(newSet.size === exam.subjects.length);
       }
       return newSet;
     });
@@ -1000,6 +1006,16 @@ const ExamDetail = () => {
               </CardContent>
             </Card>
 
+            {/* Subjects and Topics Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Subjects and Topics</h2>
+              {exam.total_marks && (
+                <Badge variant="outline" className="text-sm sm:text-base px-3 py-1">
+                  Total: {exam.total_marks} marks
+                </Badge>
+              )}
+            </div>
+
             {/* Subjects */}
             <div className="space-y-6">
               {sortedSubjects.map(subject => {
@@ -1009,9 +1025,9 @@ const ExamDetail = () => {
                 
                 return (
                   <Card key={subject.id} className="overflow-hidden">
-                    <Collapsible>
+                    <Collapsible open={isExpanded} onOpenChange={() => toggleSection(subject.id)}>
                       <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSection(subject.id)}>
+                        <CardHeader className="cursor-pointer transition-colors" onClick={() => toggleSection(subject.id)}>
                           {/* Mobile Layout */}
                           <div className="flex sm:hidden flex-col gap-3">
                              {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
@@ -1134,7 +1150,7 @@ const ExamDetail = () => {
                                   key={topic.id}
                                   className={`p-4 rounded-lg border-2 transition-all ${
                                     topic.isAccessible
-                                      ? 'border-border bg-card hover:shadow-md'
+                                      ? 'border-border bg-card'
                                       : 'border-muted bg-muted/20 opacity-70'
                                   }`}
                                 >
