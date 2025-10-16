@@ -781,14 +781,19 @@ const ExamDetail = () => {
                     <Users className="h-5 w-5" />
                     <span className="font-medium">{exam.enrolledStudents} students</span>
                   </div>
-                  <Badge className="bg-primary/10 text-primary">
+                  <Badge className="bg-primary/10 text-primary pointer-events-none">
                     <BookOpen className="h-3 w-3 mr-1" />
                     {exam.subjects.length} Subjects
                   </Badge>
-                  <Badge className="bg-secondary/10 text-secondary">
+                  <Badge className="bg-secondary/10 text-secondary pointer-events-none">
                     <Target className="h-3 w-3 mr-1" />
                     {exam.totalTopics} Topics
                   </Badge>
+                  {exam.total_marks && (
+                    <Badge variant="outline" className="text-sm px-3 py-1 pointer-events-none">
+                      Total: {exam.total_marks} marks
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -831,14 +836,19 @@ const ExamDetail = () => {
                             <Users className="h-4 w-4" />
                             <span className="font-medium">{exam.enrolledStudents} students</span>
                           </div>
-                          <Badge className="bg-primary/10 text-primary text-xs">
+                          <Badge className="bg-primary/10 text-primary text-xs pointer-events-none">
                             <BookOpen className="h-3 w-3 mr-1" />
                             {exam.subjects.length} Subjects
                           </Badge>
-                          <Badge className="bg-secondary/10 text-secondary text-xs">
+                          <Badge className="bg-secondary/10 text-secondary text-xs pointer-events-none">
                             <Target className="h-3 w-3 mr-1" />
                             {exam.totalTopics} Topics
                           </Badge>
+                          {exam.total_marks && (
+                            <Badge variant="outline" className="text-xs px-2 py-1 pointer-events-none">
+                              Total: {exam.total_marks} marks
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1007,13 +1017,8 @@ const ExamDetail = () => {
             </Card>
 
             {/* Subjects and Topics Header */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">Subjects and Topics</h2>
-              {exam.total_marks && (
-                <Badge variant="outline" className="text-sm sm:text-base px-3 py-1">
-                  Total: {exam.total_marks} marks
-                </Badge>
-              )}
             </div>
 
             {/* Subjects */}
@@ -1094,7 +1099,7 @@ const ExamDetail = () => {
                                 </div>
                                 
                                  <div className="flex items-center gap-3">
-                                   <Badge className="bg-primary/10 text-primary">
+                                   <Badge className="bg-primary/10 text-primary pointer-events-none">
                                      {totalTopics} topics
                                    </Badge>
                                   
