@@ -982,20 +982,18 @@ const ExamDetail = () => {
                         <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSection(subject.id)}>
                           {/* Mobile Layout */}
                           <div className="flex sm:hidden flex-col gap-3">
-                             {/* First row: Subject name (full width) + Arrow button (left side in same row) */}
+                             {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
                              <div className="flex items-center justify-between w-full">
-                               <div className="flex items-center gap-2 flex-1">
-                                 {isExpanded ? (
-                                   <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                 ) : (
-                                   <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                 )}
-                                 <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
-                               </div>
+                               <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
+                               {isExpanded ? (
+                                 <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                               ) : (
+                                 <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                               )}
                              </div>
                              
-                             {/* Second row: Resources button + Marks */}
-                             <div className="flex items-center gap-2">
+                             {/* Second row: Resources button + Marks (same row) */}
+                             <div className="flex items-center gap-3">
                                {/* Resources Button for Section - Mobile */}
                                <Button 
                                  asChild 

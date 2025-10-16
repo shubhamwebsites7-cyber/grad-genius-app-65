@@ -498,51 +498,61 @@ const Pricing = () => {
                 
                 <Collapsible className="border rounded-lg bg-card">
                   <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Can I change my plan later?</h3>
+                    <h3 className="text-lg font-semibold text-left">What do I get in the free plan?</h3>
                     <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">Yes, you can upgrade to a longer duration plan at any time. Contact support for assistance.</p>
+                    <p className="text-muted-foreground">You can explore all exams and subjects, but only 3 topics per subject are unlocked. You can also track progress for up to 3 topics.</p>
                   </CollapsibleContent>
                 </Collapsible>
 
                 <Collapsible className="border rounded-lg bg-card">
                   <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Is my payment secure?</h3>
+                    <h3 className="text-lg font-semibold text-left">What benefits do I get with a paid plan?</h3>
                     <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">Absolutely! We use Cashfree, a trusted payment gateway with bank-level security and encryption.</p>
+                    <p className="text-muted-foreground">A paid plan unlocks all topics, progress tracking, and resource access for your chosen exam — no limits.</p>
                   </CollapsibleContent>
                 </Collapsible>
 
                 <Collapsible className="border rounded-lg bg-card">
                   <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">What payment methods do you accept?</h3>
+                    <h3 className="text-lg font-semibold text-left">Are the paid plans one-time or recurring?</h3>
                     <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">We accept all major payment methods including credit/debit cards, UPI, net banking, and wallets.</p>
+                    <p className="text-muted-foreground">All plans are one-time payments for their duration (1, 3, 6, or 12 months). You can renew anytime.</p>
                   </CollapsibleContent>
                 </Collapsible>
 
                 <Collapsible className="border rounded-lg bg-card">
                   <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">What happens if I don't renew my subscription?</h3>
+                    <h3 className="text-lg font-semibold text-left">Can I switch or upgrade my plan later?</h3>
                     <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">Your access to premium features will expire, but your progress data will be preserved. You can renew anytime to regain full access.</p>
+                    <p className="text-muted-foreground">Yes, you can upgrade anytime — your new plan duration will start from the date of purchase.</p>
                   </CollapsibleContent>
                 </Collapsible>
 
                 <Collapsible className="border rounded-lg bg-card">
                   <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Can I get a refund?</h3>
+                    <h3 className="text-lg font-semibold text-left">Which payment methods are supported?</h3>
                     <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">We offer refunds within 7 days of purchase if you haven't used the premium features extensively. Please contact support for refund requests.</p>
+                    <p className="text-muted-foreground">We support Cashfree (INR) for Indian users and PayPal for international users.</p>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                <Collapsible className="border rounded-lg bg-card">
+                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                    <h3 className="text-lg font-semibold text-left">Will my progress be saved after my plan expires?</h3>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-6 pb-6">
+                    <p className="text-muted-foreground">Yes, your progress remains saved. You can renew your plan to continue learning without losing data.</p>
                   </CollapsibleContent>
                 </Collapsible>
               </div>

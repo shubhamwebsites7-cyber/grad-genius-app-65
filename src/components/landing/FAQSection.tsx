@@ -9,36 +9,28 @@ import {
 export const FAQSection: React.FC = () => {
   const faqs = [
     {
-      question: 'Is Examtrakr completely free to use?',
-      answer: 'Yes! Examtrakr offers a generous free plan that includes basic exam tracking, progress monitoring, and topic completion tracking. You can upgrade to Premium for advanced features like detailed analytics, AI insights, and unlimited exam tracking.'
+      question: 'What is ExamTrakr?',
+      answer: 'ExamTrakr is a smart web app to prepare for exams like IBPS, NEET, JEE, and more — track your learning, access resources, and stay organized.'
     },
     {
-      question: 'Which competitive exams are supported?',
-      answer: 'We support 150+ competitive exams including NEET, JEE, IBPS PO, IBPS SO, SBI, SSC CGL, SSC CHSL, UPSC, CAT, GATE, CLAT, NDA, CDS, and many more. New exams are added regularly based on student requests.'
+      question: 'Is ExamTrakr free to use?',
+      answer: 'Yes! You can start free — explore exams and topics, then upgrade for full access when ready.'
     },
     {
-      question: 'How does the AI-powered tracking work?',
-      answer: 'Our AI analyzes your study patterns, topic completion rates, and time spent on different subjects. It provides personalized insights, identifies weak areas, predicts your performance, and suggests optimized study plans to maximize your preparation efficiency.'
+      question: 'Do I need to download any app?',
+      answer: 'No need — ExamTrakr works directly on your browser. You can also install it as a PWA on mobile or desktop.'
     },
     {
-      question: 'Can I track multiple exams simultaneously?',
-      answer: 'Yes! Free users can track up to 3 exams simultaneously, while Premium users get unlimited exam tracking. This is perfect if you\'re preparing for multiple competitive exams or want to keep backup options.'
+      question: 'Can I track my study progress?',
+      answer: 'Yes! Every topic you study can be marked complete to visualize your progress.'
     },
     {
-      question: 'Is my study data secure and private?',
-      answer: 'Absolutely! We take data security seriously. All your study data is encrypted and stored securely. We never share your personal information or study patterns with third parties. Your privacy is our top priority.'
+      question: 'Is ExamTrakr available for all exams?',
+      answer: 'We\'re adding new exams regularly — from banking and government to engineering and medical entrances.'
     },
     {
-      question: 'Can I access Examtrakr offline?',
-      answer: 'Yes! Examtrakr is a Progressive Web App (PWA) that works offline once installed. You can track your progress, mark topics as completed, and view your analytics even without an internet connection. Data syncs automatically when you\'re back online.'
-    },
-    {
-      question: 'How is Examtrakr different from other study apps?',
-      answer: 'Unlike generic study apps, Examtrakr is specifically designed for competitive exam preparation. We focus on structured topic tracking, exam-specific analytics, progress monitoring, and AI-powered insights tailored for Indian competitive exams.'
-    },
-    {
-      question: 'What happens if I upgrade to Premium later?',
-      answer: 'All your existing data is preserved when you upgrade. You\'ll immediately get access to Premium features including advanced analytics, unlimited exams, AI insights, and priority support. You can upgrade or downgrade anytime.'
+      question: 'Is my data safe?',
+      answer: 'Absolutely. Your data is securely stored and managed through Supabase with encrypted access.'
     }
   ];
 

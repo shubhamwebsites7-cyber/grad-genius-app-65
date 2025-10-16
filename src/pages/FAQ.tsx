@@ -13,27 +13,27 @@ const FAQ = () => {
   const faqs = [
     {
       question: 'What is ExamTrakr?',
-      answer: 'ExamTrakr is an online platform where students can take topic-wise and full-length exams, check performance reports, and improve based on difficulty analysis.'
+      answer: 'ExamTrakr is a smart web app to prepare for exams like IBPS, NEET, JEE, and more — track your learning, access resources, and stay organized.'
     },
     {
       question: 'Is ExamTrakr free to use?',
-      answer: 'Yes, many features are free! You can also upgrade to a paid plan for unlimited exams and detailed performance analytics.'
+      answer: 'Yes! You can start free — explore exams and topics, then upgrade for full access when ready.'
     },
     {
-      question: 'How can I access all topics or exams?',
-      answer: 'After logging in, simply choose your subject and start taking tests. Premium users get access to all subjects and advanced reports.'
+      question: 'Do I need to download any app?',
+      answer: 'No need — ExamTrakr works directly on your browser. You can also install it as a PWA on mobile or desktop.'
     },
     {
-      question: 'How can I purchase the premium plan?',
-      answer: 'You can make a secure payment through Razorpay using any UPI, card, or wallet once the plan is live.'
+      question: 'Can I track my study progress?',
+      answer: 'Yes! Every topic you study can be marked complete to visualize your progress.'
     },
     {
-      question: 'What happens if my payment fails?',
-      answer: 'If your payment fails but the amount is deducted, it is automatically refunded by Razorpay within 5–7 working days.'
+      question: 'Is ExamTrakr available for all exams?',
+      answer: 'We\'re adding new exams regularly — from banking and government to engineering and medical entrances.'
     },
     {
-      question: 'How can I contact support?',
-      answer: 'You can email us at examtrakr@gmail.com or call/WhatsApp +91 9302418061.'
+      question: 'Is my data safe?',
+      answer: 'Absolutely. Your data is securely stored and managed through Supabase with encrypted access.'
     }
   ];
 
