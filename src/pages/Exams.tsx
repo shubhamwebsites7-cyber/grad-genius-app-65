@@ -68,7 +68,10 @@ const Exams = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = sessionStorage.getItem('examsCurrentPage');
+    return saved ? parseInt(saved, 10) : 1;
+  });
   const [exams, setExams] = useState<Exam[]>([]);
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,6 +342,11 @@ const Exams = () => {
     setCurrentPage(1);
   }, [searchQuery, selectedFilter]);
 
+  // Save current page to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('examsCurrentPage', currentPage.toString());
+  }, [currentPage]);
+
   const handleAddExam = (newExam: Omit<Exam, 'id'>) => {
     const examWithId = {
       ...newExam,
@@ -390,7 +398,7 @@ const Exams = () => {
               <div className="relative mb-6">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
-                  placeholder="Search exams (IBPS, NEET, JEE...)"
+                  placeholder="Search exams (SAT, IELTS, IBPS, NEET...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 h-12 text-base"
@@ -503,30 +511,12 @@ const Exams = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {paginatedExams.map((exam) => (
                 <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
-                  <CardHeader>
-                  <div className="flex justify-between items-start gap-3">
-                      <div className="flex-1">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-xl group-hover:text-primary transition-colors break-words">
-                            {exam.name}
-                          </CardTitle>
-                          {exam.full_name && exam.full_name !== exam.name && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                              {exam.full_name}
-                            </p>
-                          )}
-                        </div>
-                        <CardDescription className="mt-2 text-muted-foreground">
-                          {exam.categoryName}
-                        </CardDescription>
-                        {exam.description && (
-                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                            {exam.description}
-                          </p>
-                        )}
-                      </div>
+                  <CardHeader className="pb-4">
+                    {/* Mobile Layout */}
+                    <div className="md:hidden space-y-3">
+                      {/* Category Badge - Full Width */}
                       <Badge 
-                        className="flex-shrink-0"
+                        className="w-full justify-center"
                         style={{
                           backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
                           color: exam.categoryColor || undefined,
@@ -535,35 +525,101 @@ const Exams = () => {
                       >
                         {exam.type || 'General'}
                       </Badge>
+                      
+                      {/* Exam Name */}
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {exam.name}
+                      </CardTitle>
+                      
+                      {/* Full Name */}
+                      {exam.full_name && exam.full_name !== exam.name && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {exam.full_name}
+                        </p>
+                      )}
+                      
+                      {/* Subjects - Max 5 */}
+                      {exam.subjects && exam.subjects.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {exam.subjects.slice(0, 5).map((subject) => (
+                            <Badge 
+                              key={subject.id}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {subject.name}
+                            </Badge>
+                          ))}
+                          {exam.subjects.length > 5 && (
+                            <Link to={`/exam/${exam.id}`}>
+                              <Badge 
+                                variant="secondary"
+                                className="text-xs cursor-pointer hover:bg-primary/20"
+                              >
+                                ...{exam.subjects.length - 5} more
+                              </Badge>
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop/Tablet Layout */}
+                    <div className="hidden md:block">
+                      <div className="flex justify-between items-start gap-3 mb-3">
+                        {/* Left: Exam Name */}
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors flex-1">
+                          {exam.name}
+                        </CardTitle>
+                        
+                        {/* Right: Category Badge */}
+                        <Badge 
+                          className="flex-shrink-0"
+                          style={{
+                            backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
+                            color: exam.categoryColor || undefined,
+                            borderColor: exam.categoryColor || undefined
+                          }}
+                        >
+                          {exam.type || 'General'}
+                        </Badge>
+                      </div>
+                      
+                      {/* Second Row: Full Name */}
+                      {exam.full_name && exam.full_name !== exam.name && (
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          {exam.full_name}
+                        </p>
+                      )}
+                      
+                      {/* Subjects - Max 5 */}
+                      {exam.subjects && exam.subjects.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {exam.subjects.slice(0, 5).map((subject) => (
+                            <Badge 
+                              key={subject.id}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {subject.name}
+                            </Badge>
+                          ))}
+                          {exam.subjects.length > 5 && (
+                            <Link to={`/exam/${exam.id}`}>
+                              <Badge 
+                                variant="secondary"
+                                className="text-xs cursor-pointer hover:bg-primary/20"
+                              >
+                                ...{exam.subjects.length - 5} more
+                              </Badge>
+                            </Link>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="space-y-6">
-                    {/* Subject Tags - Show max 5 */}
-                    {exam.subjects && exam.subjects.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {exam.subjects.slice(0, 5).map((subject) => (
-                          <Badge 
-                            key={subject.id}
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            {subject.name}
-                          </Badge>
-                        ))}
-                        {exam.subjects.length > 5 && (
-                          <Link to={`/exam/${exam.id}`}>
-                            <Badge 
-                              variant="secondary"
-                              className="text-xs cursor-pointer hover:bg-primary/20"
-                            >
-                              ...{exam.subjects.length - 5} more
-                            </Badge>
-                          </Link>
-                        )}
-                      </div>
-                    )}
-
+                  <CardContent className="space-y-4 pt-0">
                     {/* Progress (if enrolled) */}
                     {exam.isEnrolled && exam.progress !== undefined && (
                       <div className="space-y-2">
@@ -578,17 +634,25 @@ const Exams = () => {
                       </div>
                     )}
 
-                    {/* Enrolled Students */}
+                    {/* Stats - Similar to Landing Page */}
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Enrolled Students:</span>
-                      <span className="font-medium text-success">{exam.enrolledStudents}</span>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Users className="h-4 w-4 text-primary" />
+                        <span className="font-semibold text-foreground">{exam.enrolledStudents}</span>
+                        <span className="hidden sm:inline ml-1">Enrolled Students</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        <span className="font-semibold text-foreground">{exam.totalTopics}+</span>
+                        <span className="ml-1">Topics</span>
+                      </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
                       {exam.isEnrolled ? (
                         <Button asChild variant="hero" className="flex-1">
-                          <Link to={`/exam/${exam.id}`}>Continue Learning</Link>
+                          <Link to={`/exam/${exam.id}`}>Continue</Link>
                         </Button>
                       ) : (
                         <Button 
@@ -609,20 +673,10 @@ const Exams = () => {
                       )}
                       <Button 
                         variant="outline"
-                        onClick={() => {
-                          if (!user) {
-                            toast({
-                              title: 'Login Required',
-                              description: 'Please login to view exam details.',
-                              variant: 'destructive'
-                            });
-                            window.location.href = '/login';
-                          } else {
-                            window.location.href = `/exam/${exam.id}`;
-                          }
-                        }}
+                        className="flex-1"
+                        asChild
                       >
-                        View Details
+                        <Link to={`/exam/${exam.id}`}>View</Link>
                       </Button>
                     </div>
                   </CardContent>
@@ -632,14 +686,17 @@ const Exams = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <Pagination className="mt-8">
+              <Pagination className="mt-8 mb-8 pb-4 md:pb-0">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious 
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        if (currentPage > 1) setCurrentPage(p => p - 1);
+                        if (currentPage > 1) {
+                          setCurrentPage(p => p - 1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
                       }}
                       className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                     />
@@ -652,6 +709,7 @@ const Exams = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           setCurrentPage(page);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         isActive={currentPage === page}
                         className="cursor-pointer"
@@ -666,7 +724,10 @@ const Exams = () => {
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        if (currentPage < totalPages) setCurrentPage(p => p + 1);
+                        if (currentPage < totalPages) {
+                          setCurrentPage(p => p + 1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
                       }}
                       className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                     />

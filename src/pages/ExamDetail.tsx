@@ -982,40 +982,40 @@ const ExamDetail = () => {
                         <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSection(subject.id)}>
                           {/* Mobile Layout */}
                           <div className="flex sm:hidden flex-col gap-3">
-                             {/* First row: Section name + Resources button */}
-                             <div className="flex items-center justify-between">
-                               <CardTitle className="text-lg">{subject.name}</CardTitle>
-                               <div className="flex items-center gap-2">
-                                 {/* Resources Button for Section - Mobile */}
-                                 <Button 
-                                   asChild 
-                                   size="sm" 
-                                   variant="secondary" 
-                                   className="h-7 px-2 text-xs"
-                                   onClick={(e) => e.stopPropagation()}
-                                 >
-                                   <Link to={`/resources/${subject.id}`}>
-                                     <FolderOpen className="h-3 w-3 mr-1" />
-                                     Resources
-                                   </Link>
-                                 </Button>
-                                 
+                             {/* First row: Subject name (full width) + Arrow button (left side in same row) */}
+                             <div className="flex items-center justify-between w-full">
+                               <div className="flex items-center gap-2 flex-1">
                                  {isExpanded ? (
-                                   <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                                   <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                                  ) : (
-                                   <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                                   <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                                  )}
+                                 <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
                                </div>
                              </div>
                              
-                             {/* Second row: Total marks */}
-                             {subject.marks && (
-                               <div className="flex items-center">
-                                 <Badge variant="outline" className="text-sm">
+                             {/* Second row: Resources button + Marks */}
+                             <div className="flex items-center gap-2">
+                               {/* Resources Button for Section - Mobile */}
+                               <Button 
+                                 asChild 
+                                 size="sm" 
+                                 variant="secondary" 
+                                 className="h-7 px-2 text-xs"
+                                 onClick={(e) => e.stopPropagation()}
+                               >
+                                 <Link to={`/resources/${subject.id}`}>
+                                   <FolderOpen className="h-3 w-3 mr-1" />
+                                   Resources
+                                 </Link>
+                               </Button>
+                               
+                               {subject.marks && (
+                                 <Badge variant="outline" className="text-xs px-2 py-1">
                                    {subject.marks} marks
                                  </Badge>
-                               </div>
-                             )}
+                               )}
+                             </div>
                              
                              {/* Third row: Progress bar */}
                              <div className="w-full">
