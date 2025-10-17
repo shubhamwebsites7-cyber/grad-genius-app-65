@@ -123,22 +123,53 @@ export const TestimonialsSection: React.FC = () => {
 
     let scrollPosition = 0;
     const scrollSpeed = 0.5; // Slow scroll speed
+    let animationFrame: number;
+    let isPaused = false;
 
     const animate = () => {
-      scrollPosition += scrollSpeed;
-      
-      // Reset position when halfway through (seamless loop)
-      if (scrollPosition >= scrollContainer.scrollWidth / 2) {
-        scrollPosition = 0;
+      if (!isPaused) {
+        scrollPosition += scrollSpeed;
+        
+        // Reset position when halfway through (seamless loop)
+        if (scrollPosition >= scrollContainer.scrollWidth / 2) {
+          scrollPosition = 0;
+        }
+        
+        scrollContainer.scrollLeft = scrollPosition;
       }
-      
-      scrollContainer.scrollLeft = scrollPosition;
-      requestAnimationFrame(animate);
+      animationFrame = requestAnimationFrame(animate);
     };
 
-    const animationFrame = requestAnimationFrame(animate);
+    const handleMouseEnter = () => {
+      isPaused = true;
+    };
 
-    return () => cancelAnimationFrame(animationFrame);
+    const handleMouseLeave = () => {
+      isPaused = false;
+    };
+
+    const handleTouchStart = () => {
+      isPaused = true;
+    };
+
+    const handleTouchEnd = () => {
+      isPaused = false;
+    };
+
+    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
+    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+    scrollContainer.addEventListener('touchstart', handleTouchStart);
+    scrollContainer.addEventListener('touchend', handleTouchEnd);
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      scrollContainer.removeEventListener('mouseenter', handleMouseEnter);
+      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+      scrollContainer.removeEventListener('touchstart', handleTouchStart);
+      scrollContainer.removeEventListener('touchend', handleTouchEnd);
+    };
   }, []);
 
   return (
@@ -160,7 +191,7 @@ export const TestimonialsSection: React.FC = () => {
         {/* Auto-scrolling testimonials container */}
         <div 
           ref={scrollRef}
-          className="flex gap-6 overflow-x-hidden pb-4"
+          className="flex gap-6 overflow-x-hidden pb-4 cursor-pointer"
           style={{ scrollBehavior: 'auto' }}
         >
           {duplicatedTestimonials.map((testimonial, index) => (
@@ -206,8 +237,8 @@ export const TestimonialsSection: React.FC = () => {
         </div>
 
         {/* Gradient overlays for fade effect */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent pointer-events-none"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent pointer-events-none"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-background to-transparent pointer-events-none hidden sm:block"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-background to-transparent pointer-events-none hidden sm:block"></div>
       </div>
     </section>
   );

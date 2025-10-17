@@ -1020,10 +1020,9 @@ const ExamDetail = () => {
                 return (
                   <Card key={subject.id} className="overflow-hidden">
                     <Collapsible open={isExpanded} onOpenChange={() => toggleSection(subject.id)}>
-                      <CollapsibleTrigger asChild>
-                        <CardHeader className="cursor-pointer transition-colors" onClick={() => toggleSection(subject.id)}>
-                          {/* Mobile Layout */}
-                          <div className="flex sm:hidden flex-col gap-3">
+                      <CardHeader className="cursor-pointer transition-colors">
+                        {/* Mobile Layout */}
+                        <div className="flex sm:hidden flex-col gap-3" onClick={() => toggleSection(subject.id)}>
                              {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
                              <div className="flex items-center justify-between w-full">
                                <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
@@ -1075,8 +1074,8 @@ const ExamDetail = () => {
                           </div>
                           
                            {/* Desktop Layout */}
-                           <div className="hidden sm:flex flex-col gap-3 w-full">
-                             {/* First row: Section name + marks on left, Total topics + dropdown on right */}
+                           <div className="hidden sm:flex flex-col gap-3 w-full" onClick={() => toggleSection(subject.id)}>
+                             {/* First row: Section name + marks on left, dropdown on right */}
                              <div className="flex items-center justify-between w-full">
                                 <div className="flex items-center gap-3">
                                   <CardTitle className="text-xl">{subject.name}</CardTitle>
@@ -1088,9 +1087,6 @@ const ExamDetail = () => {
                                 </div>
                                 
                                  <div className="flex items-center gap-3">
-                                   <Badge className="bg-primary/10 text-primary pointer-events-none">
-                                     {totalTopics} topics
-                                   </Badge>
                                   
                                   {/* Resources Button for Section */}
                                   <Button 
@@ -1129,9 +1125,8 @@ const ExamDetail = () => {
                                   <span className="text-sm text-muted-foreground">{subjectProgress}% completed</span>
                                 </div>
                               </div>
-                            </div>
-                        </CardHeader>
-                      </CollapsibleTrigger>
+                             </div>
+                         </CardHeader>
                       
                       <CollapsibleContent>
                         <CardContent className="pt-0">
