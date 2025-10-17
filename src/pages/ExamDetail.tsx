@@ -602,8 +602,16 @@ const ExamDetail = () => {
         })
     }));
     
+    // Sort subjects based on marks when marks sorting is selected
+    const sortedFiltered = [...filtered];
+    if (sortBy === 'marks-high') {
+      sortedFiltered.sort((a, b) => (b.marks || 0) - (a.marks || 0));
+    } else if (sortBy === 'marks-low') {
+      sortedFiltered.sort((a, b) => (a.marks || 0) - (b.marks || 0));
+    }
+    
     return { 
-      sortedSubjects: filtered,
+      sortedSubjects: sortedFiltered,
       unfilteredSubjects: exam.subjects 
     };
   }, [exam, sortBy, difficultyFilter, statusFilter]);
@@ -992,25 +1000,6 @@ const ExamDetail = () => {
                         </Select>
                       </div>
                     </div>
-
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={toggleAllSections}
-                      className="flex items-center gap-2 shrink-0"
-                    >
-                      {allExpanded ? (
-                        <>
-                          <ShrinkIcon className="h-4 w-4" />
-                          Collapse All
-                        </>
-                      ) : (
-                        <>
-                          <ExpandIcon className="h-4 w-4" />
-                          Expand All
-                        </>
-                      )}
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -1022,7 +1011,7 @@ const ExamDetail = () => {
             </div>
 
             {/* Subjects */}
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {sortedSubjects.map(subject => {
                 const isExpanded = expandedSections.has(subject.id);
                 const subjectProgress = getSubjectProgress(subject.id);
@@ -1146,7 +1135,7 @@ const ExamDetail = () => {
                       
                       <CollapsibleContent>
                         <CardContent className="pt-0">
-                          <div className="space-y-3">
+                           <div className="space-y-3">
                             {subject.topics.map((topic, index) => {
                               const isAccessible = topic.isAccessible || index < 3;
                               
@@ -1162,26 +1151,29 @@ const ExamDetail = () => {
                                    {/* Mobile Layout */}
                                    <div className="block sm:hidden">
                                      <div className={topic.isAccessible ? '' : 'opacity-50'}>
-                                       {/* First row: Checkbox + Topic name + Marks */}
+                                       {/* First row: Number + Topic name + Checkbox */}
                                         <div className="flex items-center gap-3 mb-3">
+                                          <span className="text-sm font-medium text-muted-foreground min-w-[24px]">
+                                            {index + 1}.
+                                          </span>
+                                         <h4 className="font-medium text-foreground flex-1">
+                                           {topic.name}
+                                         </h4>
                                           <Checkbox
                                             checked={topic.isCompleted}
                                             onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
                                             disabled={!topic.isAccessible || !exam.isEnrolled}
                                             className="h-5 w-5"
                                           />
-                                         <h4 className="font-medium text-foreground flex-1">
-                                           {topic.name}
-                                         </h4>
+                                       </div>
+                                       
+                                       {/* Second row: Marks + Difficulty + Vote dropdown */}
+                                       <div className="flex items-center gap-3 mb-2">
                                          {topic.marks && (
                                            <span className="text-sm text-muted-foreground">
                                              {topic.marks} marks
                                            </span>
                                          )}
-                                       </div>
-                                        
-                                       {/* Second row: Difficulty + Vote dropdown */}
-                                       <div className="flex items-center gap-2">
                                          <Badge 
                                            className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
                                          >
@@ -1257,25 +1249,22 @@ const ExamDetail = () => {
                                      )}
                                    </div>
                                   
-                                   {/* Desktop Layout */}
-                                   <div className="hidden sm:block">
-                                     <div className="flex items-center justify-between">
-                                        <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
-                                          <Checkbox
-                                            checked={topic.isCompleted}
-                                            onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
-                                            disabled={!topic.isAccessible || !exam.isEnrolled}
-                                            className="h-5 w-5"
-                                          />
-                                         <div>
-                                           <h4 className="font-medium text-foreground flex items-center gap-2">
-                                             {topic.name}
-                                             {topic.marks && (
-                                               <span className="text-sm text-muted-foreground">
-                                                 ({topic.marks} marks)
-                                               </span>
-                                             )}
-                                           </h4>
+                                    {/* Desktop Layout */}
+                                    <div className="hidden sm:block">
+                                      <div className="flex items-center justify-between">
+                                         <div className={`flex items-center gap-3 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                           <span className="text-sm font-medium text-muted-foreground min-w-[24px]">
+                                             {index + 1}.
+                                           </span>
+                                          <div className="flex-1">
+                                            <h4 className="font-medium text-foreground flex items-center gap-2">
+                                              {topic.name}
+                                              {topic.marks && (
+                                                <span className="text-sm text-muted-foreground">
+                                                  ({topic.marks} marks)
+                                                </span>
+                                              )}
+                                            </h4>
                                            <div className="flex items-center gap-2 mt-1">
                                              <Badge 
                                                className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
@@ -1335,24 +1324,30 @@ const ExamDetail = () => {
                                                  </DropdownMenuContent>
                                                </DropdownMenu>
                                              )}
-                                           </div>
-                                         </div>
-                                       </div>
-                                       
-                                       {/* Locked Topic Upgrade CTA */}
-                                       {!topic.isAccessible && (
-                                         <div 
-                                           className="cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
-                                           onClick={handleLockedTopicClick}
-                                         >
-                                           <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
-                                             <Lock className="h-3 w-3" />
-                                             Click to upgrade and unlock all topics
-                                           </div>
-                                         </div>
-                                       )}
-                                     </div>
-                                   </div>
+                                            </div>
+                                          </div>
+                                          <Checkbox
+                                            checked={topic.isCompleted}
+                                            onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
+                                            disabled={!topic.isAccessible || !exam.isEnrolled}
+                                            className="h-5 w-5"
+                                          />
+                                        </div>
+                                        
+                                        {/* Locked Topic Upgrade CTA */}
+                                        {!topic.isAccessible && (
+                                          <div 
+                                            className="cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
+                                            onClick={handleLockedTopicClick}
+                                          >
+                                            <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
+                                              <Lock className="h-3 w-3" />
+                                              Click to upgrade and unlock all topics
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                  </div>
                                );
                              })}
