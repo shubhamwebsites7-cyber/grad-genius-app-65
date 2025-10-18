@@ -1022,16 +1022,20 @@ const ExamDetail = () => {
                     <Collapsible open={isExpanded} onOpenChange={() => toggleSection(subject.id)}>
                       <CardHeader className="cursor-pointer transition-colors">
                         {/* Mobile Layout */}
-                        <div className="flex sm:hidden flex-col gap-3" onClick={() => toggleSection(subject.id)}>
-                             {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
-                             <div className="flex items-center justify-between w-full">
-                               <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
-                               {isExpanded ? (
-                                 <ChevronUp className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                               ) : (
-                                 <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                               )}
-                             </div>
+                         <div className="flex sm:hidden flex-col gap-3 w-full">
+                              {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
+                              <div className="flex items-center justify-between w-full" onClick={() => toggleSection(subject.id)}>
+                                <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
+                                {isExpanded ? (
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background flex-shrink-0">
+                                    <ChevronUp className="h-5 w-5 text-background dark:text-foreground" />
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background flex-shrink-0">
+                                    <ChevronDown className="h-5 w-5 text-background dark:text-foreground" />
+                                  </div>
+                                )}
+                              </div>
                              
                              {/* Second row: Resources button + Marks (same row) */}
                              <div className="flex items-center gap-3">
@@ -1073,22 +1077,22 @@ const ExamDetail = () => {
                              </div>
                           </div>
                           
-                           {/* Desktop Layout */}
-                           <div className="hidden sm:flex flex-col gap-3 w-full" onClick={() => toggleSection(subject.id)}>
-                             {/* First row: Section name on left, dropdown arrow with red circular bg on right (top-aligned) */}
-                             <div className="flex items-start justify-between w-full">
-                                <CardTitle className="text-xl">{subject.name}</CardTitle>
-                                
-                                {isExpanded ? (
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-destructive/90">
-                                    <ChevronUp className="h-5 w-5 text-white" />
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-destructive/90">
-                                    <ChevronDown className="h-5 w-5 text-white" />
-                                  </div>
-                                )}
-                              </div>
+                            {/* Desktop Layout */}
+                             <div className="hidden sm:flex flex-col gap-3 w-full">
+                               {/* First row: Section name on left, dropdown arrow with circular bg on right (top-aligned) */}
+                               <div className="flex items-start justify-between w-full" onClick={() => toggleSection(subject.id)}>
+                                  <CardTitle className="text-xl">{subject.name}</CardTitle>
+                                  
+                                  {isExpanded ? (
+                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background">
+                                      <ChevronUp className="h-5 w-5 text-background dark:text-foreground" />
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background">
+                                      <ChevronDown className="h-5 w-5 text-background dark:text-foreground" />
+                                    </div>
+                                  )}
+                                </div>
                               
                               {/* Second row: Resources button + Marks badge */}
                               <div className="flex items-center gap-3">
@@ -1138,29 +1142,34 @@ const ExamDetail = () => {
                               const isAccessible = topic.isAccessible || index < 3;
                               
                               return (
-                                 <div
-                                  key={topic.id}
-                                  className={`p-4 rounded-lg border-2 transition-all ${
-                                    topic.isAccessible
-                                      ? 'border-border bg-card'
-                                      : 'border-muted bg-muted/20 opacity-70'
-                                  }`}
-                                >
+                                  <div
+                                   key={topic.id}
+                                   className={`p-4 rounded-lg border-2 transition-all ${
+                                     topic.isAccessible
+                                       ? topic.isCompleted
+                                         ? 'border-border bg-muted/40'
+                                         : 'border-border bg-card'
+                                       : 'border-muted bg-muted/20 opacity-70'
+                                   }`}
+                                 >
                                    {/* Mobile Layout */}
                                    <div className="block sm:hidden">
-                                     <div className={topic.isAccessible ? '' : 'opacity-50'}>
-                                       {/* First row: Checkbox + Topic name */}
-                                        <div className="flex items-start gap-3 mb-3">
-                                          <Checkbox
-                                            checked={topic.isCompleted}
-                                            onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
-                                            disabled={!topic.isAccessible || !exam.isEnrolled}
-                                            className="h-5 w-5 mt-0.5"
-                                          />
-                                         <h4 className="font-medium text-foreground flex-1">
-                                           {topic.name}
-                                         </h4>
-                                       </div>
+                                      <div className={topic.isAccessible ? '' : 'opacity-50'}>
+                                        {/* First row: Number + Topic name + Checkbox */}
+                                         <div className="flex items-start gap-3 mb-3">
+                                           <span className="text-sm font-medium text-muted-foreground mt-0.5">
+                                             {index + 1}.
+                                           </span>
+                                          <h4 className="font-medium text-foreground flex-1">
+                                            {topic.name}
+                                          </h4>
+                                           <Checkbox
+                                             checked={topic.isCompleted}
+                                             onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
+                                             disabled={!topic.isAccessible || !exam.isEnrolled}
+                                             className="h-5 w-5 mt-0.5"
+                                           />
+                                        </div>
                                        
                                        {/* Second row: Marks + Difficulty + Vote dropdown */}
                                        <div className="flex items-center gap-3 mb-2">
@@ -1246,19 +1255,16 @@ const ExamDetail = () => {
                                   
                                     {/* Desktop Layout */}
                                     <div className="hidden sm:block">
-                                      <div className="flex items-start gap-3">
-                                         {/* Checkbox on the left, top-aligned */}
-                                         <Checkbox
-                                           checked={topic.isCompleted}
-                                           onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
-                                           disabled={!topic.isAccessible || !exam.isEnrolled}
-                                           className={`h-5 w-5 mt-0.5 ${!topic.isAccessible ? 'opacity-50' : ''}`}
-                                         />
-                                         
-                                         {/* Topic content */}
-                                         <div className={`flex-1 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
-                                           <h4 className="font-medium text-foreground flex items-center gap-2">
-                                             {topic.name}
+                                       <div className="flex items-start gap-3">
+                                          {/* Number on the left */}
+                                          <span className={`text-sm font-medium text-muted-foreground mt-0.5 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                            {index + 1}.
+                                          </span>
+                                          
+                                          {/* Topic content */}
+                                          <div className={`flex-1 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                            <h4 className="font-medium text-foreground flex items-center gap-2">
+                                              {topic.name}
                                              {topic.marks && (
                                                <span className="text-sm text-muted-foreground">
                                                  ({topic.marks} marks)
@@ -1324,11 +1330,19 @@ const ExamDetail = () => {
                                                  </DropdownMenuContent>
                                                </DropdownMenu>
                                              )}
-                                           </div>
-                                         </div>
-                                        
-                                        {/* Locked Topic Upgrade CTA */}
-                                        {!topic.isAccessible && (
+                                            </div>
+                                          </div>
+
+                                          {/* Checkbox on the right, top-aligned */}
+                                          <Checkbox
+                                            checked={topic.isCompleted}
+                                            onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
+                                            disabled={!topic.isAccessible || !exam.isEnrolled}
+                                            className={`h-5 w-5 mt-0.5 ${!topic.isAccessible ? 'opacity-50' : ''}`}
+                                          />
+                                         
+                                         {/* Locked Topic Upgrade CTA */}
+                                         {!topic.isAccessible && (
                                           <div 
                                             className="cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
                                             onClick={handleLockedTopicClick}
