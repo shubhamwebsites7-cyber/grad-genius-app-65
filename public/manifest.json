@@ -1,7 +1,7 @@
 {
-  "name": "Examtrakr - Smart Exam Preparation Tracker",
+  "name": "ExamTrakr – Track Your Exam Progress & Study Smarter",
   "short_name": "Examtrakr",
-  "description": "Track your exam preparation progress with AI-powered analytics for IBPS PO, NEET, JEE, SSC, UPSC and competitive exams.",
+  "description": "Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Examtrakr</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              AI-powered exam preparation platform trusted by 50,000+ students to track progress and achieve academic excellence.
+            ExamTrakr – Track Your Exam Progress & Study Smarter
             </p>
           </div>
 

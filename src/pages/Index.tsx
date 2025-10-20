@@ -17,17 +17,17 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Examtrakr - Smart Exam Preparation Tracker for IBPS, NEET, JEE & Competitive Exams</title>
+        <title>ExamTrakr – Track Your Exam Progress & Study Smarter</title>
         <meta 
           name="description" 
-          content="Track your exam preparation progress with Examtrakr. AI-powered platform for IBPS PO, NEET, JEE, SSC, UPSC & competitive exams. Get analytics, study insights & achieve success with personalized study plans." 
+          content="Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!" 
         />
         <meta 
           name="keywords" 
-          content="exam tracker, exam preparation, IBPS PO, NEET, JEE, SSC, UPSC, CAT, GATE, student progress tracker, competitive exams, study analytics, exam planner" 
+          content="exam preparation, exam tracker, study progress tracker, subject wise progress, online exam preparation, competitive exams, smart study platform, exam progress tracking, best exam resources, study planner for students, jee preparation, neet preparation, banking exams india, ssc cgl preparation, upsc preparation, gre preparation, gmat preparation, sat preparation, lsat preparation, track study progress, student productivity, exam study tools, study smart app, learning progress tracker" 
         />
-        <meta property="og:title" content="Examtrakr - Smart Exam Preparation Tracker" />
-        <meta property="og:description" content="AI-powered exam tracking platform for IBPS, NEET, JEE & competitive exams. Track progress, get analytics, and achieve academic success." />
+        <meta property="og:title" content="ExamTrakr – Track Your Exam Progress & Study Smarter" />
+        <meta property="og:description" content="Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://examtrakr.com/" />
         <link rel="canonical" href="/" />
@@ -40,7 +40,7 @@ const Index = () => {
             "name": "Examtrakr",
             "applicationCategory": "EducationalApplication",
             "operatingSystem": "Web",
-            "description": "Smart exam preparation tracker for competitive exams",
+            "description": "ExamTrakr – Track Your Exam Progress & Study Smarter",
             "offers": {
               "@type": "Offer",
               "price": "0",
