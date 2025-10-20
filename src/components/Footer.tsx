@@ -28,9 +28,9 @@ export const Footer: React.FC = () => {
     {
       title: 'Social Media',
       links: [
-        { name: 'YouTube', href: 'https://youtube.com', icon: Youtube },
-        { name: 'Telegram', href: 'https://telegram.org', icon: Send },
-        { name: 'Instagram', href: 'https://instagram.com', icon: Instagram },
+        { name: 'YouTube', href: 'https://www.youtube.com/@ExamTrakr', icon: Youtube },
+        { name: 'Telegram', href: 'https://t.me/Examtrakr', icon: Send },
+        { name: 'Instagram', href: 'https://www.instagram.com/examtrakr/', icon: Instagram },
         { name: 'WhatsApp', href: 'https://wa.me/919302418061', icon: MessageCircle },
       ],
     },

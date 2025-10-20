@@ -1027,12 +1027,12 @@ const ExamDetail = () => {
                               <div className="flex items-center justify-between w-full" onClick={() => toggleSection(subject.id)}>
                                 <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
                                 {isExpanded ? (
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background flex-shrink-0">
-                                    <ChevronUp className="h-5 w-5 text-background dark:text-foreground" />
+                                  <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
+                                    <ChevronUp className="h-5 w-5 text-black dark:text-white" />
                                   </div>
                                 ) : (
-                                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background flex-shrink-0">
-                                    <ChevronDown className="h-5 w-5 text-background dark:text-foreground" />
+                                  <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
+                                    <ChevronDown className="h-5 w-5 text-black dark:text-white" />
                                   </div>
                                 )}
                               </div>
@@ -1084,12 +1084,12 @@ const ExamDetail = () => {
                                   <CardTitle className="text-xl">{subject.name}</CardTitle>
                                   
                                   {isExpanded ? (
-                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background">
-                                      <ChevronUp className="h-5 w-5 text-background dark:text-foreground" />
+                                    <div className="flex items-center justify-center h-8 w-8">
+                                      <ChevronUp className="h-5 w-5 text-black dark:text-white" />
                                     </div>
                                   ) : (
-                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-foreground dark:bg-background">
-                                      <ChevronDown className="h-5 w-5 text-background dark:text-foreground" />
+                                    <div className="flex items-center justify-center h-8 w-8">
+                                      <ChevronDown className="h-5 w-5 text-black dark:text-white" />
                                     </div>
                                   )}
                                 </div>
