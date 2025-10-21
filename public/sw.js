@@ -1,20 +1,24 @@
-const CACHE_NAME = 'examtrakr-v6';
+const CACHE_NAME = 'examtrakr-v7';
 const urlsToCache = [
   '/',
   '/manifest.json',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/examtrakr.png',
+  '/favicon.png'
 ];
+
+const OFFLINE_PAGE = '/offline.html';
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        console.log('[SW] Opened cache');
         return cache.addAll(urlsToCache.map(url => new Request(url, {cache: 'reload'})))
           .catch(err => {
-            console.log('Cache addAll error:', err);
+            console.log('[SW] Cache addAll error:', err);
           });
       })
   );

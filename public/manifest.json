@@ -1,12 +1,16 @@
 {
   "name": "ExamTrakr – Track Your Exam Progress & Study Smarter",
-  "short_name": "Examtrakr",
+  "short_name": "ExamTrakr",
   "description": "Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0066ff",
   "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "en",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -19,6 +23,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/examtrakr.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "categories": ["education", "productivity"],
@@ -27,13 +37,31 @@
       "src": "/screenshot-wide.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "ExamTrakr Dashboard"
     },
     {
       "src": "/screenshot-narrow.png",
       "sizes": "750x1334",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "ExamTrakr Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open your exam dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Exams",
+      "short_name": "Exams",
+      "description": "View all exams",
+      "url": "/exams",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
