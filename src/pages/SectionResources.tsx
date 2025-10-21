@@ -32,7 +32,8 @@ import {
   Bookmark,
   BookmarkCheck,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,6 +53,8 @@ interface Resource {
   topicId?: string;
   topicName?: string;
   isPending?: boolean;
+  contributorName?: string;
+  contributorId?: string;
 }
 
 interface TopicData {
@@ -69,7 +72,7 @@ interface TopicData {
 
 const SectionResources = () => {
   const { sectionId } = useParams<{ sectionId: string }>();
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('latest');
@@ -218,10 +221,16 @@ const SectionResources = () => {
       let resourcesData: any[] = [];
       
       if (topicIds.length > 0) {
-        // Fetch approved resources
+        // Fetch approved resources with contributor info
         const { data: approvedData, error: approvedError } = await supabase
           .from('topic_resources')
-          .select('*')
+          .select(`
+            *,
+            contributor:users!topic_resources_contributed_by_user_id_fkey(
+              id,
+              full_name
+            )
+          `)
           .eq('is_active', true)
           .eq('admin_approved', true)
           .in('topic_id', topicIds);
@@ -233,7 +242,13 @@ const SectionResources = () => {
         if (user) {
           const { data: pendingData, error: pendingError } = await supabase
             .from('topic_resources')
-            .select('*')
+            .select(`
+              *,
+              contributor:users!topic_resources_contributed_by_user_id_fkey(
+                id,
+                full_name
+              )
+            `)
             .eq('is_active', true)
             .eq('admin_approved', false)
             .eq('contributed_by_user_id', user.id)
@@ -319,7 +334,9 @@ const SectionResources = () => {
         isBookmarked: bookmarksSet.has(r.id),
         topicId: r.topic_id,
         topicName: topicsMap[r.topic_id],
-        isPending: !r.admin_approved
+        isPending: !r.admin_approved,
+        contributorName: r.contributor?.full_name || 'Anonymous',
+        contributorId: r.contributed_by_user_id
       }));
 
       setResources(mappedResources);
@@ -850,15 +867,36 @@ const SectionResources = () => {
 
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {filteredAndSortedResources.map((resource) => {
+              {filteredAndSortedResources.map((resource, index) => {
                 const IconComponent = getResourceIcon(resource.type);
+                const isPremium = subscription.isPremium;
+                const isLocked = !isPremium && index >= 3;
+                
                 return (
                   <Card 
                     key={resource.id} 
-                    className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group ${
+                    className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative ${
                       resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-                    }`}
+                    } ${isLocked ? 'opacity-50' : ''}`}
                   >
+                    {isLocked && (
+                      <div className="absolute inset-0 backdrop-blur-sm bg-background/30 z-10 rounded-lg flex items-center justify-center">
+                        <div className="text-center p-6">
+                          <Lock className="h-12 w-12 mx-auto mb-3 text-primary" />
+                          <p className="text-sm font-semibold mb-2">Premium Resource</p>
+                          <Button 
+                            asChild 
+                            size="sm" 
+                            className="mt-2"
+                          >
+                            <Link to="/pricing">
+                              Click to upgrade and unlock all resources
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg ${
@@ -926,6 +964,14 @@ const SectionResources = () => {
                         )}
                       </div>
 
+                      {/* Contributor Info */}
+                      {resource.contributorName && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Users className="h-3 w-3" />
+                          Added by {resource.contributorId === user?.id ? 'You' : resource.contributorName}
+                        </div>
+                      )}
+
                       {/* Meta Info */}
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -939,12 +985,18 @@ const SectionResources = () => {
                         asChild 
                         variant="hero" 
                         className="w-full"
+                        disabled={isLocked}
                       >
                         <a 
-                          href={resource.url} 
-                          target="_blank" 
+                          href={isLocked ? '#' : resource.url} 
+                          target={isLocked ? '_self' : '_blank'}
                           rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2"
+                          onClick={(e) => {
+                            if (isLocked) {
+                              e.preventDefault();
+                            }
+                          }}
                         >
                           <IconComponent className="h-4 w-4" />
                           {getResourceButtonText(resource.type)}

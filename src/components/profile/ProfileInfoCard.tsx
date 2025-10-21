@@ -161,7 +161,6 @@ export const ProfileInfoCard = ({
           <Button
             onClick={isEditing ? onSave : onEdit}
             variant={hasChanges && isEditing ? "default" : "outline"}
-            className={hasChanges && isEditing ? "animate-pulse" : ""}
           >
             {isEditing ? "Save Changes" : "Edit Profile"}
           </Button>
