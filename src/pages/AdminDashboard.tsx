@@ -592,14 +592,14 @@ const AdminDashboard = () => {
                     <button
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                      className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-left ${
                         activeSection === item.id
                           ? 'bg-primary text-primary-foreground'
                           : 'hover:bg-muted'
                       }`}
                     >
-                      <Icon className="h-5 w-5" />
-                      <span>{item.label}</span>
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="text-sm">{item.label}</span>
                     </button>
                   );
                 })}
@@ -608,11 +608,11 @@ const AdminDashboard = () => {
               <div className="mt-8 pt-8 border-t">
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start text-left"
                   onClick={handleLogout}
                 >
-                  <LogOut className="mr-3 h-5 w-5" />
-                  Logout
+                  <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="text-sm">Logout</span>
                 </Button>
               </div>
             </div>
