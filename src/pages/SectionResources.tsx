@@ -17,6 +17,7 @@ import {
   BreadcrumbPage 
 } from '@/components/ui/breadcrumb';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
   ArrowLeft, 
   Plus, 
@@ -89,6 +90,7 @@ const SectionResources = () => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [section, setSection] = useState<TopicData | null>(null);
   const [availableTopics, setAvailableTopics] = useState<{ id: string; name: string }[]>([]);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   useEffect(() => {
     if (sectionId) {
@@ -423,13 +425,9 @@ const SectionResources = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Resource submitted',
-        description: 'Your resource has been submitted for approval.',
-      });
-
       setNewResource({ title: '', description: '', url: '', topicId: '' });
       setShowAddForm(false);
+      setShowSuccessDialog(true);
       
       // Refresh the resources list to show the new pending resource
       await fetchSectionAndResources();
@@ -1037,6 +1035,29 @@ const SectionResources = () => {
         </main>
 
         <Footer />
+
+        {/* Success Dialog */}
+        <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Resource Submitted Successfully! 🎉</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                <p>
+                  Thank you for contributing! Your resource has been submitted for approval.
+                </p>
+                <p className="font-medium text-foreground">
+                  After admin approval, it will be visible to all users.
+                </p>
+                <p className="text-sm">
+                  ⏱️ This process typically takes up to 24 hours.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   );
