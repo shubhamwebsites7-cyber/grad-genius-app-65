@@ -72,27 +72,51 @@ export const SubscriptionsManagementSection = () => {
       const { data: subsData, error: subsError } = await supabase
         .from('user_subscriptions')
         .select(`
-          *,
-          users(full_name, email),
-          subscription_plans(name, duration_months)
+          id,
+          user_id,
+          plan_id,
+          status,
+          starts_at,
+          expires_at,
+          auto_renew,
+          payment_method,
+          created_at,
+          updated_at,
+          users!user_subscriptions_user_id_fkey(full_name, email),
+          subscription_plans!user_subscriptions_plan_id_fkey(name, duration_months)
         `)
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (subsError) throw subsError;
+      if (subsError) {
+        console.error('Subscriptions fetch error:', subsError);
+        throw subsError;
+      }
 
       // Fetch payments with user and plan details
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('payments')
         .select(`
-          *,
-          users(full_name, email),
-          subscription_plans(name)
+          id,
+          user_id,
+          plan_id,
+          amount,
+          currency,
+          payment_method,
+          payment_status,
+          external_payment_id,
+          created_at,
+          phone_number,
+          users!payments_user_id_fkey(full_name, email),
+          subscription_plans!payments_plan_id_fkey(name)
         `)
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (paymentsError) throw paymentsError;
+      if (paymentsError) {
+        console.error('Payments fetch error:', paymentsError);
+        throw paymentsError;
+      }
 
       setSubscriptions(subsData || []);
       setPayments(paymentsData || []);

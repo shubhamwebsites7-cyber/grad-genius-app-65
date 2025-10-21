@@ -9,12 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface Feedback {
   id: string;
   user_id: string;
-  helpful: string;
-  easy_to_use: string;
+  user_name: string | null;
+  user_email: string | null;
+  helpfulness: string;
+  ease_of_use: string;
   design_speed: string;
-  recommend: string;
+  recommendation: string;
   pricing_preference: string;
-  improvements: string | null;
+  improvement_suggestion: string | null;
   created_at: string;
 }
 
@@ -60,11 +62,31 @@ export const FeedbackSection = () => {
   const calculateStats = (data: Feedback[]) => {
     if (data.length === 0) return;
 
+    const helpfulMap: { [key: string]: number } = {
+      'very_helpful': 5,
+      'somewhat_helpful': 4,
+      'neutral': 3,
+      'not_helpful': 1
+    };
+
+    const easeMap: { [key: string]: number } = {
+      'very_easy': 5,
+      'easy': 4,
+      'average': 3,
+      'difficult': 1
+    };
+
+    const designMap: { [key: string]: number } = {
+      'yes_great': 5,
+      'okay': 3,
+      'needs_improvement': 1
+    };
+
     const sum = data.reduce((acc, item) => ({
-      helpful: acc.helpful + parseInt(item.helpful),
-      easyToUse: acc.easyToUse + parseInt(item.easy_to_use),
-      designSpeed: acc.designSpeed + parseInt(item.design_speed),
-      recommend: acc.recommend + (item.recommend === 'yes' ? 1 : 0),
+      helpful: acc.helpful + (helpfulMap[item.helpfulness] || 3),
+      easyToUse: acc.easyToUse + (easeMap[item.ease_of_use] || 3),
+      designSpeed: acc.designSpeed + (designMap[item.design_speed] || 3),
+      recommend: acc.recommend + (item.recommendation === 'definitely' ? 1 : item.recommendation === 'maybe' ? 0.5 : 0),
     }), { helpful: 0, easyToUse: 0, designSpeed: 0, recommend: 0 });
 
     setStats({
@@ -90,13 +112,51 @@ export const FeedbackSection = () => {
 
   const getPricingBadge = (preference: string) => {
     const badges: { [key: string]: { label: string; variant: "default" | "secondary" | "destructive" | "outline" } } = {
-      'free_is_good': { label: 'Free is Good', variant: 'default' },
-      'would_pay_monthly': { label: 'Would Pay Monthly', variant: 'secondary' },
-      'would_pay_lifetime': { label: 'Would Pay Lifetime', variant: 'outline' },
-      'too_expensive': { label: 'Too Expensive', variant: 'destructive' },
+      '0': { label: '₹0 (Free)', variant: 'default' },
+      '79': { label: '₹79', variant: 'secondary' },
+      '89': { label: '₹89', variant: 'secondary' },
+      '99+': { label: '₹99+', variant: 'outline' },
     };
     const badge = badges[preference] || { label: preference, variant: 'outline' as const };
     return <Badge variant={badge.variant}>{badge.label}</Badge>;
+  };
+
+  const getHelpfulnessLabel = (value: string) => {
+    const labels: { [key: string]: string } = {
+      'very_helpful': 'Very Helpful',
+      'somewhat_helpful': 'Somewhat Helpful',
+      'neutral': 'Neutral',
+      'not_helpful': 'Not Helpful'
+    };
+    return labels[value] || value;
+  };
+
+  const getEaseLabel = (value: string) => {
+    const labels: { [key: string]: string } = {
+      'very_easy': 'Very Easy',
+      'easy': 'Easy',
+      'average': 'Average',
+      'difficult': 'Difficult'
+    };
+    return labels[value] || value;
+  };
+
+  const getDesignSpeedLabel = (value: string) => {
+    const labels: { [key: string]: string } = {
+      'yes_great': 'Yes, Great!',
+      'okay': 'Okay',
+      'needs_improvement': 'Needs Improvement'
+    };
+    return labels[value] || value;
+  };
+
+  const getRecommendationLabel = (value: string) => {
+    const labels: { [key: string]: string } = {
+      'definitely': 'Definitely',
+      'maybe': 'Maybe',
+      'no': 'No'
+    };
+    return labels[value] || value;
   };
 
   if (loading) {
@@ -178,40 +238,48 @@ export const FeedbackSection = () => {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className="space-y-2">
-                    <div className="flex gap-4 items-center">
+                    {(item.user_name || item.user_email) && (
+                      <div className="mb-2">
+                        <p className="font-semibold">{item.user_name || 'Anonymous'}</p>
+                        {item.user_email && (
+                          <p className="text-sm text-muted-foreground">{item.user_email}</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-xs text-muted-foreground">Helpful</p>
-                        {renderStars(parseInt(item.helpful))}
+                        <p className="text-xs text-muted-foreground mb-1">Helpfulness</p>
+                        <Badge variant="outline">{getHelpfulnessLabel(item.helpfulness)}</Badge>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Easy to Use</p>
-                        {renderStars(parseInt(item.easy_to_use))}
+                        <p className="text-xs text-muted-foreground mb-1">Ease of Use</p>
+                        <Badge variant="outline">{getEaseLabel(item.ease_of_use)}</Badge>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Design/Speed</p>
-                        {renderStars(parseInt(item.design_speed))}
+                        <p className="text-xs text-muted-foreground mb-1">Design & Speed</p>
+                        <Badge variant="outline">{getDesignSpeedLabel(item.design_speed)}</Badge>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Would Recommend</p>
+                        <Badge variant={item.recommendation === 'definitely' ? 'default' : item.recommendation === 'maybe' ? 'secondary' : 'destructive'}>
+                          {getRecommendationLabel(item.recommendation)}
+                        </Badge>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    {item.recommend === 'yes' ? (
-                      <ThumbsUp className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <ThumbsDown className="h-5 w-5 text-red-600" />
-                    )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Pricing Preference:</span>
                   {getPricingBadge(item.pricing_preference)}
                 </div>
 
-                {item.improvements && (
+                {item.improvement_suggestion && (
                   <div>
                     <h4 className="font-semibold mb-2">Suggested Improvements:</h4>
-                    <p className="text-muted-foreground">{item.improvements}</p>
+                    <p className="text-muted-foreground">{item.improvement_suggestion}</p>
                   </div>
                 )}
 

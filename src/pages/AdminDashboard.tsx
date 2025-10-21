@@ -65,9 +65,9 @@ interface UserData {
 interface ExamData {
   id: string;
   name: string;
-  exam_type: string;
   enrollment_count: number;
   is_active: boolean;
+  category_id?: string;
 }
 
 interface ResourceData {
@@ -175,15 +175,15 @@ const AdminDashboard = () => {
         examsData,
         pendingResourcesData
       ] = await Promise.all([
-        supabase.from('users').select('*', { count: 'exact', head: true }),
+        supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('exams').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('subjects').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('topics').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('topic_resources').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('admin_approved', true),
         supabase.from('topic_resources').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('admin_approved', false),
         supabase.from('user_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('users').select('id, full_name, email, created_at, is_active').order('created_at', { ascending: false }).limit(10),
-        supabase.from('exams').select('id, name, exam_type, enrollment_count, is_active').eq('is_active', true).order('enrollment_count', { ascending: false }).limit(10),
+        supabase.from('users').select('id, full_name, email, created_at, is_active').eq('is_active', true).order('created_at', { ascending: false }).limit(10),
+        supabase.from('exams').select('id, name, enrollment_count, is_active').eq('is_active', true).order('enrollment_count', { ascending: false }).limit(10),
         supabase.from('topic_resources').select(`
           id,
           title,
@@ -402,7 +402,6 @@ const AdminDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Exam Name</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>Enrollments</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
@@ -411,9 +410,6 @@ const AdminDashboard = () => {
                     {exams.map((exam) => (
                       <TableRow key={exam.id}>
                         <TableCell className="font-medium">{exam.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{exam.exam_type}</Badge>
-                        </TableCell>
                         <TableCell>{exam.enrollment_count.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={exam.is_active ? 'default' : 'secondary'}>
@@ -499,7 +495,6 @@ const AdminDashboard = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Exam Name</TableHead>
-                      <TableHead>Type</TableHead>
                       <TableHead>Enrollments</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
@@ -509,9 +504,6 @@ const AdminDashboard = () => {
                     {exams.map((exam) => (
                       <TableRow key={exam.id}>
                         <TableCell className="font-medium">{exam.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{exam.exam_type}</Badge>
-                        </TableCell>
                         <TableCell>{exam.enrollment_count.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={exam.is_active ? 'default' : 'secondary'}>
