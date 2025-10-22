@@ -416,22 +416,11 @@ const SectionResources = () => {
       const resourceType = newResource.url.includes('youtube') || newResource.url.includes('youtu.be') ? 'video' :
                           newResource.url.includes('.pdf') ? 'pdf' : 'website';
 
-      if (isSubjectSelected) {
-        // If subject is selected, add resource to all topics in that subject
-        const topicsInSubject = availableTopics.filter(t => !t.isSubject).map(t => t.id);
-        
-        if (topicsInSubject.length === 0) {
-          toast({
-            title: 'Error',
-            description: 'No topics found in this subject.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        // Insert resource for each topic
-        const resourceInserts = topicsInSubject.map(topicId => ({
-          topic_id: topicId,
+      // Add resource once - either to specific topic or to subject (section_id)
+      const { error } = await supabase
+        .from('topic_resources')
+        .insert({
+          topic_id: selectedId, // Can be either topic_id or section_id (subject)
           title: newResource.title,
           description: newResource.description,
           resource_type: resourceType,
@@ -440,31 +429,9 @@ const SectionResources = () => {
           contributed_by_user_id: user.id,
           admin_approved: false,
           is_active: true
-        }));
+        } as any);
 
-        const { error } = await supabase
-          .from('topic_resources')
-          .insert(resourceInserts as any);
-
-        if (error) throw error;
-      } else {
-        // Add resource to specific topic
-        const { error } = await supabase
-          .from('topic_resources')
-          .insert({
-            topic_id: selectedId,
-            title: newResource.title,
-            description: newResource.description,
-            resource_type: resourceType,
-            url: newResource.url,
-            is_user_contributed: true,
-            contributed_by_user_id: user.id,
-            admin_approved: false,
-            is_active: true
-          } as any);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       setNewResource({ title: '', description: '', url: '', topicId: '' });
       setShowAddForm(false);
