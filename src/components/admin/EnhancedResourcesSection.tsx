@@ -21,9 +21,10 @@ interface Resource {
   contributed_by_user_id: string | null;
   created_at: string;
   avg_rating?: number;
-  topics?: {
-    name: string;
-  };
+  scope_name?: string;
+  scope_type?: 'topic' | 'subject';
+  exam_name?: string;
+  subject_name?: string;
   users?: {
     full_name: string;
   };
@@ -46,7 +47,6 @@ export const EnhancedResourcesSection = () => {
         .select(`
           *,
           resource_ratings(rating),
-          topics(name),
           users(full_name)
         `)
         .eq('is_active', true)
@@ -66,16 +66,66 @@ export const EnhancedResourcesSection = () => {
 
       if (error) throw error;
 
-      // Calculate average ratings
-      const resourcesWithRatings = (data || []).map((resource: any) => {
-        const ratings = resource.resource_ratings || [];
-        const avgRating = ratings.length > 0
-          ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
-          : 0;
-        return { ...resource, avg_rating: avgRating };
-      });
+      // Fetch topic and section information for each resource
+      const enrichedResources = await Promise.all(
+        (data || []).map(async (resource: any) => {
+          // Calculate average rating
+          const ratings = resource.resource_ratings || [];
+          const avgRating = ratings.length > 0
+            ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
+            : 0;
 
-      setResources(resourcesWithRatings);
+          // Try to fetch as topic first
+          const { data: topicData } = await supabase
+            .from('topics')
+            .select('name, exam_sections(name, exams(name))')
+            .eq('id', resource.topic_id)
+            .maybeSingle();
+
+          if (topicData) {
+            // It's a topic-level resource
+            const topicInfo = topicData as any;
+            return {
+              ...resource,
+              avg_rating: avgRating,
+              scope_name: topicInfo.name,
+              scope_type: 'topic' as const,
+              subject_name: topicInfo.exam_sections?.name || '',
+              exam_name: topicInfo.exam_sections?.exams?.name || '',
+            };
+          }
+
+          // Try to fetch as section (subject)
+          const { data: sectionData } = await supabase
+            .from('exam_sections')
+            .select('name, exams(name)')
+            .eq('id', resource.topic_id)
+            .maybeSingle();
+
+          if (sectionData) {
+            // It's a subject-level resource
+            const sectionInfo = sectionData as any;
+            return {
+              ...resource,
+              avg_rating: avgRating,
+              scope_name: sectionInfo.name,
+              scope_type: 'subject' as const,
+              subject_name: sectionInfo.name,
+              exam_name: sectionInfo.exams?.name || '',
+            };
+          }
+
+          // Fallback if neither found
+          return {
+            ...resource,
+            avg_rating: avgRating,
+            scope_name: 'Unknown',
+            scope_type: 'topic' as const,
+          };
+        })
+      );
+
+      setResources(enrichedResources);
     } catch (error) {
       console.error('Error fetching resources:', error);
       toast({
@@ -240,28 +290,45 @@ export const EnhancedResourcesSection = () => {
               <Card key={resource.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                     <div className="space-y-2">
+                      <div className="space-y-2 flex-1">
                       <CardTitle className="flex items-center gap-2">
                         {getTypeIcon(resource.resource_type)}
                         {resource.title}
                       </CardTitle>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <Badge variant="secondary">{resource.resource_type}</Badge>
                         {getStatusBadge(resource.admin_approved)}
+                        {resource.scope_type === 'subject' && (
+                          <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-600">
+                            Subject-Level
+                          </Badge>
+                        )}
                         {!isValidUrl && (
                           <Badge variant="destructive">Invalid URL</Badge>
                         )}
                       </div>
-                      {resource.topics && (
-                        <p className="text-sm text-muted-foreground">
-                          Topic: {resource.topics.name}
-                        </p>
-                      )}
-                      {resource.users && (
-                        <p className="text-sm text-muted-foreground">
-                          Submitted by: {resource.users.full_name}
-                        </p>
-                      )}
+                      <div className="space-y-1">
+                        {resource.exam_name && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Exam:</span> {resource.exam_name}
+                          </p>
+                        )}
+                        {resource.subject_name && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Subject:</span> {resource.subject_name}
+                          </p>
+                        )}
+                        {resource.scope_type === 'topic' && resource.scope_name && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Topic:</span> {resource.scope_name}
+                          </p>
+                        )}
+                        {resource.users && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Submitted by:</span> {resource.users.full_name}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-4">
                       {renderRating(resource.avg_rating || 0)}
