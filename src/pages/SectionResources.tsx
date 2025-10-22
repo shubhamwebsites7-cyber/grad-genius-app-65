@@ -226,7 +226,11 @@ const SectionResources = () => {
       // Fetch resources for the topic(s)
       let resourcesData: any[] = [];
       
-      if (topicIds.length > 0) {
+      // Build the list of IDs to search for resources
+      // Include both topic IDs and section ID (for subject-level resources)
+      const searchIds = isSubject ? [...topicIds, sectionId] : topicIds;
+      
+      if (searchIds.length > 0) {
         // Fetch approved resources with contributor info
         const { data: approvedData, error: approvedError } = await supabase
           .from('topic_resources')
@@ -239,7 +243,7 @@ const SectionResources = () => {
           `)
           .eq('is_active', true)
           .eq('admin_approved', true)
-          .in('topic_id', topicIds);
+          .in('topic_id', searchIds);
 
         if (approvedError) throw approvedError;
         resourcesData = approvedData || [];
@@ -258,7 +262,7 @@ const SectionResources = () => {
             .eq('is_active', true)
             .eq('admin_approved', false)
             .eq('contributed_by_user_id', user.id)
-            .in('topic_id', topicIds);
+            .in('topic_id', searchIds);
 
           if (pendingError) throw pendingError;
           if (pendingData) {
@@ -339,7 +343,8 @@ const SectionResources = () => {
         dateAdded: new Date(r.created_at),
         isBookmarked: bookmarksSet.has(r.id),
         topicId: r.topic_id,
-        topicName: topicsMap[r.topic_id],
+        // If topic_id matches sectionId (subject), show subject name, otherwise show topic name
+        topicName: r.topic_id === sectionId ? `${section?.name} (Subject)` : (topicsMap[r.topic_id] || 'Unknown Topic'),
         isPending: !r.admin_approved,
         contributorName: r.contributor?.full_name || 'Anonymous',
         contributorId: r.contributed_by_user_id
