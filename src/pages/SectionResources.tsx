@@ -89,7 +89,7 @@ const SectionResources = () => {
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [section, setSection] = useState<TopicData | null>(null);
-  const [availableTopics, setAvailableTopics] = useState<{ id: string; name: string }[]>([]);
+  const [availableTopics, setAvailableTopics] = useState<{ id: string; name: string; isSubject?: boolean }[]>([]);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   useEffect(() => {
@@ -177,7 +177,11 @@ const SectionResources = () => {
           topicsData.forEach((t: any) => {
             topicsMap[t.id] = t.name;
           });
-          setAvailableTopics(topicsData.map((t: any) => ({ id: t.id, name: t.name })));
+          // Add subject as first option, then all topics
+          setAvailableTopics([
+            { id: sectionId, name: `All ${subject.name} (Subject)`, isSubject: true },
+            ...topicsData.map((t: any) => ({ id: t.id, name: t.name, isSubject: false }))
+          ]);
         }
       } else {
         const topic = topicData as any;
@@ -393,13 +397,16 @@ const SectionResources = () => {
     if (!newResource.title || !newResource.url || !user || !section) return;
 
     // Determine the topic ID to use
-    const topicIdToUse = newResource.topicId || section.id;
+    const selectedId = newResource.topicId || section.id;
     
-    // Validate that we have a valid topic ID
-    if (!topicIdToUse) {
+    // Check if a subject is selected (not a specific topic)
+    const isSubjectSelected = availableTopics.find(t => t.id === selectedId && t.isSubject);
+    
+    // Validate that we have a valid selection
+    if (!selectedId) {
       toast({
         title: 'Error',
-        description: 'Please select a topic for this resource.',
+        description: 'Please select a topic or subject for this resource.',
         variant: 'destructive'
       });
       return;
@@ -409,21 +416,55 @@ const SectionResources = () => {
       const resourceType = newResource.url.includes('youtube') || newResource.url.includes('youtu.be') ? 'video' :
                           newResource.url.includes('.pdf') ? 'pdf' : 'website';
 
-      const { error } = await supabase
-        .from('topic_resources')
-        .insert({
-          topic_id: topicIdToUse,
+      if (isSubjectSelected) {
+        // If subject is selected, add resource to all topics in that subject
+        const topicsInSubject = availableTopics.filter(t => !t.isSubject).map(t => t.id);
+        
+        if (topicsInSubject.length === 0) {
+          toast({
+            title: 'Error',
+            description: 'No topics found in this subject.',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        // Insert resource for each topic
+        const resourceInserts = topicsInSubject.map(topicId => ({
+          topic_id: topicId,
           title: newResource.title,
           description: newResource.description,
           resource_type: resourceType,
           url: newResource.url,
           is_user_contributed: true,
           contributed_by_user_id: user.id,
-          admin_approved: false, // Needs admin approval
+          admin_approved: false,
           is_active: true
-        } as any);
+        }));
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from('topic_resources')
+          .insert(resourceInserts as any);
+
+        if (error) throw error;
+      } else {
+        // Add resource to specific topic
+        const { error } = await supabase
+          .from('topic_resources')
+          .insert({
+            topic_id: selectedId,
+            title: newResource.title,
+            description: newResource.description,
+            resource_type: resourceType,
+            url: newResource.url,
+            is_user_contributed: true,
+            contributed_by_user_id: user.id,
+            admin_approved: false,
+            is_active: true
+          } as any);
+
+        if (error) throw error;
+      }
 
       setNewResource({ title: '', description: '', url: '', topicId: '' });
       setShowAddForm(false);
@@ -785,7 +826,7 @@ const SectionResources = () => {
                 <CardHeader>
                   <CardTitle>Add New Resource</CardTitle>
                   <CardDescription>
-                    Share a helpful resource for {section.name}
+                    Share a helpful resource for a specific topic or the entire subject
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -793,7 +834,7 @@ const SectionResources = () => {
                     {availableTopics.length > 0 && (
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">
-                          Topic *
+                          Topic or Subject *
                         </label>
                         <Select
                           value={newResource.topicId}
@@ -801,7 +842,7 @@ const SectionResources = () => {
                           required
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a topic" />
+                            <SelectValue placeholder="Select a topic or subject" />
                           </SelectTrigger>
                           <SelectContent>
                             {availableTopics.map((topic) => (
