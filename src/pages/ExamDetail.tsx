@@ -327,11 +327,13 @@ const ExamDetail = () => {
         description: 'Please enroll in this exam to track your progress.',
         variant: 'destructive'
       });
-      // Scroll to enrollment section
-      const enrollmentSection = document.getElementById('enrollment-section');
-      if (enrollmentSection) {
-        enrollmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      // Scroll to enrollment section with a slight delay to ensure DOM is ready
+      setTimeout(() => {
+        const enrollmentSection = document.getElementById('enrollment-section');
+        if (enrollmentSection) {
+          enrollmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
       return;
     }
 
