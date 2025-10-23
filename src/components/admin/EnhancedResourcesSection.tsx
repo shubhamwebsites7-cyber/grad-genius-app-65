@@ -261,14 +261,33 @@ export const EnhancedResourcesSection = () => {
     );
   }
 
+  // Group resources by exam and then by subject
+  const groupedResources = resources.reduce((acc, resource) => {
+    const examName = resource.exam_name || 'Unknown Exam';
+    if (!acc[examName]) {
+      acc[examName] = {};
+    }
+    
+    const subjectName = resource.scope_type === 'exam' 
+      ? 'Exam-Level Resources' 
+      : (resource.subject_name || 'Unknown Subject');
+    
+    if (!acc[examName][subjectName]) {
+      acc[examName][subjectName] = [];
+    }
+    
+    acc[examName][subjectName].push(resource);
+    return acc;
+  }, {} as Record<string, Record<string, Resource[]>>);
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Resource Management</h2>
-        <p className="text-muted-foreground">Manage and review learning resources</p>
+        <p className="text-muted-foreground">Manage and review learning resources organized by exam and subject</p>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap">
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Filter by status" />
@@ -292,9 +311,18 @@ export const EnhancedResourcesSection = () => {
             <SelectItem value="document">Document</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="flex gap-2 ml-auto">
+          <Badge variant="outline" className="bg-green-600/10 text-green-600 border-green-600">
+            {resources.filter(r => r.admin_approved).length} Approved
+          </Badge>
+          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-600">
+            {resources.filter(r => !r.admin_approved).length} Pending
+          </Badge>
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {resources.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
@@ -303,114 +331,135 @@ export const EnhancedResourcesSection = () => {
             </CardContent>
           </Card>
         ) : (
-          resources.map((resource) => {
-            const isValidUrl = validateUrl(resource.url);
-            return (
-              <Card key={resource.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-1">
-                      <CardTitle className="flex items-center gap-2">
-                        {getTypeIcon(resource.resource_type)}
-                        {resource.title}
-                      </CardTitle>
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="secondary">{resource.resource_type}</Badge>
-                        {getStatusBadge(resource.admin_approved)}
-                        {resource.scope_type === 'subject' && (
-                          <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-600">
-                            Subject-Level
-                          </Badge>
-                        )}
-                        {resource.scope_type === 'exam' && (
-                          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-600">
-                            Exam-Level
-                          </Badge>
-                        )}
-                        {!isValidUrl && (
-                          <Badge variant="destructive">Invalid URL</Badge>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        {resource.exam_name && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Exam:</span> {resource.exam_name}
-                          </p>
-                        )}
-                        {resource.scope_type !== 'exam' && resource.subject_name && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Subject:</span> {resource.subject_name}
-                          </p>
-                        )}
-                        {resource.scope_type === 'topic' && resource.scope_name && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Topic:</span> {resource.scope_name}
-                          </p>
-                        )}
-                        {resource.users && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Submitted by:</span> {resource.users.full_name}
-                          </p>
-                        )}
-                      </div>
+          Object.entries(groupedResources).map(([examName, subjects]) => (
+            <Card key={examName} className="overflow-hidden">
+              <CardHeader className="bg-primary/5 border-b">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  {examName}
+                  <Badge variant="secondary" className="ml-auto">
+                    {Object.values(subjects).flat().length} resources
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {Object.entries(subjects).map(([subjectName, subjectResources]) => (
+                  <div key={subjectName} className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b">
+                      <h3 className="font-semibold text-lg">{subjectName}</h3>
+                      <Badge variant="outline" className="ml-2">
+                        {subjectResources.length} resources
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-4">
-                      {renderRating(resource.avg_rating || 0)}
+                    
+                    <div className="grid gap-4">
+                      {subjectResources.map((resource) => {
+                        const isValidUrl = validateUrl(resource.url);
+                        return (
+                          <Card key={resource.id} className="bg-card/50">
+                            <CardContent className="p-4">
+                              <div className="flex gap-4">
+                                <div className="flex-1 space-y-3">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1">
+                                      <h4 className="font-semibold flex items-center gap-2 mb-2">
+                                        {getTypeIcon(resource.resource_type)}
+                                        {resource.title}
+                                      </h4>
+                                      <div className="flex gap-2 flex-wrap mb-2">
+                                        <Badge variant="secondary" className="text-xs">{resource.resource_type}</Badge>
+                                        {getStatusBadge(resource.admin_approved)}
+                                        {resource.scope_type === 'topic' && (
+                                          <Badge variant="outline" className="text-xs">
+                                            Topic: {resource.scope_name}
+                                          </Badge>
+                                        )}
+                                        {!isValidUrl && (
+                                          <Badge variant="destructive" className="text-xs">Invalid URL</Badge>
+                                        )}
+                                      </div>
+                                      {resource.description && (
+                                        <p className="text-sm text-muted-foreground mb-2">{resource.description}</p>
+                                      )}
+                                      {resource.users && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Submitted by: {resource.users.full_name}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                      {renderRating(resource.avg_rating || 0)}
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(resource.created_at).toLocaleDateString()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      value={resource.url}
+                                      readOnly
+                                      className={`text-sm ${!isValidUrl ? 'border-destructive' : ''}`}
+                                    />
+                                    {isValidUrl && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
+                                      >
+                                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                                          <ExternalLink className="h-4 w-4" />
+                                        </a>
+                                      </Button>
+                                    )}
+                                  </div>
+
+                                  <div className="flex gap-2">
+                                    {!resource.admin_approved ? (
+                                      <>
+                                        <Button
+                                          onClick={() => handleApprove(resource.id)}
+                                          disabled={!isValidUrl}
+                                          size="sm"
+                                          className="gap-2"
+                                        >
+                                          <CheckCircle className="h-4 w-4" />
+                                          Approve
+                                        </Button>
+                                        <Button
+                                          onClick={() => handleReject(resource.id)}
+                                          variant="destructive"
+                                          size="sm"
+                                          className="gap-2"
+                                        >
+                                          <XCircle className="h-4 w-4" />
+                                          Reject
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <Button
+                                        onClick={() => handleReject(resource.id)}
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2"
+                                      >
+                                        <XCircle className="h-4 w-4" />
+                                        Disapprove
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {resource.description && (
-                    <p className="text-muted-foreground">{resource.description}</p>
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={resource.url}
-                      readOnly
-                      className={!isValidUrl ? 'border-destructive' : ''}
-                    />
-                    {isValidUrl && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                      >
-                        <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-
-                  {!resource.admin_approved && (
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleApprove(resource.id)}
-                        disabled={!isValidUrl}
-                        className="gap-2"
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        Approve
-                      </Button>
-                      <Button
-                        onClick={() => handleReject(resource.id)}
-                        variant="destructive"
-                        className="gap-2"
-                      >
-                        <XCircle className="h-4 w-4" />
-                        Reject
-                      </Button>
-                    </div>
-                  )}
-
-                  <p className="text-xs text-muted-foreground">
-                    Added on {new Date(resource.created_at).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })
+                ))}
+              </CardContent>
+            </Card>
+          ))
         )}
       </div>
     </div>
