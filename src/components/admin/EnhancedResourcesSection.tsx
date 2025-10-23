@@ -78,7 +78,7 @@ export const EnhancedResourcesSection = () => {
           // Try to fetch as topic first
           const { data: topicData } = await supabase
             .from('topics')
-            .select('name, exam_sections(name, exams(name))')
+            .select('name, subjects(name, exams(name))')
             .eq('id', resource.topic_id)
             .maybeSingle();
 
@@ -90,28 +90,28 @@ export const EnhancedResourcesSection = () => {
               avg_rating: avgRating,
               scope_name: topicInfo.name,
               scope_type: 'topic' as const,
-              subject_name: topicInfo.exam_sections?.name || '',
-              exam_name: topicInfo.exam_sections?.exams?.name || '',
+              subject_name: topicInfo.subjects?.name || '',
+              exam_name: topicInfo.subjects?.exams?.name || '',
             };
           }
 
-          // Try to fetch as section (subject)
-          const { data: sectionData } = await supabase
-            .from('exam_sections')
+          // Try to fetch as subject
+          const { data: subjectData } = await supabase
+            .from('subjects')
             .select('name, exams(name)')
             .eq('id', resource.topic_id)
             .maybeSingle();
 
-          if (sectionData) {
+          if (subjectData) {
             // It's a subject-level resource
-            const sectionInfo = sectionData as any;
+            const subjectInfo = subjectData as any;
             return {
               ...resource,
               avg_rating: avgRating,
-              scope_name: sectionInfo.name,
+              scope_name: subjectInfo.name,
               scope_type: 'subject' as const,
-              subject_name: sectionInfo.name,
-              exam_name: sectionInfo.exams?.name || '',
+              subject_name: subjectInfo.name,
+              exam_name: subjectInfo.exams?.name || '',
             };
           }
 
