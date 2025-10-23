@@ -327,6 +327,11 @@ const ExamDetail = () => {
         description: 'Please enroll in this exam to track your progress.',
         variant: 'destructive'
       });
+      // Scroll to enrollment section
+      const enrollmentSection = document.getElementById('enrollment-section');
+      if (enrollmentSection) {
+        enrollmentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
@@ -1377,7 +1382,7 @@ const ExamDetail = () => {
 
              {/* CTA Section */}
             {!exam.isEnrolled && (
-              <Card className="mt-12 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+              <Card id="enrollment-section" className="mt-12 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
                 <CardContent className="p-8 text-center">
                   <h3 className="text-2xl font-bold text-foreground mb-4">
                     Ready to start your {exam.name} preparation?
