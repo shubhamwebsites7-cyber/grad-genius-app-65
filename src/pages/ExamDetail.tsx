@@ -859,19 +859,7 @@ const ExamDetail = () => {
                           )}
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Exam Resources Button */}
-                    <div className="sm:ml-4">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => navigate(`/exams/${exam.id}/resources`)}
-                        className="w-full sm:w-auto"
-                      >
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Exam Resources
-                      </Button>
-                    </div>
+                     </div>
                   </CardContent>
                 </Card>
             </div>
@@ -1018,8 +1006,16 @@ const ExamDetail = () => {
             </Card>
 
             {/* Subjects and Topics Header */}
-            <div className="mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">Subjects and Topics</h2>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(`/exams/${exam.id}/resources`)}
+              >
+                <BookOpen className="mr-2 h-4 w-4" />
+                Resources
+              </Button>
             </div>
 
             {/* Subjects */}

@@ -33,7 +33,8 @@ import {
   BookmarkCheck,
   Loader2,
   AlertCircle,
-  GraduationCap
+  GraduationCap,
+  Lock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -58,12 +59,11 @@ interface Resource {
 interface ExamData {
   id: string;
   name: string;
-  type: string;
 }
 
 const ExamResources = () => {
   const { examId } = useParams<{ examId: string }>();
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('latest');
@@ -94,7 +94,7 @@ const ExamResources = () => {
       // Fetch exam data
       const { data: examData, error: examError } = await supabase
         .from('exams')
-        .select('id, name, type')
+        .select('id, name')
         .eq('id', examId)
         .eq('is_active', true)
         .maybeSingle();
@@ -596,10 +596,29 @@ const ExamResources = () => {
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAndSortedResources.map((resource) => {
+            {filteredAndSortedResources.map((resource, index) => {
               const Icon = getResourceIcon(resource.type);
+              const isPremium = subscription.isPremium;
+              const isLocked = !isPremium && index >= 2;
+              
               return (
-                <Card key={resource.id} className={resource.isPending ? 'border-amber-500' : ''}>
+                <Card key={resource.id} className={`${resource.isPending ? 'border-amber-500' : ''} ${isLocked ? 'relative opacity-60' : ''}`}>
+                  {isLocked && (
+                    <div className="absolute inset-0 backdrop-blur-sm bg-background/40 z-10 rounded-lg flex items-center justify-center">
+                      <div className="text-center p-6">
+                        <Lock className="h-12 w-12 mx-auto mb-3 text-primary" />
+                        <p className="text-sm font-semibold mb-2">Premium Resource</p>
+                        <Button 
+                          asChild 
+                          size="sm"
+                        >
+                          <Link to="/pricing">
+                            Click to upgrade and unlock all resources
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <Icon className="h-6 w-6 text-primary" />
@@ -613,6 +632,7 @@ const ExamResources = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleBookmark(resource.id)}
+                          disabled={isLocked}
                         >
                           {resource.isBookmarked ? (
                             <BookmarkCheck className="h-4 w-4 text-primary" />
@@ -635,8 +655,9 @@ const ExamResources = () => {
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
                               key={star}
-                              onClick={() => handleRating(resource.id, star)}
+                              onClick={() => !isLocked && handleRating(resource.id, star)}
                               className="focus:outline-none"
+                              disabled={isLocked}
                             >
                               <Star
                                 className={`h-4 w-4 ${
@@ -671,7 +692,8 @@ const ExamResources = () => {
                       {/* Action Button */}
                       <Button
                         className="w-full"
-                        onClick={() => window.open(resource.url, '_blank')}
+                        onClick={() => !isLocked && window.open(resource.url, '_blank')}
+                        disabled={isLocked}
                       >
                         <Icon className="mr-2 h-4 w-4" />
                         {getResourceButtonText(resource.type)}

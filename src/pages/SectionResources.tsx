@@ -878,10 +878,10 @@ const SectionResources = () => {
 
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {filteredAndSortedResources.map((resource, index) => {
+            {filteredAndSortedResources.map((resource, index) => {
                 const IconComponent = getResourceIcon(resource.type);
                 const isPremium = subscription.isPremium;
-                const isLocked = !isPremium && index >= 3;
+                const isLocked = !isPremium && index >= 2;
                 
                 return (
                   <Card 
