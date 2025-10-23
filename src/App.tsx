@@ -82,10 +82,10 @@ const App = () => (
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                   <Route path="/exams" element={<Exams />} />
-                  <Route path="/exam/:examId" element={<ProtectedRoute><ExamDetail /></ProtectedRoute>} />
+                  <Route path="/exam/:examId" element={<ExamDetail />} />
                   <Route path="/exams/add" element={<ProtectedRoute><AddExam /></ProtectedRoute>} />
-                  <Route path="/exams/:examId/resources" element={<ProtectedRoute><ExamResources /></ProtectedRoute>} />
-                  <Route path="/resources/:sectionId" element={<ProtectedRoute><SectionResources /></ProtectedRoute>} />
+                  <Route path="/exams/:examId/resources" element={<ExamResources />} />
+                  <Route path="/resources/:sectionId" element={<SectionResources />} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/about" element={<About />} />

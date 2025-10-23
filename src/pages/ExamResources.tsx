@@ -29,6 +29,7 @@ import {
   ExternalLink,
   BookOpen,
   Clock,
+  Users,
   Bookmark,
   BookmarkCheck,
   Loader2,
@@ -488,28 +489,81 @@ const ExamResources = () => {
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <GraduationCap className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold text-foreground">{exam.name}</h1>
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                Resources for {exam.name}
+              </h1>
+              <p className="text-muted-foreground text-base sm:text-lg mb-4">
+                Exam-level resources (PYQs, strategy guides, etc.)
+              </p>
+              
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge className="bg-primary/10 text-primary pointer-events-none">
+                  <GraduationCap className="h-3 w-3 mr-1" />
+                  {exam.name}
+                </Badge>
+              </div>
             </div>
-            <p className="text-muted-foreground">Exam-level resources (PYQs, strategy guides, etc.)</p>
           </div>
-          <Link to={`/exam/${exam.id}`}>
-            <Button variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Exam
-            </Button>
-          </Link>
+
+          {/* Search and Filters */}
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search resources..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest Updates</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="highest-rated">Highest Rated</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Add Resource Button */}
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowAddForm(true)}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Resource
+                </Button>
+                <Link to={`/exam/${exam.id}`}>
+                  <Button variant="outline">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Exam
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Add Resource Form */}
         {showAddForm && (
-          <Card className="mb-6">
+          <Card className="mb-8">
             <CardHeader>
-              <CardTitle>Contribute Exam Resource</CardTitle>
+              <CardTitle>Add New Resource</CardTitle>
               <CardDescription>
                 Share exam-level resources like PYQs, strategy guides, or general exam materials
               </CardDescription>
@@ -517,35 +571,47 @@ const ExamResources = () => {
             <CardContent>
               <form onSubmit={handleAddResource} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium">Resource Title *</label>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Resource Title *
+                  </label>
                   <Input
                     value={newResource.title}
                     onChange={(e) => setNewResource({ ...newResource, title: e.target.value })}
-                    placeholder="e.g., Complete PYQ Collection 2015-2024"
+                    placeholder="Enter resource title"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Description</label>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Description
+                  </label>
                   <Input
                     value={newResource.description}
                     onChange={(e) => setNewResource({ ...newResource, description: e.target.value })}
-                    placeholder="Brief description of the resource"
+                    placeholder="Brief description (optional)"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">URL *</label>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Resource URL *
+                  </label>
                   <Input
-                    type="url"
                     value={newResource.url}
                     onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-                    placeholder="https://..."
+                    placeholder="https://example.com or YouTube URL"
+                    type="url"
                     required
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button type="submit">Submit for Review</Button>
-                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)}>
+                <div className="flex gap-3">
+                  <Button type="submit" variant="hero">
+                    Add Resource
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowAddForm(false)}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -554,155 +620,185 @@ const ExamResources = () => {
           </Card>
         )}
 
-        {/* Add Resource Button */}
-        {!showAddForm && (
-          <Button onClick={() => setShowAddForm(true)} className="mb-6">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Exam Resource
-          </Button>
-        )}
-
-        {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search resources..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="latest">Latest</SelectItem>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="highest-rated">Highest Rated</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Resources Grid */}
-        {filteredAndSortedResources.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">No exam resources available yet. Be the first to contribute!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAndSortedResources.map((resource, index) => {
-              const Icon = getResourceIcon(resource.type);
-              const isPremium = subscription.isPremium;
-              const isLocked = !isPremium && index >= 2;
-              
-              return (
-                <Card key={resource.id} className={`${resource.isPending ? 'border-amber-500' : ''} ${isLocked ? 'relative opacity-60' : ''}`}>
-                  {isLocked && (
-                    <div className="absolute inset-0 backdrop-blur-sm bg-background/40 z-10 rounded-lg flex items-center justify-center">
-                      <div className="text-center p-6">
-                        <Lock className="h-12 w-12 mx-auto mb-3 text-primary" />
-                        <p className="text-sm font-semibold mb-2">Premium Resource</p>
-                        <Button 
-                          asChild 
-                          size="sm"
-                        >
-                          <Link to="/pricing">
-                            Click to upgrade and unlock all resources
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <Icon className="h-6 w-6 text-primary" />
-                      <div className="flex items-center gap-2">
-                        {resource.isPending && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-600">
-                            Pending Review
-                          </Badge>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleBookmark(resource.id)}
-                          disabled={isLocked}
-                        >
-                          {resource.isBookmarked ? (
-                            <BookmarkCheck className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Bookmark className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg mt-2">{resource.title}</CardTitle>
-                    {resource.description && (
-                      <CardDescription>{resource.description}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Rating */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => !isLocked && handleRating(resource.id, star)}
-                              className="focus:outline-none"
-                              disabled={isLocked}
-                            >
-                              <Star
-                                className={`h-4 w-4 ${
-                                  star <= (resource.userRating || resource.rating)
-                                    ? 'fill-amber-400 text-amber-400'
-                                    : 'text-muted-foreground'
-                                }`}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {resource.rating > 0 ? resource.rating.toFixed(1) : 'No ratings'} ({resource.totalRatings})
-                        </span>
-                      </div>
-
-                      {/* Metadata */}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {resource.dateAdded.toLocaleDateString()}
-                        </div>
-                      </div>
-
-                      {/* Contributor */}
-                      {resource.contributorName && (
-                        <p className="text-xs text-muted-foreground">
-                          Contributed by {resource.contributorName}
-                        </p>
-                      )}
-
-                      {/* Action Button */}
-                      <Button
-                        className="w-full"
-                        onClick={() => !isLocked && window.open(resource.url, '_blank')}
-                        disabled={isLocked}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {filteredAndSortedResources.map((resource, index) => {
+            const IconComponent = getResourceIcon(resource.type);
+            const isPremium = subscription.isPremium;
+            const isLocked = !isPremium;
+            
+            return (
+              <Card 
+                key={resource.id} 
+                className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative ${
+                  resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''
+                } ${isLocked ? 'opacity-50' : ''}`}
+              >
+                {isLocked && (
+                  <div className="absolute inset-0 backdrop-blur-sm bg-background/30 z-10 rounded-lg flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <Lock className="h-12 w-12 mx-auto mb-3 text-primary" />
+                      <p className="text-sm font-semibold mb-2">Premium Resource</p>
+                      <Button 
+                        asChild 
+                        size="sm" 
+                        className="mt-2"
                       >
-                        <Icon className="mr-2 h-4 w-4" />
-                        {getResourceButtonText(resource.type)}
+                        <Link to="/pricing">
+                          Click to upgrade and unlock all resources
+                        </Link>
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                )}
+                
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      resource.type === 'video' ? 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400' :
+                      resource.type === 'pdf' ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400' :
+                      'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400'
+                    }`}>
+                      <IconComponent className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-2">
+                        <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2 flex-1">
+                          {resource.title}
+                        </CardTitle>
+                        {resource.isPending && (
+                          <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20">
+                            Pending
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleBookmark(resource.id)}
+                      className={`shrink-0 hover:scale-110 transition-transform ${
+                        resource.isBookmarked ? 'text-primary' : ''
+                      }`}
+                      title={resource.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                    >
+                      {resource.isBookmarked ? (
+                        <BookmarkCheck className="h-4 w-4 fill-current" />
+                      ) : (
+                        <Bookmark className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Description */}
+                  {resource.description && (
+                    <CardDescription className="text-sm line-clamp-3">
+                      {resource.description}
+                    </CardDescription>
+                  )}
+
+                  {/* Rating */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">Rating</span>
+                      <span className="text-sm text-muted-foreground">
+                        {resource.totalRatings} reviews
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => handleRating(resource.id, star)}
+                          className="cursor-pointer hover:scale-110 transition-transform"
+                        >
+                          <Star
+                            className={`h-4 w-4 ${
+                              star <= (resource.userRating || resource.rating) 
+                                ? 'fill-warning text-warning' 
+                                : 'text-muted-foreground'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="text-sm text-muted-foreground ml-1">
+                        ({resource.rating.toFixed(1)})
+                      </span>
+                    </div>
+                    {resource.userRating && (
+                      <p className="text-xs text-success">Your rating: {resource.userRating}/5</p>
+                    )}
+                  </div>
+
+                  {/* Contributor Info */}
+                  {resource.contributorName && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Users className="h-3 w-3" />
+                      Added by {resource.contributorId === user?.id ? 'You' : resource.contributorName}
+                    </div>
+                  )}
+
+                  {/* Meta Info */}
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {resource.dateAdded.toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <Button 
+                    asChild 
+                    variant="hero" 
+                    className="w-full"
+                    disabled={isLocked}
+                  >
+                    <a 
+                      href={isLocked ? '#' : resource.url} 
+                      target={isLocked ? '_self' : '_blank'}
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2"
+                      onClick={(e) => {
+                        if (isLocked) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      <IconComponent className="h-4 w-4" />
+                      {getResourceButtonText(resource.type)}
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Empty State */}
+        {filteredAndSortedResources.length === 0 && (
+          <div className="text-center py-12">
+            <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">No resources found</h3>
+            <p className="text-muted-foreground mb-6">
+              {searchQuery 
+                ? 'Try adjusting your search criteria' 
+                : 'Be the first to add a resource for this exam!'
+              }
+            </p>
+            <Button 
+              onClick={() => {
+                if (searchQuery) {
+                  setSearchQuery('');
+                } else {
+                  setShowAddForm(true);
+                }
+              }}
+              variant="outline"
+            >
+              {searchQuery ? 'Clear Search' : 'Add Resource'}
+            </Button>
           </div>
         )}
       </main>
@@ -711,13 +807,21 @@ const ExamResources = () => {
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Resource Submitted!</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your exam resource has been submitted for admin review. It will appear here once approved.
+            <AlertDialogTitle>Resource Submitted Successfully! 🎉</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                Thank you for contributing! Your resource has been submitted for approval.
+              </p>
+              <p className="font-medium text-foreground">
+                After admin approval, it will be visible to all users.
+              </p>
+              <p className="text-sm">
+                ⏱️ This process typically takes up to 24 hours.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>Got it</AlertDialogAction>
+            <AlertDialogAction>OK</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

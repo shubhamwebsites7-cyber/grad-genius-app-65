@@ -881,7 +881,7 @@ const SectionResources = () => {
             {filteredAndSortedResources.map((resource, index) => {
                 const IconComponent = getResourceIcon(resource.type);
                 const isPremium = subscription.isPremium;
-                const isLocked = !isPremium && index >= 2;
+                const isLocked = !isPremium;
                 
                 return (
                   <Card 
