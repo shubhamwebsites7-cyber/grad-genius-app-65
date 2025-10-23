@@ -461,7 +461,8 @@ const ExamResources = () => {
 
       <Navigation />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 py-4 px-4 sm:py-8 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -539,22 +540,14 @@ const ExamResources = () => {
               </div>
               
               {/* Add Resource Button */}
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => setShowAddForm(true)}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Resource
-                </Button>
-                <Link to={`/exam/${exam.id}`}>
-                  <Button variant="outline">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Exam
-                  </Button>
-                </Link>
-              </div>
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Resource
+              </Button>
             </div>
           </div>
         </div>
@@ -801,6 +794,7 @@ const ExamResources = () => {
             </Button>
           </div>
         )}
+        </div>
       </main>
 
       {/* Success Dialog */}
