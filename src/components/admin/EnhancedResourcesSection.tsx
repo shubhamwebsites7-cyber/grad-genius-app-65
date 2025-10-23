@@ -22,7 +22,7 @@ interface Resource {
   created_at: string;
   avg_rating?: number;
   scope_name?: string;
-  scope_type?: 'topic' | 'subject';
+  scope_type?: 'topic' | 'subject' | 'exam';
   exam_name?: string;
   subject_name?: string;
   users?: {
@@ -115,7 +115,26 @@ export const EnhancedResourcesSection = () => {
             };
           }
 
-          // Fallback if neither found
+          // Try to fetch as exam
+          const { data: examData } = await supabase
+            .from('exams')
+            .select('name')
+            .eq('id', resource.topic_id)
+            .maybeSingle();
+
+          if (examData) {
+            // It's an exam-level resource
+            const examInfo = examData as any;
+            return {
+              ...resource,
+              avg_rating: avgRating,
+              scope_name: examInfo.name,
+              scope_type: 'exam' as const,
+              exam_name: examInfo.name,
+            };
+          }
+
+          // Fallback if none found
           return {
             ...resource,
             avg_rating: avgRating,
@@ -303,6 +322,11 @@ export const EnhancedResourcesSection = () => {
                             Subject-Level
                           </Badge>
                         )}
+                        {resource.scope_type === 'exam' && (
+                          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-600">
+                            Exam-Level
+                          </Badge>
+                        )}
                         {!isValidUrl && (
                           <Badge variant="destructive">Invalid URL</Badge>
                         )}
@@ -313,7 +337,7 @@ export const EnhancedResourcesSection = () => {
                             <span className="font-medium">Exam:</span> {resource.exam_name}
                           </p>
                         )}
-                        {resource.subject_name && (
+                        {resource.scope_type !== 'exam' && resource.subject_name && (
                           <p className="text-sm text-muted-foreground">
                             <span className="font-medium">Subject:</span> {resource.subject_name}
                           </p>

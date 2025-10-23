@@ -860,6 +860,18 @@ const ExamDetail = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Exam Resources Button */}
+                    <div className="sm:ml-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => navigate(`/exams/${exam.id}/resources`)}
+                        className="w-full sm:w-auto"
+                      >
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Exam Resources
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
             </div>

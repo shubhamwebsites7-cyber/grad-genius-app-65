@@ -27,6 +27,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ExamDetail = lazy(() => import("./pages/ExamDetail"));
 const SectionResources = lazy(() => import("./pages/SectionResources"));
+const ExamResources = lazy(() => import("./pages/ExamResources"));
 const AddExam = lazy(() => import("./pages/AddExam"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const Support = lazy(() => import("./pages/Support"));
@@ -83,6 +84,7 @@ const App = () => (
                   <Route path="/exams" element={<Exams />} />
                   <Route path="/exam/:examId" element={<ProtectedRoute><ExamDetail /></ProtectedRoute>} />
                   <Route path="/exams/add" element={<ProtectedRoute><AddExam /></ProtectedRoute>} />
+                  <Route path="/exams/:examId/resources" element={<ProtectedRoute><ExamResources /></ProtectedRoute>} />
                   <Route path="/resources/:sectionId" element={<ProtectedRoute><SectionResources /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/support" element={<Support />} />
