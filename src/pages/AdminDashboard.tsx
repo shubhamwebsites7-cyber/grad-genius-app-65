@@ -108,7 +108,7 @@ const AdminDashboard = () => {
     activeSubscriptions: 0,
   });
   
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [exams, setExams] = useState<ExamData[]>([]);
   const [pendingResources, setPendingResources] = useState<ResourceData[]>([]);
 
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
         pendingResourcesCount,
         subscriptionsCount,
         usersData,
-        examsData,
+        examsWithEnrollments,
         pendingResourcesData
       ] = await Promise.all([
         supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true),
@@ -182,8 +182,8 @@ const AdminDashboard = () => {
         supabase.from('topic_resources').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('admin_approved', true),
         supabase.from('topic_resources').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('admin_approved', false),
         supabase.from('user_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('users').select('id, full_name, email, created_at, is_active').eq('is_active', true).order('created_at', { ascending: false }).limit(10),
-        supabase.from('exams').select('id, name, enrollment_count, is_active').eq('is_active', true).order('enrollment_count', { ascending: false }).limit(10),
+        supabase.from('users').select('id, full_name, email, created_at, is_active, phone_number, country_code').eq('is_active', true).order('created_at', { ascending: false }).limit(10),
+        supabase.from('exams').select('id, name, is_active').eq('is_active', true),
         supabase.from('topic_resources').select(`
           id,
           title,
@@ -204,6 +204,41 @@ const AdminDashboard = () => {
         `).eq('is_active', true).eq('admin_approved', false).order('created_at', { ascending: false })
       ]);
 
+      // Fetch enrollment counts for each exam
+      const examsData = await Promise.all(
+        (examsWithEnrollments.data || []).map(async (exam) => {
+          const { count } = await supabase
+            .from('user_exam_enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('exam_id', exam.id)
+            .eq('is_active', true);
+          
+          return {
+            ...exam,
+            enrollment_count: count || 0
+          };
+        })
+      );
+
+      // Sort exams by enrollment count
+      examsData.sort((a, b) => b.enrollment_count - a.enrollment_count);
+
+      // Fetch enrollment count for each user
+      const usersWithEnrollments = await Promise.all(
+        (usersData.data || []).map(async (user) => {
+          const { count } = await supabase
+            .from('user_exam_enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('is_active', true);
+          
+          return {
+            ...user,
+            enrollment_count: count || 0
+          };
+        })
+      );
+
       setStats({
         totalUsers: usersCount.count || 0,
         totalExams: examsCount.count || 0,
@@ -214,8 +249,8 @@ const AdminDashboard = () => {
         activeSubscriptions: subscriptionsCount.count || 0,
       });
 
-      setUsers(usersData.data || []);
-      setExams(examsData.data || []);
+      setUsers(usersWithEnrollments);
+      setExams(examsData.slice(0, 10)); // Top 10 exams by enrollment
       setPendingResources(pendingResourcesData.data || []);
 
       setLoading(false);
@@ -451,6 +486,9 @@ const AdminDashboard = () => {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Country</TableHead>
+                      <TableHead>Enrollments</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Joined</TableHead>
                     </TableRow>
@@ -460,6 +498,11 @@ const AdminDashboard = () => {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name}</TableCell>
                         <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.phone_number || '-'}</TableCell>
+                        <TableCell>{user.country_code || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.enrollment_count}</Badge>
+                        </TableCell>
                         <TableCell>
                           <Badge variant={user.is_active ? 'default' : 'secondary'}>
                             {user.is_active ? 'Active' : 'Inactive'}

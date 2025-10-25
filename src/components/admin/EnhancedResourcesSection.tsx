@@ -49,13 +49,15 @@ export const EnhancedResourcesSection = () => {
           resource_ratings(rating),
           users(full_name)
         `)
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
+      // Show both approved and unapproved resources
       if (filter === 'pending') {
-        query = query.eq('admin_approved', false);
+        query = query.eq('admin_approved', false).eq('is_active', true);
       } else if (filter === 'approved') {
-        query = query.eq('admin_approved', true);
+        query = query.eq('admin_approved', true).eq('is_active', true);
+      } else {
+        query = query.eq('is_active', true);
       }
 
       if (typeFilter !== 'all') {
