@@ -1,7 +1,8 @@
 -- Create pricing_offers table to store limited time offer settings
+-- Note: Discount percentages are now stored in plan_pricing table
+-- This table only manages the offer end time
 CREATE TABLE IF NOT EXISTS pricing_offers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  discount_percentage INT NOT NULL DEFAULT 0 CHECK (discount_percentage >= 0 AND discount_percentage <= 100),
   offer_end_time TIMESTAMPTZ NOT NULL,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -44,6 +45,6 @@ USING (
   )
 );
 
--- Insert default offer (8 hours from now, 50% off)
-INSERT INTO pricing_offers (discount_percentage, offer_end_time, is_active)
-VALUES (50, NOW() + INTERVAL '8 hours', true);
+-- Insert default offer (8 hours from now)
+INSERT INTO pricing_offers (offer_end_time, is_active)
+VALUES (NOW() + INTERVAL '8 hours', true);

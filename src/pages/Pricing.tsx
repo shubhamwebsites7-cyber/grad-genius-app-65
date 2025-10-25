@@ -39,7 +39,6 @@ interface SubscriptionPlan {
 
 interface PricingOffer {
   id: string;
-  discount_percentage: number;
   offer_end_time: string;
   is_active: boolean;
 }
@@ -359,16 +358,28 @@ const Pricing = () => {
         <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
           {/* Hero Section with Timer */}
           <div className="text-center mb-8 md:mb-12 animate-fade-in">
-            {offer && timeRemaining.hours + timeRemaining.minutes + timeRemaining.seconds > 0 && (
+            {offer && timeRemaining.hours + timeRemaining.minutes + timeRemaining.seconds > 0 && selectedPlan && (
               <div className="mb-6">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 text-foreground px-6 py-3 rounded-full mb-4">
-                  <Gift className="h-5 w-5 text-primary" />
-                  <span className="font-medium">Limited Time Offer 🎉 {offer.discount_percentage}% OFF</span>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold mb-4">Pay once, own forever.</h2>
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  {String(timeRemaining.hours).padStart(2, '0')}h {String(timeRemaining.minutes).padStart(2, '0')}m {String(timeRemaining.seconds).padStart(2, '0')}s
-                </div>
+                {(() => {
+                  const plan = plans.find(p => p.id === selectedPlan);
+                  const discount = plan?.pricing?.discount_percentage || 0;
+                  const description = plan?.is_popular ? plan.description : null;
+                  
+                  return (
+                    <>
+                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 text-foreground px-6 py-3 rounded-full mb-4">
+                        <Gift className="h-5 w-5 text-primary" />
+                        <span className="font-medium">Limited Time Offer 🎉 Save {discount}% OFF</span>
+                      </div>
+                      {description && (
+                        <h2 className="text-xl md:text-2xl font-semibold mb-4 text-muted-foreground">{description}</h2>
+                      )}
+                      <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                        {String(timeRemaining.hours).padStart(2, '0')}h {String(timeRemaining.minutes).padStart(2, '0')}m {String(timeRemaining.seconds).padStart(2, '0')}s
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
             
@@ -474,11 +485,18 @@ const Pricing = () => {
                       <div className="text-right">
                         {plan.pricing ? (
                           <>
-                            {plan.pricing.original_price && offer && (
-                              <div className="text-sm text-muted-foreground line-through">
-                                {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 justify-end">
+                              {plan.pricing.original_price && plan.pricing.discount_percentage && (
+                                <div className="text-sm text-muted-foreground line-through">
+                                  {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                                </div>
+                              )}
+                              {plan.pricing.discount_percentage && (
+                                <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                                  Save {plan.pricing.discount_percentage}%
+                                </Badge>
+                              )}
+                            </div>
                             <div className="text-xl md:text-2xl font-bold">
                               {formatPrice(plan.pricing.price, plan.pricing.currency)}
                             </div>

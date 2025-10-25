@@ -42,7 +42,6 @@ interface PlanWithPricing extends SubscriptionPlan {
 
 interface PricingOffer {
   id: string;
-  discount_percentage: number;
   offer_end_time: string;
   is_active: boolean;
   created_at: string;
@@ -68,7 +67,6 @@ export const PricingManagementSection = () => {
   const [submitting, setSubmitting] = useState(false);
   const [offer, setOffer] = useState<PricingOffer | null>(null);
   const [offerForm, setOfferForm] = useState({
-    discount_percentage: 50,
     hours: 8,
   });
 
@@ -146,7 +144,6 @@ export const PricingManagementSection = () => {
         const now = new Date();
         const hoursRemaining = Math.max(0, Math.round((endTime.getTime() - now.getTime()) / (1000 * 60 * 60)));
         setOfferForm({
-          discount_percentage: offerData.discount_percentage,
           hours: hoursRemaining,
         });
       }
@@ -163,7 +160,6 @@ export const PricingManagementSection = () => {
       endTime.setHours(endTime.getHours() + offerForm.hours);
 
       const offerData = {
-        discount_percentage: offerForm.discount_percentage,
         offer_end_time: endTime.toISOString(),
         is_active: true,
       };
@@ -456,35 +452,25 @@ export const PricingManagementSection = () => {
             Limited Time Offer Settings
           </CardTitle>
           <CardDescription>
-            Configure the countdown timer and discount percentage shown on the pricing page
+            Configure the countdown timer duration (discount % is managed in plan pricing above)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="discount">Discount Percentage (%)</Label>
-              <Input
-                id="discount"
-                type="number"
-                min="0"
-                max="100"
-                value={offerForm.discount_percentage}
-                onChange={(e) => setOfferForm({ ...offerForm, discount_percentage: parseInt(e.target.value) || 0 })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="hours" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Hours Remaining
-              </Label>
-              <Input
-                id="hours"
-                type="number"
-                min="1"
-                value={offerForm.hours}
-                onChange={(e) => setOfferForm({ ...offerForm, hours: parseInt(e.target.value) || 1 })}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="hours" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Hours Remaining
+            </Label>
+            <Input
+              id="hours"
+              type="number"
+              min="1"
+              value={offerForm.hours}
+              onChange={(e) => setOfferForm({ ...offerForm, hours: parseInt(e.target.value) || 1 })}
+            />
+            <p className="text-sm text-muted-foreground">
+              Note: Discount percentages are managed in each plan's pricing settings above
+            </p>
           </div>
           <div className="flex items-center justify-between pt-2">
             <div className="text-sm text-muted-foreground">

@@ -17,7 +17,7 @@ Examtrakr uses a PostgreSQL database with Supabase as the backend service. The d
 - `plan_pricing` - Regional pricing for plans
 - `payments` - Payment transaction records
 - `user_subscriptions` - Active user subscriptions
-- `pricing_offers` - Limited time offer settings (discount & countdown timer)
+- `pricing_offers` - Limited time offer settings (countdown timer only)
 
 ### 📚 **Exam Structure**
 - `exam_categories` - Exam categorization
