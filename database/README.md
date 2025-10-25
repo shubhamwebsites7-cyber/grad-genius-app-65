@@ -17,6 +17,7 @@ Examtrakr uses a PostgreSQL database with Supabase as the backend service. The d
 - `plan_pricing` - Regional pricing for plans
 - `payments` - Payment transaction records
 - `user_subscriptions` - Active user subscriptions
+- `pricing_offers` - Limited time offer settings (discount & countdown timer)
 
 ### 📚 **Exam Structure**
 - `exam_categories` - Exam categorization
@@ -71,7 +72,7 @@ graph TD
 | Category | Tables | Key Features |
 |----------|--------|--------------|
 | **User Management** | 4 | Authentication, profiles, roles, sessions |
-| **Subscriptions** | 4 | Plans, pricing, payments, subscriptions |
+| **Subscriptions** | 5 | Plans, pricing, payments, subscriptions, offers |
 | **Content Structure** | 4 | Categories, exams, subjects, topics |
 | **Resources** | 3 | Materials, ratings, bookmarks |
 | **Progress Tracking** | 5 | Multi-level progress tracking |
@@ -107,6 +108,7 @@ Each table schema is documented in separate files:
 - `05_resources_system.sql` - Learning resources tables
 - `06_user_management.sql` - User-related tables
 - `09_users_table.sql` - Extended users table (bridges auth.users)
+- `14_pricing_offers_table.sql` - Limited time offers configuration
 
 ## 🔧 Setup Instructions
 

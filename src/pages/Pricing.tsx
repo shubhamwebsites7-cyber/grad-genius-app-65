@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertCircle, Loader2, Phone, Sparkles, ChevronDown } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Phone, Sparkles, ChevronDown, Gift } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +37,13 @@ interface SubscriptionPlan {
   pricing?: PlanPricing;
 }
 
+interface PricingOffer {
+  id: string;
+  discount_percentage: number;
+  offer_end_time: string;
+  is_active: boolean;
+}
+
 const Pricing = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -48,13 +55,43 @@ const Pricing = () => {
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [phoneError, setPhoneError] = useState<string>('');
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [offer, setOffer] = useState<PricingOffer | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
     fetchPricingPlans();
+    fetchActiveOffer();
     if (user) {
       fetchUserPhoneNumber();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!offer) return;
+
+    const calculateTimeRemaining = () => {
+      const now = new Date().getTime();
+      const endTime = new Date(offer.offer_end_time).getTime();
+      const difference = endTime - now;
+
+      if (difference <= 0) {
+        setTimeRemaining({ hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      setTimeRemaining({ hours, minutes, seconds });
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [offer]);
 
   const fetchUserPhoneNumber = async () => {
     if (!user) return;
@@ -133,6 +170,13 @@ const Pricing = () => {
       });
 
       setPlans(plansWithPricing);
+      
+      // Auto-select popular plan
+      const popularPlan = plansWithPricing.find(p => p.is_popular);
+      if (popularPlan) {
+        setSelectedPlan(popularPlan.id);
+      }
+      
       setLoading(false);
     } catch (err: any) {
       console.error('Error fetching pricing:', err);
@@ -141,7 +185,34 @@ const Pricing = () => {
     }
   };
 
-  const handlePlanPurchase = async (plan: SubscriptionPlan) => {
+  const fetchActiveOffer = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pricing_offers')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        setOffer(data as unknown as PricingOffer);
+      }
+    } catch (error) {
+      console.error('Error fetching offer:', error);
+    }
+  };
+
+  const handlePlanPurchase = async () => {
+    const plan = plans.find(p => p.id === selectedPlan);
+    if (!plan) {
+      toast({
+        title: 'Error',
+        description: 'Please select a plan.',
+        variant: 'destructive'
+      });
+      return;
+    }
     if (!user) {
       toast({
         title: 'Login Required',
@@ -286,19 +357,27 @@ const Pricing = () => {
         <Navigation />
         
         <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
-          {/* Hero Section */}
-          <div className="text-center mb-12 md:mb-16 animate-fade-in">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">Premium Plans</span>
-            </div>
+          {/* Hero Section with Timer */}
+          <div className="text-center mb-8 md:mb-12 animate-fade-in">
+            {offer && timeRemaining.hours + timeRemaining.minutes + timeRemaining.seconds > 0 && (
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 text-foreground px-6 py-3 rounded-full mb-4">
+                  <Gift className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Limited Time Offer 🎉 {offer.discount_percentage}% OFF</span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-4">Pay once, own forever.</h2>
+                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  {String(timeRemaining.hours).padStart(2, '0')}h {String(timeRemaining.minutes).padStart(2, '0')}m {String(timeRemaining.seconds).padStart(2, '0')}s
+                </div>
+              </div>
+            )}
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               Choose Your Perfect Plan
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Unlock unlimited exam access and premium features to accelerate your learning journey
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+              Unlock unlimited exam access and premium features
             </p>
           </div>
 
@@ -354,83 +433,98 @@ const Pricing = () => {
                 </div>
               )}
 
-              {/* Pricing Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                {plans.map((plan, index) => (
-                  <Card 
-                    key={plan.id} 
-                    className={`relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in ${
-                      plan.is_popular 
-                        ? 'border-primary shadow-lg ring-2 ring-primary/20 scale-105 lg:scale-110' 
-                        : 'border-border'
+              {/* Pricing Cards - Horizontal Layout */}
+              <div className="max-w-2xl mx-auto space-y-4">
+                {plans.map((plan) => (
+                  <div
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan.id)}
+                    className={`relative cursor-pointer transition-all duration-200 rounded-2xl border-2 p-4 md:p-6 ${
+                      selectedPlan === plan.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border bg-card hover:border-primary/50'
                     }`}
-                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {plan.is_popular && (
-                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                        <Badge className="bg-primary text-primary-foreground px-4 py-1.5 shadow-lg">
-                          ⭐ Most Popular
+                      <div className="absolute -top-3 right-4">
+                        <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs">
+                          Best Value
                         </Badge>
                       </div>
                     )}
-                    
-                    <CardHeader className="text-center pb-6 pt-8">
-                      <CardTitle className="text-xl mb-3">{getDurationLabel(plan.duration_months)}</CardTitle>
-                      
-                      {plan.pricing ? (
-                        <div className="space-y-3">
-                          <div className="space-y-1">
-                            <div className="text-3xl md:text-4xl font-bold text-foreground">
-                              {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                            </div>
-                            {plan.pricing.original_price && (
-                              <div className="text-sm text-muted-foreground">
-                                <span className="line-through">
-                                  {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                            <Badge variant="secondary" className="bg-success/10 text-success border-success/20 pointer-events-none">
-                              Save {plan.pricing.discount_percentage}%
-                            </Badge>
+
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Radio Button */}
+                      <div className="flex-shrink-0">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          selectedPlan === plan.id ? 'border-primary' : 'border-muted-foreground'
+                        }`}>
+                          {selectedPlan === plan.id && (
+                            <div className="w-3 h-3 rounded-full bg-primary" />
                           )}
                         </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          Pricing not available
-                        </div>
-                      )}
-                      
-                      {plan.description && (
-                        <CardDescription className="text-xs mt-3">
-                          {plan.description}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0 pb-6">
-                      <Button 
-                        variant={plan.is_popular ? "default" : "outline"} 
-                        size="lg" 
-                        className="w-full"
-                        onClick={() => handlePlanPurchase(plan)}
-                        disabled={!plan.pricing || processingPayment === plan.id}
-                      >
-                        {processingPayment === plan.id ? (
+                      </div>
+
+                      {/* Plan Name */}
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg">{getDurationLabel(plan.duration_months)}</h3>
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="text-right">
+                        {plan.pricing ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
+                            {plan.pricing.original_price && offer && (
+                              <div className="text-sm text-muted-foreground line-through">
+                                {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                              </div>
+                            )}
+                            <div className="text-xl md:text-2xl font-bold">
+                              {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                            </div>
+                            {plan.duration_months > 1 && (
+                              <div className="text-xs text-muted-foreground">
+                                {plan.duration_months === 12 ? '/year' : `/${plan.duration_months} months`}
+                              </div>
+                            )}
                           </>
                         ) : (
-                          'Choose Plan'
+                          <div className="text-sm text-muted-foreground">N/A</div>
                         )}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                      </div>
+                    </div>
+
+                    {plan.description && (
+                      <p className="text-sm text-muted-foreground mt-2 ml-10">
+                        {plan.description}
+                      </p>
+                    )}
+                  </div>
                 ))}
+
+                {/* Other Plans Collapsible - If needed */}
+                <div className="text-center pt-2">
+                  <p className="text-sm text-muted-foreground">
+                    Recurring billing, cancel anytime
+                  </p>
+                </div>
+
+                {/* Continue Button */}
+                <Button 
+                  size="lg" 
+                  className="w-full h-14 text-lg font-semibold"
+                  onClick={handlePlanPurchase}
+                  disabled={!selectedPlan || processingPayment !== null}
+                >
+                  {processingPayment ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Continue'
+                  )}
+                </Button>
               </div>
 
               {/* Features Highlight */}

@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Loader2, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, DollarSign, Gift, Clock } from 'lucide-react';
 import { Database } from '@/integrations/supabase/database.types';
 
 interface SubscriptionPlan {
@@ -40,6 +40,14 @@ interface PlanWithPricing extends SubscriptionPlan {
   pricing: PlanPricing[];
 }
 
+interface PricingOffer {
+  id: string;
+  discount_percentage: number;
+  offer_end_time: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 const COUNTRIES = [
   { code: 'IN', name: 'India', currency: 'INR', symbol: '₹' },
   { code: 'US', name: 'United States', currency: 'USD', symbol: '$' },
@@ -58,6 +66,11 @@ export const PricingManagementSection = () => {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
   const [selectedPlanForPricing, setSelectedPlanForPricing] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [offer, setOffer] = useState<PricingOffer | null>(null);
+  const [offerForm, setOfferForm] = useState({
+    discount_percentage: 50,
+    hours: 8,
+  });
 
   const [planForm, setPlanForm] = useState({
     name: '',
@@ -77,6 +90,7 @@ export const PricingManagementSection = () => {
 
   useEffect(() => {
     fetchPlans();
+    fetchActiveOffer();
   }, []);
 
   const fetchPlans = async () => {
@@ -112,6 +126,78 @@ export const PricingManagementSection = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActiveOffer = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pricing_offers')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        const offerData = data as unknown as PricingOffer;
+        setOffer(offerData);
+        const endTime = new Date(offerData.offer_end_time);
+        const now = new Date();
+        const hoursRemaining = Math.max(0, Math.round((endTime.getTime() - now.getTime()) / (1000 * 60 * 60)));
+        setOfferForm({
+          discount_percentage: offerData.discount_percentage,
+          hours: hoursRemaining,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching offer:', error);
+    }
+  };
+
+  const handleUpdateOffer = async () => {
+    try {
+      setSubmitting(true);
+      
+      const endTime = new Date();
+      endTime.setHours(endTime.getHours() + offerForm.hours);
+
+      const offerData = {
+        discount_percentage: offerForm.discount_percentage,
+        offer_end_time: endTime.toISOString(),
+        is_active: true,
+      };
+
+      if (offer) {
+        const { error } = await (supabase
+          .from('pricing_offers')
+          .update as any)(offerData)
+          .eq('id', offer.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase
+          .from('pricing_offers')
+          .insert as any)([offerData]);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Limited time offer updated successfully.',
+      });
+
+      await fetchActiveOffer();
+    } catch (error) {
+      console.error('Error updating offer:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update offer.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -362,9 +448,63 @@ export const PricingManagementSection = () => {
 
   return (
     <div className="space-y-6">
+      {/* Limited Time Offer Section */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5 text-primary" />
+            Limited Time Offer Settings
+          </CardTitle>
+          <CardDescription>
+            Configure the countdown timer and discount percentage shown on the pricing page
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="discount">Discount Percentage (%)</Label>
+              <Input
+                id="discount"
+                type="number"
+                min="0"
+                max="100"
+                value={offerForm.discount_percentage}
+                onChange={(e) => setOfferForm({ ...offerForm, discount_percentage: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hours" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Hours Remaining
+              </Label>
+              <Input
+                id="hours"
+                type="number"
+                min="1"
+                value={offerForm.hours}
+                onChange={(e) => setOfferForm({ ...offerForm, hours: parseInt(e.target.value) || 1 })}
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <div className="text-sm text-muted-foreground">
+              {offer ? (
+                <>Timer ends: {new Date(offer.offer_end_time).toLocaleString()}</>
+              ) : (
+                'No active offer'
+              )}
+            </div>
+            <Button onClick={handleUpdateOffer} disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {offer ? 'Update Offer' : 'Create Offer'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Pricing Management</h2>
+          <h2 className="text-2xl font-bold">Subscription Plans</h2>
           <p className="text-muted-foreground">Manage subscription plans and country-wise pricing</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
