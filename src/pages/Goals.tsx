@@ -732,18 +732,18 @@ export default function Goals() {
           <div className="space-y-6">
             {/* Current Active Strike Info */}
             {streaks.some(s => s.is_active) && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-card border rounded-lg p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-green-800">
+                    <h3 className="font-semibold text-success">
                       Strike {streaks.find(s => s.is_active)?.streak_number} - Active
                     </h3>
-                    <p className="text-green-600">
+                    <p className="text-success-foreground">
                       Day {streaks.find(s => s.is_active)?.current_count} - Keep going!
                     </p>
                   </div>
-                  <div className="w-16 h-16 bg-green-500 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl font-bold text-white">
+                  <div className="w-16 h-16 bg-success rounded-lg flex items-center justify-center">
+                    <span className="text-2xl font-bold text-success-foreground">
                       {streaks.find(s => s.is_active)?.current_count}
                     </span>
                   </div>
@@ -805,16 +805,16 @@ export default function Goals() {
             
             {/* Legend and Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg border">
+              <div className="text-center p-4 bg-card rounded-lg border shadow-sm">
                 <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
-                <span className="text-sm font-medium">Completed Strikes</span>
+                <span className="text-sm font-medium text-foreground">Completed Strikes</span>
                 <p className="text-xs text-muted-foreground">
                   {streaks.filter(s => s.final_count > 0).length} finished streaks
                 </p>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg border">
+              <div className="text-center p-4 bg-card rounded-lg border shadow-sm">
                 <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2 animate-pulse"></div>
-                <span className="text-sm font-medium">Active Strike</span>
+                <span className="text-sm font-medium text-foreground">Active Strike</span>
                 <p className="text-xs text-muted-foreground">Currently growing</p>
               </div>
             </div>
