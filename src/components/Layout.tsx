@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePWA } from '@/hooks/usePWA';
 import { NavigationLink } from '@/components/NavigationLink';
 import { toast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Layout() {
   console.log("Layout component is rendering - changes are working!");
@@ -54,7 +55,9 @@ export function Layout() {
             </h1>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <ThemeToggle />
+            
             {canInstall && (
               <Button
                 variant="ghost"
@@ -63,7 +66,7 @@ export function Layout() {
                 className="text-muted-foreground hover:text-foreground"
               >
                 <Download className="h-4 w-4 mr-1" />
-                Install App
+                <span className="hidden sm:inline">Install App</span>
               </Button>
             )}
             
@@ -81,7 +84,7 @@ export function Layout() {
                   onClick={handleSignOut}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  Sign out
+                  <span className="hidden sm:inline">Sign out</span>
                 </Button>
               </div>
             )}

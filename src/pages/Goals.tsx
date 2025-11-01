@@ -109,7 +109,7 @@ export default function Goals() {
 
     try {
       const { data, error } = await supabase
-        .from('goals')
+        .from('goal')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -176,7 +176,7 @@ export default function Goals() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('goals')
+        .from('goal')
         .insert([{ 
           title: newGoal.trim(), 
           user_id: user.id,
@@ -213,7 +213,7 @@ export default function Goals() {
   const updateGoal = async (goalId: string, updates: Partial<Goal>) => {
     try {
       const { error } = await supabase
-        .from('goals')
+        .from('goal')
         .update(updates)
         .eq('id', goalId);
 
@@ -242,7 +242,7 @@ export default function Goals() {
   const deleteGoal = async (goalId: string) => {
     try {
       const { error } = await supabase
-        .from('goals')
+        .from('goal')
         .delete()
         .eq('id', goalId);
 
