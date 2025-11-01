@@ -112,7 +112,7 @@ export default function Goals() {
         .from('goal')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       setGoals((data || []) as Goal[]);
@@ -134,7 +134,7 @@ export default function Goals() {
         .from('tips')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       setTips((data || []) as Tip[]);

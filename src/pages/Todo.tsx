@@ -188,9 +188,31 @@ export default function Todo() {
 
       if (error) throw error;
 
-      setTasks([...tasks, data as Task]);
+      const updatedTasks = [...tasks, data as Task];
+      setTasks(updatedTasks);
       setNewTask('');
-      setNewTaskPriority('low');
+      
+      // Calculate new counts after adding task
+      const newCounts = updatedTasks.reduce(
+        (acc, task) => {
+          acc[task.priority]++;
+          return acc;
+        },
+        { high: 0, medium: 0, low: 0 } as TaskCounts
+      );
+      
+      // Keep same priority if still has room, otherwise find available priority
+      if (newCounts[newTaskPriority] < PRIORITY_LIMITS[newTaskPriority]) {
+        // Keep current priority
+      } else {
+        // Find next available priority
+        const availablePriority = (['high', 'medium', 'low'] as const).find(
+          p => newCounts[p] < PRIORITY_LIMITS[p]
+        );
+        if (availablePriority) {
+          setNewTaskPriority(availablePriority);
+        }
+      }
       
       toast({
         title: "Success",
