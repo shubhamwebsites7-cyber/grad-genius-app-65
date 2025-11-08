@@ -6,15 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 // Input validation helpers
-const isValidUUID = (uuid: string): boolean => {
+const isValidUUID = (uuid)=>{
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
-const isValidPhoneNumber = (phone: string): boolean => {
+const isValidPhoneNumber = (phone)=>{
   const phoneRegex = /^\+?[1-9]\d{1,14}$/;
   return phoneRegex.test(phone.replace(/\s+/g, ''));
 };
-const sanitizePhoneNumber = (phone: string): string => {
+const sanitizePhoneNumber = (phone)=>{
   const cleaned = phone.replace(/\D/g, '');
   return cleaned.startsWith('91') ? `+${cleaned}` : `+91${cleaned}`;
 };
@@ -183,9 +183,9 @@ serve(async (req)=>{
       } else {
         query = query.eq('country_code', 'IN');
       }
-      const pricingResult = await query.maybeSingle();
-      pricing = pricingResult.data;
-      if (isDevelopment) console.log('Pricing query result:', pricingResult);
+      const { data: pricingData, error: pricingError } = await query.maybeSingle();
+      pricing = pricingData;
+      if (isDevelopment) console.log('Pricing query result:', pricingData);
     } catch (pricingError) {
       if (isDevelopment) console.log('Pricing query error:', pricingError);
     }

@@ -1,21 +1,17 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature, x-webhook-timestamp, x-idempotency-header',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
-
 console.info('🚀 Cashfree Webhook Initialized — LIVE PRODUCTION MODE');
-
-// ✅ Secure HMAC signature verification using Cashfree's Base64URL format
-async function verifyCashfreeSignature(payload: string, signature: string, timestamp: string, secretKey: string): Promise<boolean> {
+// ✅ Updated signature verification based on Cashfree latest docs
+async function verifyCashfreeSignature(rawBody, signature, timestamp, secretKey) {
   try {
-    const signedPayload = `${timestamp}.${payload}`;
     const encoder = new TextEncoder();
     const keyData = encoder.encode(secretKey);
-    const messageData = encoder.encode(signedPayload);
+    const messageData = encoder.encode(timestamp + rawBody); // timestamp + raw payload, no separator
     const key = await crypto.subtle.importKey('raw', keyData, {
       name: 'HMAC',
       hash: 'SHA-256'
@@ -23,14 +19,14 @@ async function verifyCashfreeSignature(payload: string, signature: string, times
       'sign'
     ]);
     const signatureBuffer = await crypto.subtle.sign('HMAC', key, messageData);
-    const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); // Base64URL encoding
+    // Standard Base64 encoding (not Base64URL)
+    const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
     return signature === expectedSignature;
   } catch (error) {
     console.error('❌ Signature verification error:', error);
     return false;
   }
 }
-
 serve(async (req)=>{
   // Handle preflight request
   if (req.method === 'OPTIONS') {
@@ -38,7 +34,6 @@ serve(async (req)=>{
       headers: corsHeaders
     });
   }
-  // Allow only POST method
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({
       error: 'Method not allowed'
@@ -99,23 +94,7 @@ serve(async (req)=>{
     const CASHFREE_SECRET_KEY = Deno.env.get('CASHFREE_SECRET_KEY');
     const signature = req.headers.get('x-webhook-signature');
     const timestamp = req.headers.get('x-webhook-timestamp');
-    if (CASHFREE_SECRET_KEY && signature && timestamp) {
-      const isValid = await verifyCashfreeSignature(rawBody, signature, timestamp, CASHFREE_SECRET_KEY);
-      if (!isValid) {
-        console.error('❌ Invalid webhook signature');
-        return new Response(JSON.stringify({
-          error: 'Invalid signature'
-        }), {
-          status: 401,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
-        });
-      }
-      console.log('✅ Webhook signature verified successfully');
-    } else {
-      console.error('❌ Missing signature or secret key');
+    if (!CASHFREE_SECRET_KEY || !signature || !timestamp) {
       return new Response(JSON.stringify({
         error: 'Missing signature or secret key'
       }), {
@@ -126,6 +105,40 @@ serve(async (req)=>{
         }
       });
     }
+    const isValid = await verifyCashfreeSignature(rawBody, signature, timestamp, CASHFREE_SECRET_KEY);
+    if (!isValid) {
+      console.error('❌ Invalid webhook signature');
+      return new Response(JSON.stringify({
+        error: 'Invalid signature'
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    console.log('✅ Webhook signature verified successfully');
+    // ✅ Idempotency check
+    const idempotencyKey = req.headers.get('x-idempotency-header');
+    if (idempotencyKey) {
+      const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+      const { data: existing } = await supabase.from('payments').select('id').eq('idempotency_key', idempotencyKey).maybeSingle();
+      if (existing) {
+        console.log('⚠️ Duplicate webhook detected, skipping processing');
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Duplicate webhook, ignored'
+        }), {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+    }
+    // Extract data
     const orderData = webhookData?.data?.order || webhookData?.data || webhookData;
     const paymentData = webhookData?.data?.payment || {};
     const customerDetails = webhookData?.data?.customer_details || {};
@@ -144,36 +157,34 @@ serve(async (req)=>{
     }
     console.log(`🚀 Processing webhook for Order ID: ${order_id}`);
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-    // Find payment in database
+    // Find payment
     const { data: payment, error: paymentError } = await supabase.from('payments').select('*').eq('external_payment_id', order_id).maybeSingle();
     if (paymentError) throw new Error(`Database error: ${paymentError.message}`);
-    if (!payment) {
-      return new Response(JSON.stringify({
-        error: 'Payment record not found',
-        order_id
-      }), {
-        status: 404,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-    // ✅ Determine payment status
+    if (!payment) return new Response(JSON.stringify({
+      error: 'Payment record not found',
+      order_id
+    }), {
+      status: 404,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
+    // Determine payment status
     let newStatus = 'pending';
     const status = paymentData.payment_status?.toUpperCase();
     if (order_status === 'PAID' || status === 'SUCCESS') newStatus = 'completed';
-    else if (status === 'FAILED' || order_status === 'CANCELLED') newStatus = 'failed';
-    else if (order_status === 'EXPIRED') newStatus = 'failed';
-    const updateData: any = {
+    else if (status === 'FAILED' || order_status === 'CANCELLED' || order_status === 'EXPIRED') newStatus = 'failed';
+    const updateData = {
       payment_status: newStatus,
       updated_at: new Date().toISOString()
     };
     if (customer_phone && !payment.phone_number) updateData.phone_number = customer_phone;
     if (paymentData.payment_method) updateData.payment_method = paymentData.payment_method;
+    if (idempotencyKey) updateData.idempotency_key = idempotencyKey;
     const { error: updateError } = await supabase.from('payments').update(updateData).eq('id', payment.id);
     if (updateError) throw new Error(`Failed to update payment: ${updateError.message}`);
-    // ✅ If payment successful → activate subscription
+    // ✅ If payment completed → activate subscription
     if (newStatus === 'completed') {
       const { data: plan, error: planError } = await supabase.from('subscription_plans').select('*').eq('id', payment.plan_id).single();
       if (planError || !plan) throw new Error(`Plan not found: ${planError?.message}`);
