@@ -97,6 +97,7 @@ export const SubscriptionCard = () => {
           auto_renew,
           payment_method,
           external_subscription_id,
+          purchase_platform,
           created_at,
           updated_at,
           subscription_plans!plan_id (
@@ -110,7 +111,8 @@ export const SubscriptionCard = () => {
             currency,
             payment_status,
             created_at,
-            payment_method
+            payment_method,
+            platform
           )
         `)
         .eq('user_id', user?.id)

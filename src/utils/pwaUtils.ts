@@ -14,6 +14,20 @@ export const isStandalone = (): boolean => {
 };
 
 /**
+ * Check if running as Play Store TWA (Trusted Web Activity)
+ */
+export const isPlayStoreApp = (): boolean => {
+  // TWA detection methods
+  const isTWA = 
+    document.referrer.includes('android-app://') ||
+    (window.location.search.includes('utm_source=homescreen')) ||
+    (window.matchMedia('(display-mode: standalone)').matches && isAndroid()) ||
+    localStorage.getItem('app_source') === 'playstore';
+  
+  return isTWA && isStandalone();
+};
+
+/**
  * Check if app is running as installed PWA
  */
 export const isInstalled = (): boolean => {

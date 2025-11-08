@@ -8,12 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertCircle, Loader2, Phone, Sparkles, ChevronDown, Gift } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Phone, Sparkles, ChevronDown, Gift, Play } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { DownloadAppBanner } from '@/components/DownloadAppBanner';
+import { GooglePlayPaymentProcessor } from '@/components/payment/GooglePlayPaymentProcessor';
+import { shouldShowAppDownload, shouldUseGooglePlay, getPlatform } from '@/utils/platformDetection';
 
 interface PlanPricing {
   id: string;
@@ -57,6 +60,10 @@ const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [offer, setOffer] = useState<PricingOffer | null>(null);
   const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [showGooglePlayPayment, setShowGooglePlayPayment] = useState(false);
+  const [selectedPlanForGooglePlay, setSelectedPlanForGooglePlay] = useState<SubscriptionPlan | null>(null);
+  const [platform, setPlatform] = useState<string>('web');
+  const [showDownloadBanner, setShowDownloadBanner] = useState(false);
 
   useEffect(() => {
     fetchPricingPlans();
@@ -64,7 +71,21 @@ const Pricing = () => {
     if (user) {
       fetchUserPhoneNumber();
     }
+    
+    // Detect platform
+    const currentPlatform = getPlatform();
+    setPlatform(currentPlatform);
+    console.log('🔍 Platform detected:', currentPlatform);
   }, [user]);
+  
+  useEffect(() => {
+    // Check if we should show download banner for non-Indian users
+    if (userCountry !== 'IN' && platform === 'web') {
+      setShowDownloadBanner(true);
+    } else {
+      setShowDownloadBanner(false);
+    }
+  }, [userCountry, platform]);
 
   useEffect(() => {
     if (!offer) return;
@@ -227,6 +248,24 @@ const Pricing = () => {
         title: 'Error',
         description: 'Pricing information not available for this plan.',
         variant: 'destructive'
+      });
+      return;
+    }
+
+    // Check if we should use Google Play Billing
+    if (shouldUseGooglePlay(userCountry)) {
+      console.log('🎮 Using Google Play Billing');
+      setSelectedPlanForGooglePlay(plan);
+      setShowGooglePlayPayment(true);
+      return;
+    }
+
+    // Check if user should download app (non-Indian on web)
+    if (shouldShowAppDownload(userCountry)) {
+      toast({
+        title: 'Download Required',
+        description: 'Please download our app from Play Store to subscribe.',
+        variant: 'default'
       });
       return;
     }
@@ -408,8 +447,39 @@ const Pricing = () => {
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-12">
-              {/* Phone Number Input */}
-              {user && (
+              {/* Google Play Payment Modal */}
+              {showGooglePlayPayment && selectedPlanForGooglePlay && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="max-w-md w-full">
+                    <GooglePlayPaymentProcessor
+                      planId={selectedPlanForGooglePlay.id}
+                      planName={selectedPlanForGooglePlay.name}
+                      durationMonths={selectedPlanForGooglePlay.duration_months}
+                      onSuccess={() => {
+                        setShowGooglePlayPayment(false);
+                        navigate('/profile?payment_status=success');
+                      }}
+                      onFailure={() => {
+                        setShowGooglePlayPayment(false);
+                      }}
+                      onCancel={() => {
+                        setShowGooglePlayPayment(false);
+                        setSelectedPlanForGooglePlay(null);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Download App Banner for Non-Indian Users on Web */}
+              {showDownloadBanner && (
+                <div className="animate-fade-in">
+                  <DownloadAppBanner countryName={userCountry === 'US' ? 'United States' : 'your country'} />
+                </div>
+              )}
+
+              {/* Phone Number Input - Only show for Cashfree payments */}
+              {user && userCountry === 'IN' && !showDownloadBanner && (
                 <div className="max-w-md mx-auto space-y-2 animate-fade-in">
                   <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
                     <Phone className="h-4 w-4" />
@@ -446,15 +516,19 @@ const Pricing = () => {
 
               {/* Pricing Cards - Horizontal Layout */}
               <div className="max-w-2xl mx-auto space-y-4">
-                {plans.map((plan) => (
+                {plans.map((plan) => {
+                  const isGooglePlay = shouldUseGooglePlay(userCountry);
+                  const showPricing = !showDownloadBanner;
+                  
+                  return (
                   <div
                     key={plan.id}
-                    onClick={() => setSelectedPlan(plan.id)}
+                    onClick={() => showPricing && setSelectedPlan(plan.id)}
                     className={`relative cursor-pointer transition-all duration-200 rounded-2xl border-2 p-4 md:p-6 ${
-                      selectedPlan === plan.id
+                      selectedPlan === plan.id && showPricing
                         ? 'border-primary bg-primary/5'
                         : 'border-border bg-card hover:border-primary/50'
-                    }`}
+                    } ${!showPricing ? 'opacity-60' : ''}`}
                   >
                     {plan.is_popular && (
                       <div className="absolute -top-3 right-4">
@@ -518,8 +592,8 @@ const Pricing = () => {
                       </p>
                     )}
                   </div>
-                ))}
-
+                  );
+                })}
                 {/* Other Plans Collapsible - If needed */}
                 <div className="text-center pt-2">
                   <p className="text-sm text-muted-foreground">
