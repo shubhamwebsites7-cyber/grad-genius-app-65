@@ -6,15 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 // Input validation helpers
-const isValidUUID = (uuid)=>{
+const isValidUUID = (uuid: string): boolean =>{
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(uuid);
 };
-const isValidPhoneNumber = (phone)=>{
+const isValidPhoneNumber = (phone: string): boolean =>{
   const phoneRegex = /^\+?[1-9]\d{1,14}$/;
   return phoneRegex.test(phone.replace(/\s+/g, ''));
 };
-const sanitizePhoneNumber = (phone)=>{
+const sanitizePhoneNumber = (phone: string): string =>{
   const cleaned = phone.replace(/\D/g, '');
   return cleaned.startsWith('91') ? `+${cleaned}` : `+91${cleaned}`;
 };

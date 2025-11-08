@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 console.info('🚀 Cashfree Webhook Initialized — LIVE PRODUCTION MODE');
 // ✅ Updated signature verification based on Cashfree latest docs
-async function verifyCashfreeSignature(rawBody, signature, timestamp, secretKey) {
+async function verifyCashfreeSignature(rawBody: string, signature: string, timestamp: string, secretKey: string): Promise<boolean> {
   try {
     const encoder = new TextEncoder();
     const keyData = encoder.encode(secretKey);
@@ -175,7 +175,13 @@ serve(async (req)=>{
     const status = paymentData.payment_status?.toUpperCase();
     if (order_status === 'PAID' || status === 'SUCCESS') newStatus = 'completed';
     else if (status === 'FAILED' || order_status === 'CANCELLED' || order_status === 'EXPIRED') newStatus = 'failed';
-    const updateData = {
+    const updateData: {
+      payment_status: string;
+      updated_at: string;
+      phone_number?: string;
+      payment_method?: string;
+      idempotency_key?: string;
+    } = {
       payment_status: newStatus,
       updated_at: new Date().toISOString()
     };

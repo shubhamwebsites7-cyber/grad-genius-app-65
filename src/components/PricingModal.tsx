@@ -255,10 +255,12 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{getModalTitle()}</DialogTitle>
-          <DialogDescription className="text-base">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-3 pb-6">
+          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            {getModalTitle()}
+          </DialogTitle>
+          <DialogDescription className="text-base text-muted-foreground">
             {getModalDescription()}
           </DialogDescription>
         </DialogHeader>
@@ -279,8 +281,10 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           <>
             {/* Phone Number Input */}
             {user && (
-              <div className="space-y-2 mb-6">
-                <Label htmlFor="phone">Phone Number (Required for Payment)</Label>
+              <div className="space-y-2 mb-8 max-w-md mx-auto">
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  Phone Number <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -288,36 +292,45 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   maxLength={10}
+                  className="text-center text-lg"
                 />
+                <p className="text-xs text-muted-foreground text-center">
+                  Required for payment processing
+                </p>
               </div>
             )}
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-8">
               {plans.map((plan) => (
                 <Card 
                   key={plan.id} 
-                  className={`relative ${
+                  className={`relative flex flex-col transition-all duration-300 hover:scale-105 ${
                     plan.is_popular 
-                      ? 'border-primary shadow-lg ring-2 ring-primary/20' 
-                      : 'border-border'
+                      ? 'border-primary shadow-xl ring-2 ring-primary/30 bg-gradient-to-b from-primary/5 to-transparent' 
+                      : 'border-border hover:border-primary/50'
                   }`}
                 >
                   {plan.is_popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1 shadow-lg">
+                        <Sparkles className="h-3 w-3 mr-1 inline" />
                         Most Popular
                       </Badge>
                     </div>
                   )}
                   
-                  <CardHeader className="text-center pb-4">
-                    <CardTitle className="text-lg mb-2">{getDurationLabel(plan.duration_months)}</CardTitle>
+                  <CardHeader className="text-center pb-6 pt-8">
+                    <CardTitle className="text-xl font-bold mb-4">
+                      {getDurationLabel(plan.duration_months)}
+                    </CardTitle>
                     
                     {plan.pricing ? (
-                      <div className="space-y-2">
-                        <div className="text-2xl font-bold text-foreground">
-                          {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="text-4xl font-bold text-foreground">
+                            {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                          </div>
                         </div>
                         
                         {plan.pricing.original_price && (
@@ -329,10 +342,14 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                         )}
                         
                         {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                          <Badge variant="secondary" className="bg-success/10 text-success">
-                            {plan.pricing.discount_percentage}% OFF
+                          <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                            Save {plan.pricing.discount_percentage}%
                           </Badge>
                         )}
+
+                        <p className="text-xs text-muted-foreground mt-2">
+                          per {plan.duration_months === 1 ? 'month' : `${plan.duration_months} months`}
+                        </p>
                       </div>
                     ) : (
                       <div className="text-sm text-muted-foreground">
@@ -341,11 +358,17 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                     )}
                   </CardHeader>
                   
-                  <CardContent className="pt-4">
+                  <CardContent className="pt-0 flex-1 flex flex-col justify-between">
+                    {plan.description && (
+                      <p className="text-center text-sm text-muted-foreground mb-4 min-h-[3rem]">
+                        {plan.description}
+                      </p>
+                    )}
+                    
                     <Button 
-                      variant={plan.is_popular ? "hero" : "outline"} 
+                      variant={plan.is_popular ? "default" : "outline"} 
                       size="lg" 
-                      className="w-full"
+                      className={`w-full mt-auto ${plan.is_popular ? 'shadow-lg shadow-primary/25' : ''}`}
                       onClick={() => handlePlanPurchase(plan)}
                       disabled={!plan.pricing || processingPayment === plan.id}
                     >
@@ -355,72 +378,81 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                           Processing...
                         </>
                       ) : (
-                        'Choose Plan'
+                        <>
+                          Choose Plan
+                          {plan.is_popular && <Sparkles className="ml-2 h-4 w-4" />}
+                        </>
                       )}
                     </Button>
-                    
-                    {plan.description && (
-                      <div className="text-center text-xs text-muted-foreground mt-2">
-                        {plan.description}
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}
             </div>
 
             {/* Features Highlight */}
-            <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Sparkles className="h-6 w-6 text-primary" />
-                  Premium Features Included
+            <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/30 shadow-lg mt-8">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-2xl md:text-3xl flex items-center justify-center gap-2">
+                  <Sparkles className="h-7 w-7 text-primary" />
+                  All Plans Include
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-base">
                   Everything you need to ace your exams
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="rounded-full bg-success/10 p-2">
+                      <Check className="h-5 w-5 text-success flex-shrink-0" />
+                    </div>
                     <div>
-                      <p className="font-medium">Unlimited Exam Access</p>
+                      <p className="font-semibold text-foreground">Unlimited Exam Access</p>
                       <p className="text-sm text-muted-foreground">Enroll in as many exams as you want</p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="rounded-full bg-success/10 p-2">
+                      <Check className="h-5 w-5 text-success flex-shrink-0" />
+                    </div>
                     <div>
-                      <p className="font-medium">Full Topic Coverage</p>
+                      <p className="font-semibold text-foreground">Full Topic Coverage</p>
                       <p className="text-sm text-muted-foreground">Access all topics without restrictions</p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="rounded-full bg-success/10 p-2">
+                      <Check className="h-5 w-5 text-success flex-shrink-0" />
+                    </div>
                     <div>
-                      <p className="font-medium">Resources Library</p>
+                      <p className="font-semibold text-foreground">Resources Library</p>
                       <p className="text-sm text-muted-foreground">Download PDFs, videos, and notes</p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="rounded-full bg-success/10 p-2">
+                      <Check className="h-5 w-5 text-success flex-shrink-0" />
+                    </div>
                     <div>
-                      <p className="font-medium">Progress Tracking</p>
+                      <p className="font-semibold text-foreground">Progress Tracking</p>
                       <p className="text-sm text-muted-foreground">Monitor your learning journey</p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="rounded-full bg-success/10 p-2">
+                      <Check className="h-5 w-5 text-success flex-shrink-0" />
+                    </div>
                     <div>
-                      <p className="font-medium">Priority Support</p>
+                      <p className="font-semibold text-foreground">Priority Support</p>
                       <p className="text-sm text-muted-foreground">Get help when you need it</p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                    <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
+                    <div className="rounded-full bg-success/10 p-2">
+                      <Check className="h-5 w-5 text-success flex-shrink-0" />
+                    </div>
                     <div>
-                      <p className="font-medium">Mobile Friendly</p>
+                      <p className="font-semibold text-foreground">Mobile Friendly</p>
                       <p className="text-sm text-muted-foreground">Study anywhere, anytime</p>
                     </div>
                   </div>
