@@ -38,6 +38,8 @@ export const SubscriptionCard = () => {
     price: '₹0',
     isPremium: false
   });
+  const [subscriptionRecord, setSubscriptionRecord] = useState<any>(null);
+  const [platform, setPlatform] = useState<string>('cashfree');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export const SubscriptionCard = () => {
     try {
       setLoading(true);
 
-      // Query user_subscriptions with actual schema
+      // Query user_subscriptions with actual schema including trial fields
       const { data, error } = await supabase
         .from('user_subscriptions')
         .select(`
@@ -100,6 +102,10 @@ export const SubscriptionCard = () => {
           purchase_platform,
           created_at,
           updated_at,
+          is_trial,
+          trial_starts_at,
+          trial_ends_at,
+          accumulated_days,
           subscription_plans!plan_id (
             name,
             description,
@@ -127,12 +133,16 @@ export const SubscriptionCard = () => {
       }
 
       if (data) {
-        const subscriptionRecord = data as any;
-        const plan = subscriptionRecord.subscription_plans;
-        const lastPayment = subscriptionRecord.payments;
+        const subRecord = data as any;
+        const plan = subRecord.subscription_plans;
+        const lastPayment = subRecord.payments;
+        
+        // Store subscription record for trial checking
+        setSubscriptionRecord(subRecord);
+        setPlatform(subRecord.purchase_platform || 'cashfree');
         
         // Check if subscription is still valid
-        const expiresAt = new Date(subscriptionRecord.expires_at);
+        const expiresAt = new Date(subRecord.expires_at);
         const isValid = expiresAt > new Date();
 
         if (isValid && lastPayment) {
@@ -203,13 +213,21 @@ export const SubscriptionCard = () => {
   return (
     <Card className={subscriptionData.isPremium ? 'border-primary/50 bg-gradient-to-br from-primary/5 to-transparent' : ''}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {subscriptionData.isPremium ? (
-            <Crown className="h-5 w-5 text-primary" />
-          ) : (
-            <CreditCard className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 justify-between">
+          <span className="flex items-center gap-2">
+            {subscriptionData.isPremium ? (
+              <Crown className="h-5 w-5 text-primary" />
+            ) : (
+              <CreditCard className="h-5 w-5" />
+            )}
+            Subscription
+          </span>
+          {subscriptionRecord?.is_trial && subscriptionRecord?.trial_ends_at && 
+           new Date(subscriptionRecord.trial_ends_at) > new Date() && (
+            <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+              🎁 Free Trial
+            </Badge>
           )}
-          Subscription
         </CardTitle>
         <CardDescription>
           Manage your subscription plan and billing
@@ -217,6 +235,23 @@ export const SubscriptionCard = () => {
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Trial Badge at top if active */}
+        {subscriptionRecord?.is_trial && subscriptionRecord?.trial_ends_at && 
+         new Date(subscriptionRecord.trial_ends_at) > new Date() && (
+          <div className="p-3 bg-blue-500/5 rounded-lg border border-blue-500/10">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-blue-600 font-medium">🎉 Free Trial Active</span>
+              <span className="text-muted-foreground">
+                • Ends {new Date(subscriptionRecord.trial_ends_at).toLocaleDateString('en-IN', { 
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+          </div>
+        )}
+        
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Current Plan</span>
