@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfileInfoCard } from '@/components/profile/ProfileInfoCard';
 import { SubscriptionCard } from '@/components/profile/SubscriptionCard';
+import { SubscriptionProgressBar } from '@/components/profile/SubscriptionProgressBar';
 import { SupportCard } from '@/components/profile/SupportCard';
 import { ProfileLoadingSkeleton } from '@/components/profile/ProfileLoadingSkeleton';
 import { PaymentHistoryCard } from '@/components/profile/PaymentHistoryCard';
@@ -244,6 +245,7 @@ const Profile = () => {
               {/* Right Column / Below on Mobile - Subscription & Support */}
               <div className="space-y-6">
                 <SubscriptionCard />
+                <SubscriptionProgressBar />
                 <PaymentHistoryCard />
                 <SupportCard />
               </div>

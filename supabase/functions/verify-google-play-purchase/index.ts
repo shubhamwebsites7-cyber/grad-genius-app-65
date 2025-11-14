@@ -139,10 +139,36 @@ serve(async (req) => {
       throw new Error('Invalid plan ID');
     }
 
-    // Calculate subscription dates
+    // Check if user has already used trial
+    const { data: existingTrialSub } = await supabase
+      .from('user_subscriptions')
+      .select('id, accumulated_days')
+      .eq('user_id', user.id)
+      .eq('trial_used', true)
+      .maybeSingle();
+
+    const hasUsedTrial = !!existingTrialSub;
+    const previousAccumulatedDays = existingTrialSub?.accumulated_days || 0;
+
+    // Calculate subscription dates with 3-day trial
     const startDate = new Date();
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + plan.duration_months);
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 3); // 3 days trial
+
+    // Determine if this is a trial subscription
+    const isTrial = !hasUsedTrial && (
+      purchaseData.lineItems?.[0]?.offerDetails?.basePlanId?.includes('trial') ||
+      purchaseData.subscriptionState === 'SUBSCRIPTION_STATE_IN_TRIAL'
+    );
+
+    // If user gets trial, paid period starts after trial ends
+    const paidStartDate = isTrial ? trialEndDate : startDate;
+    const paidEndDate = new Date(paidStartDate);
+    paidEndDate.setMonth(paidEndDate.getMonth() + plan.duration_months);
+
+    // Calculate total days for this subscription (including trial if applicable)
+    const subscriptionDays = Math.floor((paidEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalAccumulatedDays = previousAccumulatedDays + subscriptionDays;
 
     // Extract price from Google Play response (in micros)
     const priceMicros = purchaseData.lineItems?.[0]?.priceAmountMicros || 0;
@@ -174,7 +200,7 @@ serve(async (req) => {
 
     console.log('✅ Payment record created:', payment.id);
 
-    // Create or update subscription
+    // Create or update subscription with trial and accumulated days
     const { data: subscription, error: subscriptionError } = await supabase
       .from('user_subscriptions')
       .insert({
@@ -182,11 +208,17 @@ serve(async (req) => {
         plan_id: plan.id,
         status: 'active',
         starts_at: startDate.toISOString(),
-        expires_at: endDate.toISOString(),
+        expires_at: paidEndDate.toISOString(),
         payment_method: 'google_play',
         external_subscription_id: purchaseData.latestOrderId || purchaseToken,
         last_payment_id: payment.id,
         purchase_platform: 'google_play',
+        // Trial fields
+        is_trial: isTrial,
+        trial_starts_at: isTrial ? startDate.toISOString() : null,
+        trial_ends_at: isTrial ? trialEndDate.toISOString() : null,
+        trial_used: true, // Mark that user has used their trial
+        accumulated_days: totalAccumulatedDays,
       })
       .select()
       .single();
@@ -210,7 +242,7 @@ serve(async (req) => {
         subscription: {
           id: subscription.id,
           status: 'active',
-          expiresAt: endDate.toISOString(),
+          expiresAt: paidEndDate.toISOString(),
         }
       }),
       { 
