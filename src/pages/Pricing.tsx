@@ -18,6 +18,7 @@ import { DownloadAppBanner } from '@/components/DownloadAppBanner';
 import { GooglePlayPaymentProcessor } from '@/components/payment/GooglePlayPaymentProcessor';
 import { shouldShowAppDownload, shouldUseGooglePlay, getPlatform } from '@/utils/platformDetection';
 import { PricingFAQ } from '@/components/pricing/PricingFAQ';
+import { PremiumFeatures } from '@/components/pricing/PremiumFeatures';
 
 interface PlanPricing {
   id: string;
@@ -397,12 +398,12 @@ const Pricing = () => {
         
         <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
           {/* Hero Section with Timer */}
-          <div className="text-center mb-12 md:mb-16 space-y-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold">
+          <div className="text-center mb-12 md:mb-16 space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
               Choose Your Perfect Plan
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
               Select the plan that works best for you
             </p>
           </div>
@@ -521,7 +522,7 @@ const Pricing = () => {
 
                       <CardHeader className="text-center space-y-4 pb-6 pt-8">
                         {/* Plan Name with Selection Indicator */}
-                        <CardTitle className="text-2xl font-extrabold text-foreground flex items-center justify-center gap-3">
+                        <CardTitle className="text-xl font-bold text-foreground flex items-center justify-center gap-3">
                           <span>{getDurationLabel(plan.duration_months)}</span>
                           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                             isSelected 
@@ -552,7 +553,7 @@ const Pricing = () => {
                               </div>
                             )}
                             <div className="flex items-baseline justify-center gap-1">
-                              <span className="text-4xl md:text-5xl font-black text-foreground">
+                              <span className="text-3xl md:text-4xl font-bold text-foreground">
                                 {formatPrice(plan.pricing.price, plan.pricing.currency)}
                               </span>
                             </div>
@@ -603,6 +604,9 @@ const Pricing = () => {
                   );
                 })}
               </div>
+
+              {/* Premium Features Section */}
+              <PremiumFeatures />
 
               {/* FAQ Section */}
               <PricingFAQ />

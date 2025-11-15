@@ -133,10 +133,15 @@ export const SubscriptionProgressBar = () => {
                 <Award className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">Total Premium Days</p>
-                <p className="text-2xl font-bold text-primary">{accumulated_total_days} days</p>
+                <p className="text-sm font-medium">Total Premium Access</p>
+                <p className="text-2xl font-bold text-primary">
+                  {accumulated_total_days} {accumulated_total_days === 1 ? 'day' : 'days'}
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Including all purchases and upgrades
+                  {is_in_trial 
+                    ? `${trial_days_total} days trial + ${accumulated_total_days - trial_days_total} days purchased`
+                    : 'All purchases combined'
+                  }
                 </p>
               </div>
             </div>
