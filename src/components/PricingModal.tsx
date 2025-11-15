@@ -305,15 +305,15 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
               {plans.map((plan) => (
                 <Card 
                   key={plan.id} 
-                  className={`relative flex flex-col transition-all duration-300 hover:scale-105 ${
+                  className={`relative flex flex-col ${
                     plan.is_popular 
-                      ? 'border-primary shadow-xl ring-2 ring-primary/30 bg-gradient-to-b from-primary/5 to-transparent' 
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-primary ring-2 ring-primary/30' 
+                      : 'border-border'
                   }`}
                 >
                   {plan.is_popular && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1 shadow-lg">
+                      <Badge className="bg-primary text-primary-foreground px-4 py-1">
                         <Sparkles className="h-3 w-3 mr-1 inline" />
                         Most Popular
                       </Badge>
@@ -368,7 +368,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                     <Button 
                       variant={plan.is_popular ? "default" : "outline"} 
                       size="lg" 
-                      className={`w-full mt-auto ${plan.is_popular ? 'shadow-lg shadow-primary/25' : ''}`}
+                      className="w-full mt-auto"
                       onClick={() => handlePlanPurchase(plan)}
                       disabled={!plan.pricing || processingPayment === plan.id}
                     >
@@ -389,76 +389,6 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
               ))}
             </div>
 
-            {/* Features Highlight */}
-            <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/30 shadow-lg mt-8">
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-2xl md:text-3xl flex items-center justify-center gap-2">
-                  <Sparkles className="h-7 w-7 text-primary" />
-                  All Plans Include
-                </CardTitle>
-                <CardDescription className="text-base">
-                  Everything you need to ace your exams
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
-                    <div className="rounded-full bg-success/10 p-2">
-                      <Check className="h-5 w-5 text-success flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Unlimited Exam Access</p>
-                      <p className="text-sm text-muted-foreground">Enroll in as many exams as you want</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
-                    <div className="rounded-full bg-success/10 p-2">
-                      <Check className="h-5 w-5 text-success flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Full Topic Coverage</p>
-                      <p className="text-sm text-muted-foreground">Access all topics without restrictions</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
-                    <div className="rounded-full bg-success/10 p-2">
-                      <Check className="h-5 w-5 text-success flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Resources Library</p>
-                      <p className="text-sm text-muted-foreground">Download PDFs, videos, and notes</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
-                    <div className="rounded-full bg-success/10 p-2">
-                      <Check className="h-5 w-5 text-success flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Progress Tracking</p>
-                      <p className="text-sm text-muted-foreground">Monitor your learning journey</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
-                    <div className="rounded-full bg-success/10 p-2">
-                      <Check className="h-5 w-5 text-success flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Priority Support</p>
-                      <p className="text-sm text-muted-foreground">Get help when you need it</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3 p-4 rounded-lg bg-background/80 border border-border/50 hover:border-primary/50 transition-colors">
-                    <div className="rounded-full bg-success/10 p-2">
-                      <Check className="h-5 w-5 text-success flex-shrink-0" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Mobile Friendly</p>
-                      <p className="text-sm text-muted-foreground">Study anywhere, anytime</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </>
         )}
       </DialogContent>

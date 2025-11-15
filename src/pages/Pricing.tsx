@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertCircle, Loader2, Phone, Sparkles, ChevronDown, Gift, Play } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Phone, Sparkles } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -398,50 +398,13 @@ const Pricing = () => {
         <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
           {/* Hero Section with Timer */}
           <div className="text-center mb-12 md:mb-16 space-y-6">
-            {/* Trust Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium animate-fade-in">
-              <Check className="h-4 w-4" />
-              <span>Trusted by 10,000+ Students</span>
-            </div>
-
-            {/* Limited Time Offer Timer */}
-            {offer && timeRemaining.hours + timeRemaining.minutes + timeRemaining.seconds > 0 && selectedPlan && (
-              <div className="animate-scale-in">
-                {(() => {
-                  const plan = plans.find(p => p.id === selectedPlan);
-                  const discount = plan?.pricing?.discount_percentage || 0;
-                  const description = plan?.is_popular ? plan.description : null;
-                  
-                  return (
-                    <div className="max-w-md mx-auto">
-                      <div className="bg-gradient-to-r from-primary via-primary/90 to-accent text-primary-foreground px-6 py-4 rounded-2xl shadow-lg">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <Gift className="h-5 w-5 animate-pulse" />
-                          <span className="font-semibold">Limited Time Offer - Save {discount}%!</span>
-                        </div>
-                        <div className="text-2xl md:text-3xl font-bold tracking-wider">
-                          {String(timeRemaining.hours).padStart(2, '0')}:{String(timeRemaining.minutes).padStart(2, '0')}:{String(timeRemaining.seconds).padStart(2, '0')}
-                        </div>
-                        {description && (
-                          <p className="text-sm mt-2 text-primary-foreground/90">{description}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold">
+              Choose Your Perfect Plan
+            </h1>
             
-            {/* Main Heading */}
-            <div className="space-y-4 animate-fade-in">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent leading-tight">
-                Choose Your Perfect Plan
-              </h1>
-              
-              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-                Start with a <span className="text-primary font-semibold">3-day free trial</span>. Unlock unlimited exam access and premium features to ace your exams.
-              </p>
-            </div>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+              Select the plan that works best for you
+            </p>
           </div>
 
           {loading ? (
@@ -535,26 +498,22 @@ const Pricing = () => {
                   const isSelected = selectedPlan === plan.id;
                   
                   return (
-                  <div
-                    key={plan.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
+                  <div key={plan.id}>
                     <Card
                       onClick={() => showPricing && setSelectedPlan(plan.id)}
-                      className={`relative cursor-pointer transition-all duration-300 group h-full
+                      className={`relative cursor-pointer h-full
                         ${isSelected && showPricing
-                          ? 'border-primary border-2 shadow-2xl -translate-y-2 bg-primary/5'
-                          : 'border-border hover:border-primary/50 hover:-translate-y-1 hover:shadow-xl'
+                          ? 'border-primary border-2'
+                          : 'border-border'
                         }
                         ${!showPricing ? 'opacity-60' : ''}
-                        ${plan.is_popular ? 'ring-2 ring-primary/20 lg:scale-[1.05]' : ''}
+                        ${plan.is_popular ? 'ring-2 ring-primary/20' : ''}
                       `}
                     >
                       {/* Best Value Badge */}
                       {plan.is_popular && (
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                          <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1.5 text-xs font-semibold shadow-lg animate-pulse">
+                          <Badge className="bg-primary text-primary-foreground px-4 py-1.5 text-xs font-semibold">
                             ⭐ Best Value
                           </Badge>
                         </div>
@@ -563,21 +522,16 @@ const Pricing = () => {
                       <CardHeader className="text-center space-y-4 pb-6 pt-8">
                         {/* Selection Indicator */}
                         <div className="flex justify-center">
-                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${
                             isSelected 
-                              ? 'border-primary bg-primary shadow-lg shadow-primary/50 scale-110' 
-                              : 'border-muted-foreground group-hover:border-primary group-hover:scale-105'
+                              ? 'border-primary bg-primary' 
+                              : 'border-muted-foreground'
                           }`}>
                             {isSelected && (
-                              <Check className="w-4 h-4 text-primary-foreground animate-scale-in" />
+                              <Check className="w-4 h-4 text-primary-foreground" />
                             )}
                           </div>
                         </div>
-
-                        {/* Trial Badge */}
-                        <Badge variant="secondary" className="mx-auto w-fit bg-gradient-to-r from-blue-500/10 to-cyan-500/10 text-blue-700 border border-blue-200 font-medium">
-                          🎁 3 Days Free
-                        </Badge>
 
                         {/* Plan Name */}
                         <CardTitle className="text-2xl font-extrabold text-foreground">
@@ -587,7 +541,7 @@ const Pricing = () => {
                         {/* Discount Badge */}
                         {plan.pricing?.discount_percentage && (
                           <div className="flex justify-center">
-                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold shadow-md">
+                            <Badge variant="secondary" className="bg-success/10 text-success">
                               Save {plan.pricing.discount_percentage}%
                             </Badge>
                           </div>
@@ -602,7 +556,7 @@ const Pricing = () => {
                               </div>
                             )}
                             <div className="flex items-baseline justify-center gap-1">
-                              <span className="text-4xl md:text-5xl font-black bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">
+                              <span className="text-4xl md:text-5xl font-black text-foreground">
                                 {formatPrice(plan.pricing.price, plan.pricing.currency)}
                               </span>
                             </div>
@@ -623,43 +577,10 @@ const Pricing = () => {
                       <CardContent className="space-y-6 pt-0">
                         {/* Description */}
                         {plan.description && (
-                          <p className="text-sm text-muted-foreground text-center leading-relaxed min-h-[3.5rem] px-2">
+                          <p className="text-sm text-muted-foreground text-center leading-relaxed px-2">
                             {plan.description}
                           </p>
                         )}
-
-                        {/* Divider */}
-                        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-                        {/* Quick Features */}
-                        <div className="space-y-2.5 text-sm">
-                          <div className="flex items-center gap-2 text-foreground">
-                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Check className="h-3 w-3 text-primary" />
-                            </div>
-                            <span className="font-medium">Unlimited exam access</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-foreground">
-                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Check className="h-3 w-3 text-primary" />
-                            </div>
-                            <span className="font-medium">All study resources</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-foreground">
-                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Check className="h-3 w-3 text-primary" />
-                            </div>
-                            <span className="font-medium">Progress tracking</span>
-                          </div>
-                          {plan.is_popular && (
-                            <div className="flex items-center gap-2 text-primary font-semibold">
-                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                                <Check className="h-3 w-3 text-primary-foreground" />
-                              </div>
-                              <span>Priority support</span>
-                            </div>
-                          )}
-                        </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -668,27 +589,11 @@ const Pricing = () => {
               </div>
 
               {/* Call to Action Section */}
-              <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-                {/* Trust Signals */}
-                <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-success" />
-                    <span>No credit card required</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-success" />
-                    <span>Cancel anytime</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-success" />
-                    <span>Instant access</span>
-                  </div>
-                </div>
-
+              <div className="max-w-3xl mx-auto space-y-6">
                 {/* Continue Button */}
                 <Button 
                   size="lg" 
-                  className="w-full h-16 text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-r from-primary to-primary/90"
+                  className="w-full h-16 text-lg font-bold"
                   onClick={handlePlanPurchase}
                   disabled={!selectedPlan || processingPayment !== null}
                 >
@@ -699,131 +604,11 @@ const Pricing = () => {
                     </>
                   ) : (
                     <>
-                      <span>Start Your Free Trial Now</span>
+                      <span>Continue to Payment</span>
                       <Check className="ml-2 h-5 w-5" />
                     </>
                   )}
                 </Button>
-
-                {/* Billing Info */}
-                <p className="text-center text-sm text-muted-foreground">
-                  Start your 3-day free trial, then {selectedPlan && plans.find(p => p.id === selectedPlan)?.pricing && 
-                    formatPrice(plans.find(p => p.id === selectedPlan)!.pricing!.price, plans.find(p => p.id === selectedPlan)!.pricing!.currency)
-                  } billed {selectedPlan && plans.find(p => p.id === selectedPlan)?.duration_months === 1 ? 'monthly' : 
-                    plans.find(p => p.id === selectedPlan)?.duration_months === 12 ? 'annually' : 
-                    `every ${plans.find(p => p.id === selectedPlan)?.duration_months} months`}
-                </p>
-              </div>
-
-              {/* Features Highlight - Enhanced */}
-              <div className="space-y-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
-                <div className="text-center space-y-3">
-                  <h2 className="text-3xl md:text-4xl font-bold flex items-center justify-center gap-3">
-                    <Sparkles className="h-8 w-8 text-primary animate-pulse" />
-                    <span>All Plans Include</span>
-                  </h2>
-                  <p className="text-muted-foreground text-lg">
-                    Everything you need to ace your exams, in every plan
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-lg">Unlimited Exam Access</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            Enroll in as many exams as you want. No limits on your learning.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-lg">Full Topic Coverage</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            Access all topics without restrictions. Complete curriculum coverage.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-lg">Resources Library</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            Download PDFs, videos, and notes for offline study.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-lg">Progress Tracking</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            Monitor your learning journey with detailed analytics.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-lg">Priority Support</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            Get help when you need it. Fast response times guaranteed.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-lg">Mobile Friendly</h3>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            Study anywhere, anytime. Fully optimized for mobile devices.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
 
               {/* FAQ Section */}
