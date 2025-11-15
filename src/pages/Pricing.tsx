@@ -513,35 +513,31 @@ const Pricing = () => {
                       {/* Best Value Badge */}
                       {plan.is_popular && (
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                          <Badge className="bg-primary text-primary-foreground px-4 py-1.5 text-xs font-semibold">
+                          <Badge className="bg-primary text-primary-foreground px-4 py-1.5 text-xs font-semibold pointer-events-none">
                             ⭐ Best Value
                           </Badge>
                         </div>
                       )}
 
                       <CardHeader className="text-center space-y-4 pb-6 pt-8">
-                        {/* Selection Indicator */}
-                        <div className="flex justify-center">
-                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${
+                        {/* Plan Name with Selection Indicator */}
+                        <CardTitle className="text-2xl font-extrabold text-foreground flex items-center justify-center gap-3">
+                          <span>{getDurationLabel(plan.duration_months)}</span>
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                             isSelected 
                               ? 'border-primary bg-primary' 
                               : 'border-muted-foreground'
                           }`}>
                             {isSelected && (
-                              <Check className="w-4 h-4 text-primary-foreground" />
+                              <Check className="w-3.5 h-3.5 text-primary-foreground" />
                             )}
                           </div>
-                        </div>
-
-                        {/* Plan Name */}
-                        <CardTitle className="text-2xl font-extrabold text-foreground">
-                          {getDurationLabel(plan.duration_months)}
                         </CardTitle>
 
                         {/* Discount Badge */}
                         {plan.pricing?.discount_percentage && (
                           <div className="flex justify-center">
-                            <Badge variant="secondary" className="bg-success/10 text-success">
+                            <Badge variant="secondary" className="bg-success/10 text-success pointer-events-none">
                               Save {plan.pricing.discount_percentage}%
                             </Badge>
                           </div>
@@ -562,10 +558,14 @@ const Pricing = () => {
                             </div>
                             <div className="text-sm font-medium text-muted-foreground">
                               {plan.duration_months === 1 
-                                ? 'per month' 
-                                : plan.duration_months === 12 
-                                  ? 'per year' 
-                                  : `for ${plan.duration_months} months`
+                                ? 'per month - Quick access for short-term exam prep' 
+                                : plan.duration_months === 3
+                                  ? 'for 3 months - Ideal for focused exam preparation'
+                                  : plan.duration_months === 6
+                                    ? 'for 6 months - Extended study period for thorough preparation'
+                                    : plan.duration_months === 12
+                                      ? 'per year - Best value for long-term learning'
+                                      : `for ${plan.duration_months} months`
                               }
                             </div>
                           </div>
@@ -574,41 +574,34 @@ const Pricing = () => {
                         )}
                       </CardHeader>
 
-                      <CardContent className="space-y-6 pt-0">
-                        {/* Description */}
-                        {plan.description && (
-                          <p className="text-sm text-muted-foreground text-center leading-relaxed px-2">
-                            {plan.description}
-                          </p>
+                      <CardContent className="space-y-6 pt-4">
+                        {/* Activate Plan Button */}
+                        {showPricing && plan.pricing && (
+                          <Button 
+                            size="lg" 
+                            className="w-full font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPlan(plan.id);
+                              handlePlanPurchase();
+                            }}
+                            disabled={processingPayment !== null}
+                          >
+                            {processingPayment === plan.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              'Activate Plan'
+                            )}
+                          </Button>
                         )}
                       </CardContent>
                     </Card>
                   </div>
                   );
                 })}
-              </div>
-
-              {/* Call to Action Section */}
-              <div className="max-w-3xl mx-auto space-y-6">
-                {/* Continue Button */}
-                <Button 
-                  size="lg" 
-                  className="w-full h-16 text-lg font-bold"
-                  onClick={handlePlanPurchase}
-                  disabled={!selectedPlan || processingPayment !== null}
-                >
-                  {processingPayment ? (
-                    <>
-                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                      Processing Payment...
-                    </>
-                  ) : (
-                    <>
-                      <span>Continue to Payment</span>
-                      <Check className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </Button>
               </div>
 
               {/* FAQ Section */}
