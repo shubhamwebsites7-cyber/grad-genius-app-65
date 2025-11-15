@@ -6,9 +6,9 @@ import { Footer } from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfileInfoCard } from '@/components/profile/ProfileInfoCard';
-import { SubscriptionCard } from '@/components/profile/SubscriptionCard';
-import { SubscriptionProgressBar } from '@/components/profile/SubscriptionProgressBar';
+import { UnifiedSubscriptionCard } from '@/components/profile/UnifiedSubscriptionCard';
 import { SupportCard } from '@/components/profile/SupportCard';
 import { ProfileLoadingSkeleton } from '@/components/profile/ProfileLoadingSkeleton';
 import { PaymentHistoryCard } from '@/components/profile/PaymentHistoryCard';
@@ -219,19 +219,22 @@ const Profile = () => {
         <Navigation />
         
         <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-              <p className="text-muted-foreground mt-2">
-                Manage your account, subscription, and preferences.
+          <div className="max-w-5xl mx-auto">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage your account and preferences
               </p>
             </div>
 
-            {/* Two-column layout on desktop, stacked on mobile */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column / Top on Mobile - Profile Information */}
-              <div className="lg:col-span-2 space-y-6">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="billing">Billing</TabsTrigger>
+                <TabsTrigger value="support">Support</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-6">
                 <ProfileInfoCard
                   profileData={profileData}
                   isEditing={isEditing}
@@ -240,16 +243,17 @@ const Profile = () => {
                   onSave={handleSaveProfile}
                   onChange={handleChange}
                 />
-              </div>
+                <UnifiedSubscriptionCard />
+              </TabsContent>
 
-              {/* Right Column / Below on Mobile - Subscription & Support */}
-              <div className="space-y-6">
-                <SubscriptionCard />
-                <SubscriptionProgressBar />
+              <TabsContent value="billing" className="space-y-6">
                 <PaymentHistoryCard />
+              </TabsContent>
+
+              <TabsContent value="support" className="space-y-6">
                 <SupportCard />
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
         
