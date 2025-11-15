@@ -101,16 +101,16 @@ BEGIN
   WHERE user_id = p_user_id;
   
   -- Calculate current subscription period
-  total_days := EXTRACT(DAY FROM (v_subscription.expires_at - v_subscription.starts_at))::INTEGER;
+  total_days := GREATEST(1, EXTRACT(DAY FROM (v_subscription.expires_at - v_subscription.starts_at))::INTEGER);
   
   -- Calculate elapsed days in current subscription
   elapsed_days := LEAST(
     total_days,
-    EXTRACT(DAY FROM (v_now - v_subscription.starts_at))::INTEGER
+    GREATEST(0, EXTRACT(DAY FROM (v_now - v_subscription.starts_at))::INTEGER)
   );
   
   -- Calculate remaining days
-  remaining_days := GREATEST(0, EXTRACT(DAY FROM (v_subscription.expires_at - v_now))::INTEGER);
+  remaining_days := GREATEST(0, EXTRACT(DAY FROM (v_subscription.expires_at - v_now))::INTEGER + 1);
   
   -- Calculate progress percentage
   progress_percentage := CASE 

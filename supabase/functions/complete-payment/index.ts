@@ -90,66 +90,52 @@ serve(async (req)=>{
       });
     }
     console.log('Found plan:', plan.name);
-    // Update payment status to completed
+    
+    // Use the extend_subscription_with_trial function to handle trial days
+    const { data: subscriptionResult, error: subscriptionError } = await supabaseClient
+      .rpc('extend_subscription_with_trial', {
+        p_user_id: payment.user_id,
+        p_plan_id: payment.plan_id,
+        p_payment_id: payment.id,
+        p_duration_months: plan.duration_months,
+        p_purchase_platform: 'cashfree'
+      });
+
+    if (subscriptionError) {
+      console.error('Failed to create/extend subscription:', subscriptionError);
+      throw new Error(`Failed to create subscription: ${subscriptionError.message}`);
+    }
+
+    if (!subscriptionResult || subscriptionResult.length === 0) {
+      throw new Error('No subscription created');
+    }
+
+    const newSubscription = subscriptionResult[0];
+    console.log('Created/extended subscription:', newSubscription.subscription_id);
+    
+    // Update payment status to completed and link to subscription
     const { error: updatePaymentError } = await supabaseClient.from('payments').update({
       payment_status: 'completed',
+      subscription_id: newSubscription.subscription_id,
       updated_at: new Date().toISOString()
     }).eq('id', payment.id);
+    
     if (updatePaymentError) {
       console.error('Failed to update payment:', updatePaymentError);
       throw new Error(`Failed to update payment: ${updatePaymentError.message}`);
     }
-    console.log('Payment updated to completed');
-    // Calculate expiration date
-    const now = new Date();
-    const expiresAt = new Date(now);
-    expiresAt.setMonth(expiresAt.getMonth() + plan.duration_months);
-    // Deactivate any existing active subscriptions for this user
-    const { error: deactivateError } = await supabaseClient.from('user_subscriptions').update({
-      status: 'expired',
-      updated_at: now.toISOString()
-    }).eq('user_id', payment.user_id).eq('status', 'active');
-    if (deactivateError) {
-      console.error('Failed to deactivate existing subscriptions:', deactivateError);
-    } else {
-      console.log('Deactivated existing subscriptions');
-    }
-    // Create new subscription
-    const { data: newSubscription, error: subscriptionError } = await supabaseClient.from('user_subscriptions').insert({
-      user_id: payment.user_id,
-      plan_id: payment.plan_id,
-      status: 'active',
-      starts_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      payment_method: 'cashfree',
-      external_subscription_id: order_id,
-      auto_renew: false,
-      last_payment_id: payment.id
-    }).select().single();
-    if (subscriptionError) {
-      console.error('Failed to create subscription:', subscriptionError);
-      throw new Error(`Failed to create subscription: ${subscriptionError.message}`);
-    }
-    console.log('Created subscription:', newSubscription.id);
-    // Update payment with subscription_id
-    const { error: linkError } = await supabaseClient.from('payments').update({
-      subscription_id: newSubscription.id,
-      updated_at: new Date().toISOString()
-    }).eq('id', payment.id);
-    if (linkError) {
-      console.error('Failed to link payment to subscription:', linkError);
-    } else {
-      console.log('Linked payment to subscription');
-    }
+    
+    console.log('Payment updated to completed and linked to subscription');
     console.log('✅ Payment completion successful');
     return new Response(JSON.stringify({
       success: true,
       message: 'Payment completed and subscription created',
       order_id,
       payment_id: payment.id,
-      subscription_id: newSubscription.id,
+      subscription_id: newSubscription.subscription_id,
       plan_name: plan.name,
-      expires_at: expiresAt.toISOString(),
+      expires_at: newSubscription.expires_at,
+      accumulated_days: newSubscription.accumulated_days,
       amount: payment.amount,
       currency: payment.currency
     }), {

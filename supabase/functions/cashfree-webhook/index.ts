@@ -194,30 +194,28 @@ serve(async (req)=>{
     if (newStatus === 'completed') {
       const { data: plan, error: planError } = await supabase.from('subscription_plans').select('*').eq('id', payment.plan_id).single();
       if (planError || !plan) throw new Error(`Plan not found: ${planError?.message}`);
-      const now = new Date();
-      const expiresAt = new Date(now);
-      expiresAt.setMonth(expiresAt.getMonth() + plan.duration_months);
-      // Expire previous subscriptions
-      await supabase.from('user_subscriptions').update({
-        status: 'expired',
-        updated_at: now.toISOString()
-      }).eq('user_id', payment.user_id).eq('status', 'active');
-      // Create new active subscription
-      const { data: newSubscription, error: subError } = await supabase.from('user_subscriptions').insert({
-        user_id: payment.user_id,
-        plan_id: payment.plan_id,
-        status: 'active',
-        starts_at: now.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        payment_method: 'cashfree',
-        external_subscription_id: order_id,
-        auto_renew: false,
-        last_payment_id: payment.id
-      }).select().single();
-      if (subError) throw new Error(`Failed to create subscription: ${subError.message}`);
+      
+      // Use extend_subscription_with_trial to handle trial accumulation
+      const { data: subscriptionResult, error: subError } = await supabase
+        .rpc('extend_subscription_with_trial', {
+          p_user_id: payment.user_id,
+          p_plan_id: payment.plan_id,
+          p_payment_id: payment.id,
+          p_duration_months: plan.duration_months,
+          p_purchase_platform: 'cashfree'
+        });
+
+      if (subError) throw new Error(`Failed to create/extend subscription: ${subError.message}`);
+
+      if (!subscriptionResult || subscriptionResult.length === 0) {
+        throw new Error('No subscription created');
+      }
+
+      const newSubscription = subscriptionResult[0];
+      
       // Update payment with subscription_id
       await supabase.from('payments').update({
-        subscription_id: newSubscription.id,
+        subscription_id: newSubscription.subscription_id,
         updated_at: new Date().toISOString()
       }).eq('id', payment.id);
     }
