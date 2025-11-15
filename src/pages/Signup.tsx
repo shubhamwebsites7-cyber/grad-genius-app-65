@@ -86,10 +86,12 @@ const Signup = () => {
 
       if (data.user) {
         toast({
-          title: "Account created successfully!",
-          description: "Please check your email to verify your account.",
+          title: "Account created successfully! 🎉",
+          description: "Please check your email inbox and verify your account before logging in.",
+          duration: 8000,
         });
-        navigate('/login');
+        // Pass email to login page to show verification reminder
+        navigate(`/login?email=${encodeURIComponent(formData.email)}&verification=pending`);
       }
     } catch (error) {
       toast({

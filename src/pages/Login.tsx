@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
-import { BookOpen, Mail, Lock } from 'lucide-react';
+import { BookOpen, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
-    email: '',
+    email: searchParams.get('email') || '',
     password: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showVerificationAlert, setShowVerificationAlert] = useState(
+    searchParams.get('verification') === 'pending'
+  );
+  const [resendingEmail, setResendingEmail] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -40,11 +46,24 @@ const Login = () => {
       });
 
       if (error) {
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        // Check if error is due to unconfirmed email
+        if (error.message.toLowerCase().includes('email not confirmed') || 
+            error.message.toLowerCase().includes('confirm') ||
+            error.message.toLowerCase().includes('verify')) {
+          setShowVerificationAlert(true);
+          toast({
+            title: "Email not verified",
+            description: "Please check your email and click the verification link to activate your account.",
+            variant: "destructive",
+            duration: 6000,
+          });
+        } else {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -102,6 +121,50 @@ const Login = () => {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address to resend verification.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResendingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Failed to resend",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Verification email sent! 📧",
+          description: "Please check your inbox and spam folder.",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to resend verification email.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -155,6 +218,29 @@ const Login = () => {
                 </Tabs>
               </CardHeader>
               <CardContent>
+                {/* Email Verification Alert */}
+                {showVerificationAlert && (
+                  <Alert className="mb-4 border-blue-200 bg-blue-50">
+                    <AlertCircle className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      <strong>Email verification required</strong>
+                      <p className="mt-1 text-sm">
+                        We've sent a verification link to <strong>{formData.email}</strong>. 
+                        Please check your inbox (and spam folder) and click the link to verify your account.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="mt-2 p-0 h-auto text-blue-700 font-semibold"
+                        onClick={handleResendVerification}
+                        disabled={resendingEmail}
+                      >
+                        {resendingEmail ? 'Sending...' : 'Resend verification email →'}
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email address</Label>
