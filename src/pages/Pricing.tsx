@@ -514,35 +514,35 @@ const Pricing = () => {
                 </div>
               )}
 
-              {/* Pricing Cards - Horizontal Layout */}
-              <div className="max-w-2xl mx-auto space-y-4">
+              {/* Pricing Cards - Grid Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {plans.map((plan) => {
                   const isGooglePlay = shouldUseGooglePlay(userCountry);
                   const showPricing = !showDownloadBanner;
                   
                   return (
-                  <div
+                  <Card
                     key={plan.id}
                     onClick={() => showPricing && setSelectedPlan(plan.id)}
-                    className={`relative cursor-pointer transition-all duration-200 rounded-2xl border-2 p-4 md:p-6 ${
+                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg ${
                       selectedPlan === plan.id && showPricing
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-card hover:border-primary/50'
-                    } ${!showPricing ? 'opacity-60' : ''}`}
+                        ? 'border-primary border-2 shadow-lg scale-105'
+                        : 'border-border hover:border-primary/50'
+                    } ${!showPricing ? 'opacity-60' : ''} ${plan.is_popular ? 'lg:scale-105' : ''}`}
                   >
                     {plan.is_popular && (
-                      <div className="absolute -top-3 right-4">
-                        <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                        <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs whitespace-nowrap shadow-md">
                           Best Value
                         </Badge>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between gap-4">
+                    <CardHeader className="text-center space-y-3 pb-4">
                       {/* Radio Button */}
-                      <div className="flex-shrink-0">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                          selectedPlan === plan.id ? 'border-primary' : 'border-muted-foreground'
+                      <div className="flex justify-center mb-2">
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          selectedPlan === plan.id ? 'border-primary bg-primary/10' : 'border-muted-foreground'
                         }`}>
                           {selectedPlan === plan.id && (
                             <div className="w-3 h-3 rounded-full bg-primary" />
@@ -550,52 +550,61 @@ const Pricing = () => {
                         </div>
                       </div>
 
+                      {/* Trial Badge */}
+                      <Badge variant="secondary" className="mx-auto w-fit bg-blue-100 text-blue-800">
+                        🎁 3 Days Free Trial
+                      </Badge>
+
                       {/* Plan Name */}
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg">{getDurationLabel(plan.duration_months)}</h3>
-                      </div>
+                      <CardTitle className="text-xl font-bold">
+                        {getDurationLabel(plan.duration_months)}
+                      </CardTitle>
 
                       {/* Pricing */}
-                      <div className="text-right">
-                        {plan.pricing ? (
-                          <>
-                            <div className="flex items-center gap-2 justify-end">
-                              {plan.pricing.original_price && plan.pricing.discount_percentage && (
-                                <div className="text-sm text-muted-foreground line-through">
-                                  {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                                </div>
-                              )}
-                              {plan.pricing.discount_percentage && (
-                                <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20">
-                                  Save {plan.pricing.discount_percentage}%
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="text-xl md:text-2xl font-bold">
-                              {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                            </div>
-                            {plan.duration_months > 1 && (
-                              <div className="text-xs text-muted-foreground">
-                                {plan.duration_months === 12 ? '/year' : `/${plan.duration_months} months`}
+                      {plan.pricing ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-center gap-2">
+                            {plan.pricing.original_price && plan.pricing.discount_percentage && (
+                              <div className="text-sm text-muted-foreground line-through">
+                                {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
                               </div>
                             )}
-                          </>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">N/A</div>
-                        )}
-                      </div>
-                    </div>
+                          </div>
+                          {plan.pricing.discount_percentage && (
+                            <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20">
+                              Save {plan.pricing.discount_percentage}%
+                            </Badge>
+                          )}
+                          <div className="text-3xl font-bold text-primary">
+                            {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                          </div>
+                          {plan.duration_months > 1 && (
+                            <div className="text-sm text-muted-foreground">
+                              {plan.duration_months === 12 ? '/year' : `/${plan.duration_months} months`}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">N/A</div>
+                      )}
+                    </CardHeader>
 
-                    {plan.description && (
-                      <p className="text-sm text-muted-foreground mt-2 ml-10">
-                        {plan.description}
-                      </p>
-                    )}
-                  </div>
+                    <CardContent className="space-y-4">
+                      {/* Description */}
+                      {plan.description && (
+                        <p className="text-sm text-muted-foreground text-center min-h-[3rem]">
+                          {plan.description}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
                   );
                 })}
-                {/* Other Plans Collapsible - If needed */}
-                <div className="text-center pt-2">
+              </div>
+
+              {/* Billing Info and Continue Button */}
+              <div className="max-w-2xl mx-auto space-y-4 mt-8">
+                <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Recurring billing, cancel anytime
                   </p>
