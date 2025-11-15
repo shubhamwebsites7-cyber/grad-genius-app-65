@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { DownloadAppBanner } from '@/components/DownloadAppBanner';
 import { GooglePlayPaymentProcessor } from '@/components/payment/GooglePlayPaymentProcessor';
 import { shouldShowAppDownload, shouldUseGooglePlay, getPlatform } from '@/utils/platformDetection';
+import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 
 interface PlanPricing {
   id: string;
@@ -396,39 +397,51 @@ const Pricing = () => {
         
         <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
           {/* Hero Section with Timer */}
-          <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <div className="text-center mb-12 md:mb-16 space-y-6">
+            {/* Trust Badge */}
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium animate-fade-in">
+              <Check className="h-4 w-4" />
+              <span>Trusted by 10,000+ Students</span>
+            </div>
+
+            {/* Limited Time Offer Timer */}
             {offer && timeRemaining.hours + timeRemaining.minutes + timeRemaining.seconds > 0 && selectedPlan && (
-              <div className="mb-6">
+              <div className="animate-scale-in">
                 {(() => {
                   const plan = plans.find(p => p.id === selectedPlan);
                   const discount = plan?.pricing?.discount_percentage || 0;
                   const description = plan?.is_popular ? plan.description : null;
                   
                   return (
-                    <>
-                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 text-foreground px-6 py-3 rounded-full mb-4">
-                        <Gift className="h-5 w-5 text-primary" />
-                        <span className="font-medium">Limited Time Offer 🎉 Save {discount}% OFF</span>
+                    <div className="max-w-md mx-auto">
+                      <div className="bg-gradient-to-r from-primary via-primary/90 to-accent text-primary-foreground px-6 py-4 rounded-2xl shadow-lg">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Gift className="h-5 w-5 animate-pulse" />
+                          <span className="font-semibold">Limited Time Offer - Save {discount}%!</span>
+                        </div>
+                        <div className="text-2xl md:text-3xl font-bold tracking-wider">
+                          {String(timeRemaining.hours).padStart(2, '0')}:{String(timeRemaining.minutes).padStart(2, '0')}:{String(timeRemaining.seconds).padStart(2, '0')}
+                        </div>
+                        {description && (
+                          <p className="text-sm mt-2 text-primary-foreground/90">{description}</p>
+                        )}
                       </div>
-                      {description && (
-                        <h2 className="text-xl md:text-2xl font-semibold mb-4 text-muted-foreground">{description}</h2>
-                      )}
-                      <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                        {String(timeRemaining.hours).padStart(2, '0')}h {String(timeRemaining.minutes).padStart(2, '0')}m {String(timeRemaining.seconds).padStart(2, '0')}s
-                      </div>
-                    </>
+                    </div>
                   );
                 })()}
               </div>
             )}
             
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Choose Your Perfect Plan
-            </h1>
-            
-            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Unlock unlimited exam access and premium features
-            </p>
+            {/* Main Heading */}
+            <div className="space-y-4 animate-fade-in">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent leading-tight">
+                Choose Your Perfect Plan
+              </h1>
+              
+              <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+                Start with a <span className="text-primary font-semibold">3-day free trial</span>. Unlock unlimited exam access and premium features to ace your exams.
+              </p>
+            </div>
           </div>
 
           {loading ? (
@@ -515,242 +528,306 @@ const Pricing = () => {
               )}
 
               {/* Pricing Cards - Grid Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {plans.map((plan) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto mb-12">
+                {plans.map((plan, index) => {
                   const isGooglePlay = shouldUseGooglePlay(userCountry);
                   const showPricing = !showDownloadBanner;
+                  const isSelected = selectedPlan === plan.id;
                   
                   return (
-                  <Card
+                  <div
                     key={plan.id}
-                    onClick={() => showPricing && setSelectedPlan(plan.id)}
-                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg ${
-                      selectedPlan === plan.id && showPricing
-                        ? 'border-primary border-2 shadow-lg scale-105'
-                        : 'border-border hover:border-primary/50'
-                    } ${!showPricing ? 'opacity-60' : ''} ${plan.is_popular ? 'lg:scale-105' : ''}`}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    {plan.is_popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                        <Badge className="bg-primary text-primary-foreground px-3 py-1 text-xs whitespace-nowrap shadow-md">
-                          Best Value
-                        </Badge>
-                      </div>
-                    )}
-
-                    <CardHeader className="text-center space-y-3 pb-4">
-                      {/* Radio Button */}
-                      <div className="flex justify-center mb-2">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          selectedPlan === plan.id ? 'border-primary bg-primary/10' : 'border-muted-foreground'
-                        }`}>
-                          {selectedPlan === plan.id && (
-                            <div className="w-3 h-3 rounded-full bg-primary" />
-                          )}
+                    <Card
+                      onClick={() => showPricing && setSelectedPlan(plan.id)}
+                      className={`relative cursor-pointer transition-all duration-300 group h-full
+                        ${isSelected && showPricing
+                          ? 'border-primary border-2 shadow-2xl -translate-y-2 bg-primary/5'
+                          : 'border-border hover:border-primary/50 hover:-translate-y-1 hover:shadow-xl'
+                        }
+                        ${!showPricing ? 'opacity-60' : ''}
+                        ${plan.is_popular ? 'ring-2 ring-primary/20 lg:scale-[1.05]' : ''}
+                      `}
+                    >
+                      {/* Best Value Badge */}
+                      {plan.is_popular && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                          <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-4 py-1.5 text-xs font-semibold shadow-lg animate-pulse">
+                            ⭐ Best Value
+                          </Badge>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Trial Badge */}
-                      <Badge variant="secondary" className="mx-auto w-fit bg-blue-100 text-blue-800">
-                        🎁 3 Days Free Trial
-                      </Badge>
+                      <CardHeader className="text-center space-y-4 pb-6 pt-8">
+                        {/* Selection Indicator */}
+                        <div className="flex justify-center">
+                          <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                            isSelected 
+                              ? 'border-primary bg-primary shadow-lg shadow-primary/50 scale-110' 
+                              : 'border-muted-foreground group-hover:border-primary group-hover:scale-105'
+                          }`}>
+                            {isSelected && (
+                              <Check className="w-4 h-4 text-primary-foreground animate-scale-in" />
+                            )}
+                          </div>
+                        </div>
 
-                      {/* Plan Name */}
-                      <CardTitle className="text-xl font-bold">
-                        {getDurationLabel(plan.duration_months)}
-                      </CardTitle>
+                        {/* Trial Badge */}
+                        <Badge variant="secondary" className="mx-auto w-fit bg-gradient-to-r from-blue-500/10 to-cyan-500/10 text-blue-700 border border-blue-200 font-medium">
+                          🎁 3 Days Free
+                        </Badge>
 
-                      {/* Pricing */}
-                      {plan.pricing ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-center gap-2">
-                            {plan.pricing.original_price && plan.pricing.discount_percentage && (
-                              <div className="text-sm text-muted-foreground line-through">
+                        {/* Plan Name */}
+                        <CardTitle className="text-2xl font-extrabold text-foreground">
+                          {getDurationLabel(plan.duration_months)}
+                        </CardTitle>
+
+                        {/* Discount Badge */}
+                        {plan.pricing?.discount_percentage && (
+                          <div className="flex justify-center">
+                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold shadow-md">
+                              Save {plan.pricing.discount_percentage}%
+                            </Badge>
+                          </div>
+                        )}
+
+                        {/* Pricing Display */}
+                        {plan.pricing ? (
+                          <div className="space-y-2 pt-2">
+                            {plan.pricing.original_price && (
+                              <div className="text-base text-muted-foreground line-through">
                                 {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
                               </div>
                             )}
+                            <div className="flex items-baseline justify-center gap-1">
+                              <span className="text-4xl md:text-5xl font-black bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">
+                                {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                              </span>
+                            </div>
+                            <div className="text-sm font-medium text-muted-foreground">
+                              {plan.duration_months === 1 
+                                ? 'per month' 
+                                : plan.duration_months === 12 
+                                  ? 'per year' 
+                                  : `for ${plan.duration_months} months`
+                              }
+                            </div>
                           </div>
-                          {plan.pricing.discount_percentage && (
-                            <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 hover:bg-green-500/20">
-                              Save {plan.pricing.discount_percentage}%
-                            </Badge>
-                          )}
-                          <div className="text-3xl font-bold text-primary">
-                            {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                        ) : (
+                          <div className="text-sm text-muted-foreground">Contact Us</div>
+                        )}
+                      </CardHeader>
+
+                      <CardContent className="space-y-6 pt-0">
+                        {/* Description */}
+                        {plan.description && (
+                          <p className="text-sm text-muted-foreground text-center leading-relaxed min-h-[3.5rem] px-2">
+                            {plan.description}
+                          </p>
+                        )}
+
+                        {/* Divider */}
+                        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+                        {/* Quick Features */}
+                        <div className="space-y-2.5 text-sm">
+                          <div className="flex items-center gap-2 text-foreground">
+                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Check className="h-3 w-3 text-primary" />
+                            </div>
+                            <span className="font-medium">Unlimited exam access</span>
                           </div>
-                          {plan.duration_months > 1 && (
-                            <div className="text-sm text-muted-foreground">
-                              {plan.duration_months === 12 ? '/year' : `/${plan.duration_months} months`}
+                          <div className="flex items-center gap-2 text-foreground">
+                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Check className="h-3 w-3 text-primary" />
+                            </div>
+                            <span className="font-medium">All study resources</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-foreground">
+                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Check className="h-3 w-3 text-primary" />
+                            </div>
+                            <span className="font-medium">Progress tracking</span>
+                          </div>
+                          {plan.is_popular && (
+                            <div className="flex items-center gap-2 text-primary font-semibold">
+                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                              <span>Priority support</span>
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <div className="text-sm text-muted-foreground">N/A</div>
-                      )}
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      {/* Description */}
-                      {plan.description && (
-                        <p className="text-sm text-muted-foreground text-center min-h-[3rem]">
-                          {plan.description}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                   );
                 })}
               </div>
 
-              {/* Billing Info and Continue Button */}
-              <div className="max-w-2xl mx-auto space-y-4 mt-8">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Recurring billing, cancel anytime
-                  </p>
+              {/* Call to Action Section */}
+              <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+                {/* Trust Signals */}
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-success" />
+                    <span>No credit card required</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-success" />
+                    <span>Cancel anytime</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-success" />
+                    <span>Instant access</span>
+                  </div>
                 </div>
 
                 {/* Continue Button */}
                 <Button 
                   size="lg" 
-                  className="w-full h-14 text-lg font-semibold"
+                  className="w-full h-16 text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-r from-primary to-primary/90"
                   onClick={handlePlanPurchase}
                   disabled={!selectedPlan || processingPayment !== null}
                 >
                   {processingPayment ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Processing...
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      Processing Payment...
                     </>
                   ) : (
-                    'Continue'
+                    <>
+                      <span>Start Your Free Trial Now</span>
+                      <Check className="ml-2 h-5 w-5" />
+                    </>
                   )}
                 </Button>
+
+                {/* Billing Info */}
+                <p className="text-center text-sm text-muted-foreground">
+                  Start your 3-day free trial, then {selectedPlan && plans.find(p => p.id === selectedPlan)?.pricing && 
+                    formatPrice(plans.find(p => p.id === selectedPlan)!.pricing!.price, plans.find(p => p.id === selectedPlan)!.pricing!.currency)
+                  } billed {selectedPlan && plans.find(p => p.id === selectedPlan)?.duration_months === 1 ? 'monthly' : 
+                    plans.find(p => p.id === selectedPlan)?.duration_months === 12 ? 'annually' : 
+                    `every ${plans.find(p => p.id === selectedPlan)?.duration_months} months`}
+                </p>
               </div>
 
-              {/* Features Highlight */}
-              <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 animate-fade-in">
-                <CardHeader>
-                  <CardTitle className="text-2xl flex items-center gap-2">
-                    <Sparkles className="h-6 w-6 text-primary" />
-                    Premium Features Included
-                  </CardTitle>
-                  <CardDescription>
-                    Everything you need to ace your exams
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                      <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Unlimited Exam Access</p>
-                        <p className="text-sm text-muted-foreground">Enroll in as many exams as you want</p>
+              {/* Features Highlight - Enhanced */}
+              <div className="space-y-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
+                <div className="text-center space-y-3">
+                  <h2 className="text-3xl md:text-4xl font-bold flex items-center justify-center gap-3">
+                    <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+                    <span>All Plans Include</span>
+                  </h2>
+                  <p className="text-muted-foreground text-lg">
+                    Everything you need to ace your exams, in every plan
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-lg">Unlimited Exam Access</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Enroll in as many exams as you want. No limits on your learning.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                      <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Full Topic Coverage</p>
-                        <p className="text-sm text-muted-foreground">Access all topics without restrictions</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-lg">Full Topic Coverage</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Access all topics without restrictions. Complete curriculum coverage.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                      <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Resources Library</p>
-                        <p className="text-sm text-muted-foreground">Download PDFs, videos, and notes</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-lg">Resources Library</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Download PDFs, videos, and notes for offline study.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                      <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Progress Tracking</p>
-                        <p className="text-sm text-muted-foreground">Monitor your learning journey</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-lg">Progress Tracking</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Monitor your learning journey with detailed analytics.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                      <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Priority Support</p>
-                        <p className="text-sm text-muted-foreground">Get help when you need it</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-lg">Priority Support</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Get help when you need it. Fast response times guaranteed.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-background/50">
-                      <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Mobile Friendly</p>
-                        <p className="text-sm text-muted-foreground">Study anywhere, anytime</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-gradient-to-br from-background to-primary/5">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-lg">Mobile Friendly</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            Study anywhere, anytime. Fully optimized for mobile devices.
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
 
               {/* FAQ Section */}
-              <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-                <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-                
-                <Collapsible className="border rounded-lg bg-card">
-                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">What do I get in the free plan?</h3>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">You can explore all exams and subjects, but only 3 topics per subject are unlocked. You can also track progress for up to 3 topics.</p>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <Collapsible className="border rounded-lg bg-card">
-                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">What benefits do I get with a paid plan?</h3>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">A paid plan unlocks all topics, progress tracking, and resource access for your chosen exam — no limits.</p>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <Collapsible className="border rounded-lg bg-card">
-                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Are the paid plans one-time or recurring?</h3>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">All plans are one-time payments for their duration (1, 3, 6, or 12 months). You can renew anytime.</p>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <Collapsible className="border rounded-lg bg-card">
-                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Can I switch or upgrade my plan later?</h3>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">Yes, you can upgrade anytime — your new plan duration will start from the date of purchase.</p>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <Collapsible className="border rounded-lg bg-card">
-                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Which payment methods are supported?</h3>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">We support Cashfree (INR) for Indian users and PayPal for international users.</p>
-                  </CollapsibleContent>
-                </Collapsible>
-
-                <Collapsible className="border rounded-lg bg-card">
-                  <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                    <h3 className="text-lg font-semibold text-left">Will my progress be saved after my plan expires?</h3>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-6 pb-6">
-                    <p className="text-muted-foreground">Yes, your progress remains saved. You can renew your plan to continue learning without losing data.</p>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
+              <PricingFAQ />
             </div>
           )}
         </main>
