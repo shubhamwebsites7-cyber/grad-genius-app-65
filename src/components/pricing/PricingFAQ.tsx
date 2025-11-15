@@ -123,7 +123,12 @@ export const PricingFAQ = () => {
         <p className="text-muted-foreground mb-4">
           Still have questions? We're here to help!
         </p>
-        <Button variant="outline" size="lg" className="gap-2" onClick={() => navigate('/support')}>
+        <Button 
+          variant="outline" 
+          size="lg" 
+          className="gap-2" 
+          onClick={() => window.open('https://www.examtrakr.com/contact', '_blank')}
+        >
           Contact Support
           <Check className="h-4 w-4" />
         </Button>
