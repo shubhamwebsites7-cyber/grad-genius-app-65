@@ -247,6 +247,7 @@ const Profile = () => {
               </TabsContent>
 
               <TabsContent value="billing" className="space-y-6">
+                <UnifiedSubscriptionCard />
                 <PaymentHistoryCard />
               </TabsContent>
 

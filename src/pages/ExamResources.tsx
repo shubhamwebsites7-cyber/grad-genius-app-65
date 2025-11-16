@@ -233,7 +233,8 @@ const ExamResources = () => {
       (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    return filtered.sort((a, b) => {
+    // Sort resources
+    const sorted = filtered.sort((a, b) => {
       switch (sortBy) {
         case 'latest':
           return b.dateAdded.getTime() - a.dateAdded.getTime();
@@ -245,7 +246,14 @@ const ExamResources = () => {
           return 0;
       }
     });
-  }, [resources, searchQuery, sortBy]);
+
+    // Apply resource limit for free/trial users (only first 3 resources)
+    if (!subscription.isPremium || subscription.status === 'trial') {
+      return sorted.slice(0, 3);
+    }
+
+    return sorted;
+  }, [resources, searchQuery, sortBy, subscription]);
 
   const getResourceIcon = (type: string) => {
     switch (type) {
@@ -617,34 +625,14 @@ const ExamResources = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredAndSortedResources.map((resource, index) => {
             const IconComponent = getResourceIcon(resource.type);
-            const isPremium = subscription.isPremium;
-            const isLocked = !isPremium;
             
             return (
               <Card 
                 key={resource.id} 
                 className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative ${
                   resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-                } ${isLocked ? 'opacity-50' : ''}`}
+                }`}
               >
-                {isLocked && (
-                  <div className="absolute inset-0 backdrop-blur-sm bg-background/30 z-10 rounded-lg flex items-center justify-center">
-                    <div className="text-center p-6">
-                      <Lock className="h-12 w-12 mx-auto mb-3 text-primary" />
-                      <p className="text-sm font-semibold mb-2">Premium Resource</p>
-                      <Button 
-                        asChild 
-                        size="sm" 
-                        className="mt-2"
-                      >
-                        <Link to="/pricing">
-                          Click to upgrade and unlock all resources
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                
                 <CardHeader className="pb-3">
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-lg ${
@@ -746,18 +734,12 @@ const ExamResources = () => {
                     asChild 
                     variant="hero" 
                     className="w-full"
-                    disabled={isLocked}
                   >
                     <a 
-                      href={isLocked ? '#' : resource.url} 
-                      target={isLocked ? '_self' : '_blank'}
+                      href={resource.url} 
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2"
-                      onClick={(e) => {
-                        if (isLocked) {
-                          e.preventDefault();
-                        }
-                      }}
                     >
                       <IconComponent className="h-4 w-4" />
                       {getResourceButtonText(resource.type)}
@@ -768,6 +750,21 @@ const ExamResources = () => {
             );
           })}
         </div>
+
+        {/* Resource Limit Info for Free/Trial Users */}
+        {(!subscription.isPremium || subscription.status === 'trial') && resources.length > 3 && (
+          <Alert className="mb-8">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {subscription.status === 'trial' 
+                ? 'Free trial users can access 3 resources. Upgrade to unlock all resources!'
+                : 'Free users can access 3 resources. Upgrade to premium to unlock all resources!'}
+              <Link to="/pricing" className="ml-2 underline font-medium">
+                View Plans
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Empty State */}
         {filteredAndSortedResources.length === 0 && (
