@@ -547,27 +547,15 @@ const Pricing = () => {
                         {/* Pricing Display */}
                         {plan.pricing ? (
                           <div className="space-y-2 pt-2">
-                            {plan.pricing.original_price && (
-                              <div className="text-base text-muted-foreground line-through">
-                                {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                              </div>
-                            )}
-                            <div className="flex items-baseline justify-center gap-1">
-                              <span className="text-3xl md:text-4xl font-bold text-foreground">
+                            <div className="flex items-center justify-center gap-2">
+                              {plan.pricing.original_price && (
+                                <span className="text-base md:text-lg text-muted-foreground line-through">
+                                  {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                                </span>
+                              )}
+                              <span className="text-2xl md:text-3xl font-bold text-foreground">
                                 {formatPrice(plan.pricing.price, plan.pricing.currency)}
                               </span>
-                            </div>
-                            <div className="text-sm font-medium text-muted-foreground">
-                              {plan.duration_months === 1 
-                                ? 'per month - Quick access for short-term exam prep' 
-                                : plan.duration_months === 3
-                                  ? 'for 3 months - Ideal for focused exam preparation'
-                                  : plan.duration_months === 6
-                                    ? 'for 6 months - Extended study period for thorough preparation'
-                                    : plan.duration_months === 12
-                                      ? 'per year - Best value for long-term learning'
-                                      : `for ${plan.duration_months} months`
-                              }
                             </div>
                           </div>
                         ) : (
