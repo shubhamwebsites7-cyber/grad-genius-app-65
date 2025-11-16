@@ -255,12 +255,12 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-3 pb-6">
-          <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <DialogContent className="max-w-[95vw] xl:max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-3 pb-4">
+          <DialogTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             {getModalTitle()}
           </DialogTitle>
-          <DialogDescription className="text-base text-muted-foreground">
+          <DialogDescription className="text-sm md:text-base text-muted-foreground">
             {getModalDescription()}
           </DialogDescription>
         </DialogHeader>
@@ -281,7 +281,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           <>
             {/* Phone Number Input */}
             {user && (
-              <div className="space-y-2 mb-8 max-w-md mx-auto">
+              <div className="space-y-2 mb-6 max-w-md mx-auto">
                 <Label htmlFor="phone" className="text-sm font-medium">
                   Phone Number <span className="text-destructive">*</span>
                 </Label>
@@ -290,58 +290,62 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                   type="tel"
                   placeholder="Enter 10-digit mobile number"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  onChange={(e) => {
+                    // Extract only digits and limit to 10
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setPhoneNumber(digits);
+                  }}
                   maxLength={10}
-                  className="text-center text-lg"
+                  className="text-center text-lg tracking-wide"
                 />
                 <p className="text-xs text-muted-foreground text-center">
-                  Required for payment processing
+                  Please enter a valid 10-digit phone number
                 </p>
               </div>
             )}
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
               {plans.map((plan) => (
                 <Card 
                   key={plan.id} 
-                  className={`relative flex flex-col ${
+                  className={`relative flex flex-col transition-all duration-300 hover:shadow-lg ${
                     plan.is_popular 
-                      ? 'border-primary ring-2 ring-primary/30' 
-                      : 'border-border'
+                      ? 'border-primary ring-2 ring-primary/30 shadow-md' 
+                      : 'border-border hover:border-primary/50'
                   }`}
                 >
                   {plan.is_popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                      <Badge className="bg-primary text-primary-foreground px-3 py-1 shadow-md">
                         <Sparkles className="h-3 w-3 mr-1 inline" />
                         Most Popular
                       </Badge>
                     </div>
                   )}
                   
-                  <CardHeader className="text-center pb-6 pt-8">
-                    <CardTitle className="text-xl font-bold mb-4">
+                  <CardHeader className="text-center pb-4 pt-8 space-y-3">
+                    <CardTitle className="text-2xl font-bold">
                       {getDurationLabel(plan.duration_months)}
                     </CardTitle>
                     
                     {plan.pricing ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                          <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+                          <Badge variant="secondary" className="bg-success/10 text-success border-success/20 text-xs">
                             Save {plan.pricing.discount_percentage}%
                           </Badge>
                         )}
                         
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="space-y-1">
                           {plan.pricing.original_price && (
-                            <span className="text-base md:text-lg text-muted-foreground line-through">
+                            <div className="text-sm text-muted-foreground line-through">
                               {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                            </span>
+                            </div>
                           )}
-                          <span className="text-2xl md:text-3xl font-bold text-foreground">
+                          <div className="text-3xl font-bold text-foreground">
                             {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -351,9 +355,9 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                     )}
                   </CardHeader>
                   
-                  <CardContent className="pt-0 flex-1 flex flex-col justify-between">
+                  <CardContent className="pt-0 flex-1 flex flex-col justify-between space-y-4">
                     {plan.description && (
-                      <p className="text-center text-sm text-muted-foreground mb-4 min-h-[3rem]">
+                      <p className="text-center text-sm text-muted-foreground leading-relaxed">
                         {plan.description}
                       </p>
                     )}
@@ -361,7 +365,7 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                     <Button 
                       variant={plan.is_popular ? "default" : "outline"} 
                       size="lg" 
-                      className="w-full mt-auto"
+                      className="w-full mt-auto font-semibold"
                       onClick={() => handlePlanPurchase(plan)}
                       disabled={!plan.pricing || processingPayment === plan.id}
                     >
