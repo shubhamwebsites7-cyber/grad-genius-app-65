@@ -621,44 +621,6 @@ const Pricing = () => {
                 })}
               </div>
 
-              {/* Proceed to Payment Button - Shown when plan is selected */}
-              {selectedPlan && !showDownloadBanner && (
-                <div className="max-w-5xl mx-auto mt-6 mb-12 animate-fade-in">
-                  <Card className="border-2 border-primary/20 bg-primary/5">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="text-center md:text-left">
-                          <h3 className="text-lg font-semibold text-foreground mb-1">
-                            Ready to activate your plan?
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {plans.find(p => p.id === selectedPlan)?.name || 'Selected plan'} • 
-                            3 days free trial included • Cancel anytime
-                          </p>
-                        </div>
-                        <Button
-                          size="lg"
-                          className="w-full md:w-auto font-semibold min-w-[200px]"
-                          onClick={handlePlanPurchase}
-                          disabled={processingPayment !== null}
-                        >
-                          {processingPayment ? (
-                            <>
-                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              Continue to Payment
-                              <Check className="ml-2 h-5 w-5" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
 
               {/* Premium Features Section */}
               <PremiumFeatures />
