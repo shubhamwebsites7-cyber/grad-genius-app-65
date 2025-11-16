@@ -886,7 +886,8 @@ const SectionResources = () => {
 
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredAndSortedResources.map((resource, index) => {
+            {/* Show accessible resources */}
+            {filteredAndSortedResources.slice(0, subscription.status === 'trial' ? 3 : undefined).map((resource, index) => {
                 const IconComponent = getResourceIcon(resource.type);
                 
                 return (
@@ -999,16 +1000,69 @@ const SectionResources = () => {
                   </Card>
                 );
               })}
+
+              {/* Show locked resources for trial users */}
+              {subscription.status === 'trial' && filteredAndSortedResources.length > 3 && 
+                filteredAndSortedResources.slice(3).map((resource, index) => {
+                  const IconComponent = getResourceIcon(resource.type);
+                  
+                  return (
+                    <Link to="/pricing" key={`locked-${resource.id}`}>
+                      <Card 
+                        className="relative hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer opacity-60 hover:opacity-80"
+                      >
+                        {/* Blur overlay */}
+                        <div className="absolute inset-0 backdrop-blur-sm bg-background/50 rounded-lg z-10 flex items-center justify-center">
+                          <div className="text-center p-4">
+                            <Lock className="h-8 w-8 text-warning mx-auto mb-2" />
+                            <p className="text-sm font-semibold text-foreground">Upgrade to Unlock</p>
+                          </div>
+                        </div>
+                        
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${
+                              resource.type === 'video' ? 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400' :
+                              resource.type === 'pdf' ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400' :
+                              'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400'
+                            }`}>
+                              <IconComponent className="h-5 w-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-lg line-clamp-2 flex-1">
+                                {resource.title}
+                              </CardTitle>
+                              {resource.topicName && (
+                                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                  <BookOpen className="h-3 w-3" />
+                                  {resource.topicName}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="space-y-4">
+                          {resource.description && (
+                            <CardDescription className="text-sm line-clamp-2">
+                              {resource.description}
+                            </CardDescription>
+                          )}
+                          <div className="h-20" />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })
+              }
             </div>
 
-            {/* Resource Limit Info for Free/Trial Users */}
-            {(!subscription.isPremium || subscription.status === 'trial') && resources.length > 3 && (
+            {/* Resource Limit Info for Trial Users Only */}
+            {subscription.status === 'trial' && resources.length > 3 && (
               <Alert className="mb-8">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {subscription.status === 'trial' 
-                    ? 'Free trial users can access 3 resources per topic. Upgrade to unlock all resources!'
-                    : 'Free users can access 3 resources per topic. Upgrade to premium to unlock all resources!'}
+                  Free trial users can access 3 resources per topic. Upgrade to unlock all resources!
                   <Link to="/pricing" className="ml-2 underline font-medium">
                     View Plans
                   </Link>

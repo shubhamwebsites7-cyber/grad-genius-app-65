@@ -69,7 +69,7 @@ interface Exam {
 
 const ExamDetail = () => {
   const { examId } = useParams<{ examId: string }>();
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState('default');
@@ -144,18 +144,8 @@ const ExamDetail = () => {
 
       if (topicsError) throw topicsError;
 
-      // Check user's subscription status
-      let hasActiveSubscription = false;
-      if (user) {
-        const { data: subscriptionData } = await supabase
-          .from('user_subscriptions')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .maybeSingle();
-        
-        hasActiveSubscription = !!subscriptionData;
-      }
+      // Check user's subscription status - trial and paid users get all topics
+      const hasActiveSubscription = subscription.isPremium; // This includes both trial and paid users
 
       // Fetch user progress
       let completedIds = new Set<string>();
@@ -248,7 +238,7 @@ const ExamDetail = () => {
               ? voteDifficulty 
               : baseDifficulty;
             
-            // Free users: only first 3 topics are accessible per subject
+            // Trial and paid users: all topics accessible. Free users: only first 3 topics
             const isAccessible = hasActiveSubscription || index < 3;
             
             return {
