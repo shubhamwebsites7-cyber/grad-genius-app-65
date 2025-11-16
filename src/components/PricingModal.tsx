@@ -327,29 +327,22 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                     
                     {plan.pricing ? (
                       <div className="space-y-3">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="text-4xl font-bold text-foreground">
-                            {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                          </div>
-                        </div>
-                        
-                        {plan.pricing.original_price && (
-                          <div className="text-sm text-muted-foreground">
-                            <span className="line-through">
-                              {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                            </span>
-                          </div>
-                        )}
-                        
                         {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
                           <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
                             Save {plan.pricing.discount_percentage}%
                           </Badge>
                         )}
-
-                        <p className="text-xs text-muted-foreground mt-2">
-                          per {plan.duration_months === 1 ? 'month' : `${plan.duration_months} months`}
-                        </p>
+                        
+                        <div className="flex items-center justify-center gap-2">
+                          {plan.pricing.original_price && (
+                            <span className="text-base md:text-lg text-muted-foreground line-through">
+                              {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                            </span>
+                          )}
+                          <span className="text-2xl md:text-3xl font-bold text-foreground">
+                            {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-sm text-muted-foreground">
