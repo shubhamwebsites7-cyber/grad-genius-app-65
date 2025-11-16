@@ -277,7 +277,7 @@ export const UnifiedSubscriptionCard = () => {
             <span className="text-sm font-medium">{subscriptionData.nextBilling}</span>
           </div>
           
-          {platform && subscriptionData.isPremium && (
+          {platform && subscriptionData.isPremium && !is_in_trial && (
             <div className="flex items-center justify-between py-2 border-b">
               <span className="text-sm text-muted-foreground">Platform</span>
               <span className="text-sm font-medium capitalize">{platform}</span>
@@ -288,8 +288,8 @@ export const UnifiedSubscriptionCard = () => {
         {/* Progress Section */}
         {showProgress && (
           <div className="space-y-4 pt-2">
-            {/* Trial Progress */}
-            {is_in_trial && (
+            {/* Show only Trial Progress when in trial */}
+            {is_in_trial ? (
               <div className="space-y-3 p-4 bg-blue-500/5 rounded-lg border border-blue-500/10">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium flex items-center gap-2">
@@ -297,39 +297,39 @@ export const UnifiedSubscriptionCard = () => {
                     Free Trial
                   </span>
                   <span className="text-sm font-semibold text-blue-600">
-                    Day {trial_days_elapsed} of {trial_days_total}
+                    Day {trial_days_elapsed + 1} of {trial_days_total}
                   </span>
                 </div>
                 <Progress 
-                  value={(trial_days_elapsed / trial_days_total) * 100} 
+                  value={((trial_days_elapsed + 1) / trial_days_total) * 100} 
                   className="h-2 bg-blue-500/10"
                 />
                 <p className="text-xs text-muted-foreground">
                   {trial_days_total - trial_days_elapsed} days of free access remaining
                 </p>
               </div>
+            ) : (
+              /* Show Current Period Progress when not in trial */
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    Current Period
+                  </span>
+                  <span className="text-sm font-semibold">
+                    Day {elapsed_days} of {total_days}
+                  </span>
+                </div>
+                <Progress value={progress_percentage} className="h-2.5" />
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">{progress_percentage}% completed</span>
+                  <span className="font-medium text-primary">{remaining_days} days left</span>
+                </div>
+              </div>
             )}
 
-            {/* Current Period Progress */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  Current Period
-                </span>
-                <span className="text-sm font-semibold">
-                  Day {elapsed_days} of {total_days}
-                </span>
-              </div>
-              <Progress value={progress_percentage} className="h-2.5" />
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">{progress_percentage}% completed</span>
-                <span className="font-medium text-primary">{remaining_days} days left</span>
-              </div>
-            </div>
-
-            {/* Total Access */}
-            {accumulated_total_days > 0 && (
+            {/* Total Access - only show when not in trial and has accumulated days */}
+            {!is_in_trial && accumulated_total_days > 0 && (
               <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
