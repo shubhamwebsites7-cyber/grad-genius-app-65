@@ -450,14 +450,14 @@ const Pricing = () => {
 
               {/* Download App Banner for Non-Indian Users on Web */}
               {showDownloadBanner && (
-                <div className="animate-fade-in">
+                <div>
                   <DownloadAppBanner countryName={userCountry === 'US' ? 'United States' : 'your country'} />
                 </div>
               )}
 
               {/* Phone Number Input - Only show for Cashfree payments */}
               {user && userCountry === 'IN' && !showDownloadBanner && (
-                <div className="max-w-md mx-auto space-y-2 animate-fade-in">
+                <div className="max-w-md mx-auto space-y-2">
                   <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
                     <Phone className="h-4 w-4" />
                     Phone Number (Required for payment)
@@ -501,21 +501,19 @@ const Pricing = () => {
                     <Card
                       key={plan.id}
                       onClick={() => !showDownloadBanner && setSelectedPlan(plan.id)}
-                      className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg
+                      className={`relative cursor-pointer
                         ${isSelected && !showDownloadBanner
                           ? 'border-primary border-2 shadow-md bg-primary/5'
                           : 'border-border'
                         }
                         ${!showDownloadBanner ? '' : 'opacity-60'}
                         ${plan.is_popular ? 'ring-2 ring-primary/20' : ''}
-                        animate-fade-in
                       `}
-                      style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       {/* Best Value Badge */}
                       {plan.is_popular && (
                         <div className="absolute -top-3 left-4 z-10">
-                          <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-3 py-1 text-xs font-semibold shadow-lg animate-pulse">
+                          <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-3 py-1 text-xs font-semibold shadow-lg">
                             ⭐ Best Value
                           </Badge>
                         </div>
