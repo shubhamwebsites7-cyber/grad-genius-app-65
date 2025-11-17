@@ -630,10 +630,13 @@ const ExamResources = () => {
                 } ${isLocked ? 'opacity-60' : ''}`}
               >
                 {isLocked && (
-                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Lock className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-sm font-medium text-foreground">Locked</p>
+                  <div className="absolute inset-0 bg-background/95 backdrop-blur-md z-10 rounded-lg flex flex-col items-center justify-center gap-3 p-6">
+                    <div className="bg-primary/10 p-4 rounded-full">
+                      <Lock className="h-10 w-10 text-primary" />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="text-lg font-semibold text-foreground">Upgrade to Unlock</p>
+                      <p className="text-sm text-muted-foreground">Get full access to all resources</p>
                     </div>
                   </div>
                 )}
