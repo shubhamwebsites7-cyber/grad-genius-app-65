@@ -31,18 +31,21 @@
       "purpose": "any"
     }
   ],
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "screenshots": [
     {
       "src": "/screenshot-wide.png",
-      "sizes": "1280x720",
+      "sizes": "1897x1080",
       "type": "image/png",
       "form_factor": "wide",
       "label": "ExamTrakr Dashboard"
     },
     {
       "src": "/screenshot-narrow.png",
-      "sizes": "750x1334",
+      "sizes": "1080x2211",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "ExamTrakr Mobile View"
@@ -54,14 +57,24 @@
       "short_name": "Dashboard",
       "description": "Open your exam dashboard",
       "url": "/dashboard",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Exams",
       "short_name": "Exams",
       "description": "View all exams",
       "url": "/exams",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
