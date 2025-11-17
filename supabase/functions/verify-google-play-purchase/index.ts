@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { create } from 'https://deno.land/x/djwt@v3.0.2/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,20 +72,48 @@ serve(async (req) => {
 
     const serviceAccount = JSON.parse(serviceAccountJson);
 
-    // Get access token for Google Play API
-    const jwtHeader = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-    const now = Math.floor(Date.now() / 1000);
-    const jwtPayload = btoa(JSON.stringify({
-      iss: serviceAccount.client_email,
-      scope: 'https://www.googleapis.com/auth/androidpublisher',
-      aud: 'https://oauth2.googleapis.com/token',
-      exp: now + 3600,
-      iat: now,
-    }));
+    // Helper function to convert PEM to binary for Web Crypto API
+    const pemToBinary = (pem: string): Uint8Array => {
+      const pemContents = pem
+        .replace(/-----BEGIN PRIVATE KEY-----/, '')
+        .replace(/-----END PRIVATE KEY-----/, '')
+        .replace(/\s/g, '');
+      const binaryString = atob(pemContents);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    };
 
-    // Note: In production, use proper JWT signing with RS256
-    // This is simplified for demonstration
-    const jwt = `${jwtHeader}.${jwtPayload}`;
+    // Import the private key for signing
+    const privateKeyData = pemToBinary(serviceAccount.private_key);
+    const privateKey = await crypto.subtle.importKey(
+      'pkcs8',
+      privateKeyData.buffer as ArrayBuffer,
+      {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: 'SHA-256',
+      },
+      false,
+      ['sign']
+    );
+
+    // Create JWT with proper RS256 signature
+    const now = Math.floor(Date.now() / 1000);
+    const jwt = await create(
+      { alg: 'RS256', typ: 'JWT' },
+      {
+        iss: serviceAccount.client_email,
+        scope: 'https://www.googleapis.com/auth/androidpublisher',
+        aud: 'https://oauth2.googleapis.com/token',
+        exp: now + 3600,
+        iat: now,
+      },
+      privateKey
+    );
+
+    console.log('✅ JWT signed successfully with RS256');
 
     // Get access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
