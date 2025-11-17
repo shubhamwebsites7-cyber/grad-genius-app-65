@@ -66,8 +66,35 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
   useEffect(() => {
     if (open) {
       fetchPricingPlans();
+      if (user) {
+        fetchUserPhoneNumber();
+      }
     }
-  }, [open]);
+  }, [open, user]);
+
+  const fetchUserPhoneNumber = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (!error && data) {
+        const userData = data as Record<string, any>;
+        if (userData.phone_number) {
+          // Extract only digits and take last 10 digits (trim from front)
+          const cleanPhone = (userData.phone_number as string).replace(/\D/g, '');
+          const last10Digits = cleanPhone.slice(-10);
+          setPhoneNumber(last10Digits);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching phone number:', error);
+    }
+  };
 
   const fetchPricingPlans = async () => {
     try {
@@ -291,8 +318,9 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                   placeholder="Enter 10-digit mobile number"
                   value={phoneNumber}
                   onChange={(e) => {
-                    // Extract only digits and limit to 10
-                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    // Remove non-digits and take last 10 digits (trim from front)
+                    const cleaned = e.target.value.replace(/\D/g, '');
+                    const digits = cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
                     setPhoneNumber(digits);
                   }}
                   maxLength={10}

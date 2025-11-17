@@ -128,7 +128,10 @@ const Pricing = () => {
       if (!error && data) {
         const userData = data as Record<string, any>;
         if (userData.phone_number) {
-          setPhoneNumber(userData.phone_number as string);
+          // Extract only digits and take last 10 digits (trim from front)
+          const cleanPhone = (userData.phone_number as string).replace(/\D/g, '');
+          const last10Digits = cleanPhone.slice(-10);
+          setPhoneNumber(last10Digits);
         }
       }
     } catch (error) {
@@ -468,7 +471,9 @@ const Pricing = () => {
                     placeholder="Enter 10-digit mobile number"
                     value={phoneNumber}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      // Remove non-digits and take last 10 digits (trim from front)
+                      const cleaned = e.target.value.replace(/\D/g, '');
+                      const value = cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
                       setPhoneNumber(value);
                       if (phoneError) setPhoneError('');
                     }}
