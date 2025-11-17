@@ -379,11 +379,6 @@ const SectionResources = () => {
       }
     });
 
-    // Apply resource limit for free/trial users (only first 3 resources)
-    if (!subscription.isPremium || subscription.status === 'trial') {
-      return sorted.slice(0, 3);
-    }
-
     return sorted;
   }, [resources, searchQuery, sortBy, subscription]);
 
@@ -886,17 +881,25 @@ const SectionResources = () => {
 
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {/* Show accessible resources */}
-            {filteredAndSortedResources.slice(0, subscription.status === 'trial' ? 3 : undefined).map((resource, index) => {
+            {filteredAndSortedResources.map((resource, index) => {
                 const IconComponent = getResourceIcon(resource.type);
+                const isLocked = (!subscription.isPremium || subscription.status === 'trial') && index >= 3;
                 
                 return (
                   <Card 
                     key={resource.id} 
                     className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative ${
                       resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-                    }`}
+                    } ${isLocked ? 'opacity-60' : ''}`}
                   >
+                    {isLocked && (
+                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg flex items-center justify-center">
+                        <div className="text-center p-4">
+                          <Lock className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm font-medium text-foreground">Locked</p>
+                        </div>
+                      </div>
+                    )}
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg ${
