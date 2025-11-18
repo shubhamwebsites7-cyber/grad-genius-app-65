@@ -630,13 +630,13 @@ const ExamResources = () => {
                 } ${isLocked ? 'blur-sm' : ''}`}
               >
                 {isLocked && (
-                  <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 rounded-lg flex flex-col items-center justify-center gap-2 p-4">
-                    <div className="bg-primary/10 p-3 rounded-full">
-                      <Lock className="h-8 w-8 text-primary" />
+                  <div className="absolute inset-0 bg-background/90 backdrop-blur-sm z-10 rounded-lg flex flex-col items-center justify-center gap-3 p-6">
+                    <div className="bg-primary/10 p-4 rounded-full">
+                      <Lock className="h-10 w-10 text-primary" />
                     </div>
                     <div className="text-center space-y-1">
-                      <p className="text-base font-semibold text-foreground">Upgrade to Unlock</p>
-                      <p className="text-xs text-muted-foreground">Get full access to all resources</p>
+                      <p className="text-lg font-semibold text-foreground">Upgrade to Unlock</p>
+                      <p className="text-sm text-muted-foreground">Upgrade plan to view this resource</p>
                     </div>
                   </div>
                 )}
