@@ -34,8 +34,7 @@ import {
   BookmarkCheck,
   Loader2,
   AlertCircle,
-  GraduationCap,
-  Lock
+  GraduationCap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -620,26 +619,14 @@ const ExamResources = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredAndSortedResources.map((resource, index) => {
             const IconComponent = getResourceIcon(resource.type);
-            const isLocked = (!subscription.isPremium || subscription.status === 'trial') && index >= 3;
             
             return (
               <Card 
                 key={resource.id} 
                 className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative ${
                   resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-                } ${isLocked ? 'blur-sm' : ''}`}
+                }`}
               >
-                {isLocked && (
-                  <div className="absolute inset-0 bg-background/90 backdrop-blur-sm z-10 rounded-lg flex flex-col items-center justify-center gap-3 p-6">
-                    <div className="bg-primary/10 p-4 rounded-full">
-                      <Lock className="h-10 w-10 text-primary" />
-                    </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-lg font-semibold text-foreground">Upgrade to Unlock</p>
-                      <p className="text-sm text-muted-foreground">Upgrade plan to view this resource</p>
-                    </div>
-                  </div>
-                )}
                 <CardHeader className="pb-3">
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-lg ${
@@ -756,69 +743,7 @@ const ExamResources = () => {
               </Card>
             );
           })}
-
-          {/* Show locked resources for trial users */}
-          {subscription.status === 'trial' && filteredAndSortedResources.length > 3 && 
-            filteredAndSortedResources.slice(3).map((resource, index) => {
-              const IconComponent = getResourceIcon(resource.type);
-              
-              return (
-                <Link to="/pricing" key={`locked-${resource.id}`}>
-                  <Card 
-                    className="relative hover:shadow-lg transition-all duration-200 hover:scale-[1.02] cursor-pointer opacity-60 hover:opacity-80"
-                  >
-                    {/* Blur overlay */}
-                    <div className="absolute inset-0 backdrop-blur-sm bg-background/50 rounded-lg z-10 flex items-center justify-center">
-                      <div className="text-center p-4">
-                        <Lock className="h-8 w-8 text-warning mx-auto mb-2" />
-                        <p className="text-sm font-semibold text-foreground">Upgrade to Unlock</p>
-                      </div>
-                    </div>
-                    
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          resource.type === 'video' ? 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400' :
-                          resource.type === 'pdf' ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400' :
-                          'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400'
-                        }`}>
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-lg line-clamp-2 flex-1">
-                            {resource.title}
-                          </CardTitle>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-4">
-                      {resource.description && (
-                        <CardDescription className="text-sm line-clamp-2">
-                          {resource.description}
-                        </CardDescription>
-                      )}
-                      <div className="h-20" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })
-          }
         </div>
-
-        {/* Resource Limit Info for Trial Users Only */}
-        {subscription.status === 'trial' && resources.length > 3 && (
-          <Alert className="mb-8">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Free trial users can access 3 resources per topic. Upgrade to unlock all resources!
-              <Link to="/pricing" className="ml-2 underline font-medium">
-                View Plans
-              </Link>
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Empty State */}
         {filteredAndSortedResources.length === 0 && (
