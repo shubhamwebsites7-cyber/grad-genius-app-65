@@ -496,9 +496,9 @@ const Pricing = () => {
                 </div>
               )}
 
-              {/* Pricing Plans - Horizontal Row Layout */}
-              <div className="space-y-4 max-w-5xl mx-auto mb-12">
-                {plans.map((plan, index) => {
+              {/* Pricing Plans - Grid Layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-12">
+                {plans.map((plan) => {
                   const isGooglePlay = shouldUseGooglePlay(userCountry);
                   const isSelected = selectedPlan === plan.id;
                   
@@ -506,118 +506,80 @@ const Pricing = () => {
                     <Card
                       key={plan.id}
                       onClick={() => !showDownloadBanner && setSelectedPlan(plan.id)}
-                      className={`relative cursor-pointer
-                        ${isSelected && !showDownloadBanner
-                          ? 'border-primary border-2 shadow-md bg-primary/5'
+                      className={`relative cursor-pointer transition-all duration-200 ${
+                        isSelected && !showDownloadBanner
+                          ? 'border-primary border-2 shadow-md'
                           : 'border-border'
                         }
-                        ${!showDownloadBanner ? '' : 'opacity-60'}
-                        ${plan.is_popular ? 'ring-2 ring-primary/20' : ''}
+                        ${!showDownloadBanner ? 'hover:shadow-md' : 'opacity-60'}
+                        ${plan.is_popular ? 'shadow-sm' : ''}
                       `}
                     >
                       {/* Best Value Badge */}
                       {plan.is_popular && (
-                        <div className="absolute -top-3 left-4 z-10">
-                          <Badge className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground px-3 py-1 text-xs font-semibold shadow-lg">
-                            ⭐ Best Value
+                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+                          <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-xs">
+                            Best Value
                           </Badge>
                         </div>
                       )}
 
-                      <CardContent className="p-4 md:p-6">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          {/* Left Section: Plan Info */}
-                          <div className="flex-1 space-y-3">
-                            {/* Plan Name and Duration */}
-                            <div className="flex items-start gap-3 flex-wrap">
-                              <div>
-                                <h3 className="text-lg md:text-xl font-bold text-foreground">
-                                  {getDurationLabel(plan.duration_months)}
-                                </h3>
-                                {plan.description && (
-                                  <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                                    {plan.description}
-                                  </p>
-                                )}
-                              </div>
-                              
-                              {/* Discount Badge - Mobile/Tablet */}
-                              {plan.pricing?.discount_percentage && (
-                                <Badge variant="secondary" className="bg-success/10 text-success text-xs font-semibold">
-                                  Save {plan.pricing.discount_percentage}%
-                                </Badge>
-                              )}
-                            </div>
-
-                            {/* Pricing Display */}
-                            {plan.pricing ? (
-                              <div className="flex items-center gap-3 flex-wrap">
-                                {plan.pricing.original_price && (
-                                  <span className="text-base text-muted-foreground line-through">
-                                    {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                                  </span>
-                                )}
-                                <span className="text-2xl md:text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                                  {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  /{plan.duration_months === 1 ? 'month' : 
-                                    plan.duration_months === 3 ? '3 months' : 
-                                    plan.duration_months === 6 ? '6 months' : 'year'}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="text-sm text-muted-foreground">Contact Us</div>
-                            )}
-
-                            {/* Quick Features - Desktop Only */}
-                            <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                              <div className="flex items-center gap-1">
-                                <Check className="h-3 w-3 text-success" />
-                                <span>Unlimited Exams</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Check className="h-3 w-3 text-success" />
-                                <span>All Topics</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Check className="h-3 w-3 text-success" />
-                                <span>Full Resources</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Section: Select Button */}
-                          <div className="flex items-center justify-center md:justify-end">
-                            {!showDownloadBanner && plan.pricing && (
-                              <Button 
-                                size="lg" 
-                                className="w-full md:w-auto md:min-w-[160px] font-semibold"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedPlan(plan.id);
-                                  handlePlanPurchase();
-                                }}
-                                disabled={processingPayment !== null}
-                                variant={isSelected ? 'default' : 'outline'}
-                              >
-                                {processingPayment === plan.id ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    Processing...
-                                  </>
-                                ) : isSelected ? (
-                                  <>
-                                    <Check className="mr-2 h-4 w-4" />
-                                    Selected
-                                  </>
-                                ) : (
-                                  'Select Plan'
-                                )}
-                              </Button>
-                            )}
-                          </div>
+                      <CardContent className="p-4 pt-6 space-y-4">
+                        {/* Duration */}
+                        <div className="text-center">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {getDurationLabel(plan.duration_months)}
+                          </h3>
                         </div>
+                        
+                        {/* Pricing */}
+                        {plan.pricing ? (
+                          <div className="text-center space-y-1">
+                            {plan.pricing.original_price && (
+                              <div className="text-xs text-muted-foreground line-through">
+                                {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                              </div>
+                            )}
+                            <div className="text-2xl font-bold text-foreground">
+                              {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                            </div>
+                            {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
+                              <Badge variant="secondary" className="bg-success/10 text-success text-xs">
+                                Save {plan.pricing.discount_percentage}%
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center text-xs text-muted-foreground">
+                            Pricing not available
+                          </div>
+                        )}
+                        
+                        {/* Button */}
+                        <Button 
+                          variant={plan.is_popular ? "default" : "outline"} 
+                          size="sm"
+                          className="w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!showDownloadBanner) {
+                              setSelectedPlan(plan.id);
+                              setTimeout(() => handlePlanPurchase(), 0);
+                            }
+                          }}
+                          disabled={showDownloadBanner || processingPayment === plan.id}
+                        >
+                          {processingPayment === plan.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                              Processing...
+                            </>
+                          ) : isGooglePlay ? (
+                            'Subscribe'
+                          ) : (
+                            'Choose Plan'
+                          )}
+                        </Button>
                       </CardContent>
                     </Card>
                   );

@@ -333,80 +333,70 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
             )}
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {plans.map((plan) => (
                 <Card 
                   key={plan.id} 
-                  className={`relative flex flex-col transition-all duration-300 hover:shadow-lg ${
+                  className={`relative transition-all duration-200 hover:shadow-md ${
                     plan.is_popular 
-                      ? 'border-primary ring-2 ring-primary/30 shadow-md' 
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-primary shadow-sm' 
+                      : 'border-border'
                   }`}
                 >
                   {plan.is_popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                      <Badge className="bg-primary text-primary-foreground px-3 py-1 shadow-md">
-                        <Sparkles className="h-3 w-3 mr-1 inline" />
-                        Most Popular
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+                      <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-xs">
+                        Best Value
                       </Badge>
                     </div>
                   )}
                   
-                  <CardHeader className="text-center pb-4 pt-8 space-y-3">
-                    <CardTitle className="text-2xl font-bold">
-                      {getDurationLabel(plan.duration_months)}
-                    </CardTitle>
+                  <CardContent className="p-4 pt-6 space-y-4">
+                    {/* Duration */}
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {getDurationLabel(plan.duration_months)}
+                      </h3>
+                    </div>
                     
+                    {/* Pricing */}
                     {plan.pricing ? (
-                      <div className="space-y-2">
+                      <div className="text-center space-y-1">
+                        {plan.pricing.original_price && (
+                          <div className="text-xs text-muted-foreground line-through">
+                            {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                          </div>
+                        )}
+                        <div className="text-2xl font-bold text-foreground">
+                          {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                        </div>
                         {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                          <Badge variant="secondary" className="bg-success/10 text-success border-success/20 text-xs">
+                          <Badge variant="secondary" className="bg-success/10 text-success text-xs">
                             Save {plan.pricing.discount_percentage}%
                           </Badge>
                         )}
-                        
-                        <div className="space-y-1">
-                          {plan.pricing.original_price && (
-                            <div className="text-sm text-muted-foreground line-through">
-                              {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                            </div>
-                          )}
-                          <div className="text-3xl font-bold text-foreground">
-                            {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                          </div>
-                        </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-center text-xs text-muted-foreground">
                         Pricing not available
                       </div>
                     )}
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0 flex-1 flex flex-col justify-between space-y-4">
-                    {plan.description && (
-                      <p className="text-center text-sm text-muted-foreground leading-relaxed">
-                        {plan.description}
-                      </p>
-                    )}
                     
+                    {/* Button */}
                     <Button 
                       variant={plan.is_popular ? "default" : "outline"} 
-                      size="lg" 
-                      className="w-full mt-auto font-semibold"
+                      size="sm"
+                      className="w-full"
                       onClick={() => handlePlanPurchase(plan)}
                       disabled={!plan.pricing || processingPayment === plan.id}
                     >
                       {processingPayment === plan.id ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                           Processing...
                         </>
                       ) : (
-                        <>
-                          Choose Plan
-                          {plan.is_popular && <Sparkles className="ml-2 h-4 w-4" />}
-                        </>
+                        'Choose Plan'
                       )}
                     </Button>
                   </CardContent>
