@@ -5,3 +5,12 @@ verify_jwt = true
 
 [functions.cashfree-webhook]
 verify_jwt = false
+
+[functions.complete-payment]
+verify_jwt = true
+
+[functions.verify-google-play-purchase]
+verify_jwt = true
+
+[functions.submit-deletion-request]
+verify_jwt = false
