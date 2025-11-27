@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HelpCircle, ExternalLink } from 'lucide-react';
+import { HelpCircle, ExternalLink, AlertTriangle } from 'lucide-react';
 
 export const SupportCard = () => {
   return (
@@ -22,9 +22,18 @@ export const SupportCard = () => {
           </Link>
         </Button>
         
-        <Button variant="ghost" className="w-full justify-start">
-          <HelpCircle className="h-4 w-4 mr-2" />
-          <span>FAQ</span>
+        <Button variant="ghost" className="w-full justify-start" asChild>
+          <Link to="/faq">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            <span>FAQ</span>
+          </Link>
+        </Button>
+
+        <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" asChild>
+          <Link to="/delete-account">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            <span>Delete Account</span>
+          </Link>
         </Button>
       </CardContent>
     </Card>
