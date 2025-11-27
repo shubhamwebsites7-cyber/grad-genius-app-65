@@ -40,6 +40,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Refund = lazy(() => import("./pages/Refund"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 
 
 // Loading component
@@ -95,6 +96,7 @@ const App = () => (
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/refund" element={<Refund />} />
                   <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/delete-account" element={<DeleteAccount />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
