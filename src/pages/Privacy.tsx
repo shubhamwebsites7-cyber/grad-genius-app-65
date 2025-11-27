@@ -29,38 +29,75 @@ const Privacy = () => {
                 </p>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">1. Information We Collect</h2>
-                <p className="text-foreground leading-relaxed mb-6">
-                  We may collect your name, email, phone number, and usage data when you create an account or interact with our platform.
+                <p className="text-foreground leading-relaxed mb-4">
+                  We may collect the following information when you use our platform or app:
                 </p>
+                <ul className="list-disc pl-6 mb-6 text-foreground">
+                  <li>Name</li>
+                  <li>Email address</li>
+                  <li>Phone number</li>
+                  <li>Exam preferences and progress</li>
+                  <li>Device & usage data (analytics)</li>
+                  <li>Payment-related information processed securely by Razorpay</li>
+                </ul>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">2. How We Use Your Information</h2>
+                <p className="text-foreground leading-relaxed mb-4">
+                  We use your information to:
+                </p>
                 <ul className="list-disc pl-6 mb-6 text-foreground">
-                  <li>To provide and improve our services</li>
-                  <li>To process payments and subscriptions securely via Razorpay</li>
-                  <li>To send important updates, offers, or notifications (you can opt out anytime)</li>
+                  <li>Provide and improve ExamTrakr services</li>
+                  <li>Manage your account and progress</li>
+                  <li>Process secure payments and subscriptions (via Razorpay)</li>
+                  <li>Send important updates or notifications (optional)</li>
                 </ul>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">3. Data Security</h2>
+                <p className="text-foreground leading-relaxed mb-4">
+                  We use industry-standard security practices.
+                  Your data is securely managed using trusted services like:
+                </p>
+                <ul className="list-disc pl-6 mb-4 text-foreground">
+                  <li>Supabase (authentication & database)</li>
+                  <li>Razorpay (payments)</li>
+                </ul>
                 <p className="text-foreground leading-relaxed mb-6">
-                  We use industry-standard security measures and trusted third-party services like Supabase and Razorpay to keep your information safe.
+                  We do not store your full card details on our servers.
                 </p>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">4. Third-Party Services</h2>
                 <p className="text-foreground leading-relaxed mb-6">
-                  Our payment gateway partner, Razorpay, may collect and process your payment information securely as per their own privacy policies.
+                  We may use third-party tools such as Supabase, Razorpay, and analytics services.
+                  These services process data according to their own privacy policies.
                 </p>
 
                 <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">5. Your Rights</h2>
+                <p className="text-foreground leading-relaxed mb-4">
+                  You can request to:
+                </p>
+                <ul className="list-disc pl-6 mb-4 text-foreground">
+                  <li>Access your data</li>
+                  <li>Update your data</li>
+                  <li>Delete your data</li>
+                </ul>
                 <p className="text-foreground leading-relaxed mb-6">
-                  You can request to access, update, or delete your data anytime by contacting{' '}
+                  Contact us at{' '}
                   <a href="mailto:examtrakr@gmail.com" className="text-primary hover:underline">
                     examtrakr@gmail.com
-                  </a>.
+                  </a>{' '}
+                  for any requests.
                 </p>
 
-                <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">6. Policy Updates</h2>
+                <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">6. Children's Privacy</h2>
+                <p className="text-foreground leading-relaxed mb-6">
+                  ExamTrakr is not intended for children under 13.
+                  If you believe a child has provided personal data, contact us for removal.
+                </p>
+
+                <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">7. Policy Updates</h2>
                 <p className="text-foreground leading-relaxed">
-                  We may revise this policy occasionally. Any changes will be posted on this page.
+                  We may update this privacy policy from time to time.
+                  Any changes will be posted on this page.
                 </p>
               </CardContent>
             </Card>
