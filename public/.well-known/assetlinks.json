@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "app.lovable.twa",
-    "sha256_cert_fingerprints": ["REPLACE_WITH_YOUR_SHA256_FINGERPRINT"]
+    "package_name": "com.examtrakr.www.twa",
+    "sha256_cert_fingerprints": ["59:38:55:51:D7:6A:58:4F:6C:C3:8E:4E:B5:CB:F7:CE:FE:D5:BD:27:BD:36:40:F1:E5:B9:3D:1A:58:1D:36:4C"]
   }
 }]
