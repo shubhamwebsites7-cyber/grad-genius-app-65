@@ -76,11 +76,18 @@ export const GooglePlayPaymentProcessor = ({
     try {
       // Get Google Play product ID
       const productId = getGooglePlayProductId(durationMonths);
-      console.log('🛒 Initiating Google Play purchase:', { planId, productId, durationMonths });
+      console.log('🛒 Initiating Google Play purchase:', { 
+        planId, 
+        productId, 
+        durationMonths,
+        userId: user.id 
+      });
 
       // Initiate purchase
       toast.info('Opening Google Play payment...');
+      console.log('📱 Calling purchasePlan with product:', productId);
       const purchaseDetails = await googlePlayBilling.purchasePlan(productId);
+      console.log('🎉 purchasePlan returned successfully:', purchaseDetails);
       
       console.log('✅ Purchase completed:', purchaseDetails);
       toast.success('Purchase successful! Verifying...');

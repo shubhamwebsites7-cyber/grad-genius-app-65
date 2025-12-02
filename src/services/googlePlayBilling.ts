@@ -85,9 +85,28 @@ export const getProducts = async (productIds: string[]): Promise<GooglePlayProdu
  */
 export const purchasePlan = async (productId: string): Promise<PurchaseDetails> => {
   try {
+    console.log('🔍 Starting purchase flow for product:', productId);
     const service = await getService();
+    console.log('✅ Digital Goods service obtained');
+    
+    // First, verify the product exists
+    console.log('🔍 Checking if product exists in Play Console...');
+    try {
+      const productDetails = await service.getDetails([productId]);
+      console.log('📦 Product details:', productDetails);
+      
+      if (!productDetails || productDetails.length === 0) {
+        throw new Error(`Product ${productId} not found in Google Play Console. Please check your product configuration.`);
+      }
+      
+      console.log('✅ Product exists, proceeding with purchase...');
+    } catch (detailsError) {
+      console.error('❌ Error getting product details:', detailsError);
+      throw new Error(`Product ${productId} not configured in Google Play Console. Please contact support.`);
+    }
     
     // Create payment request
+    console.log('💳 Creating payment request...');
     const paymentRequest = new (window as any).PaymentRequest([{
       supportedMethods: 'https://play.google.com/billing',
       data: {
@@ -95,14 +114,19 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
       }
     }]);
     
+    console.log('✅ Payment request created, showing UI...');
+    
     // Show payment UI
     const paymentResponse = await paymentRequest.show();
+    console.log('✅ Payment UI shown, user interacted');
     
     // Complete the payment
     await paymentResponse.complete('success');
+    console.log('✅ Payment completed');
     
     // Get purchase details
     const { purchaseToken } = paymentResponse.details;
+    console.log('✅ Purchase token received:', purchaseToken?.substring(0, 20) + '...');
     
     return {
       itemId: productId,
@@ -111,11 +135,26 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
       purchaseState: 'purchased'
     };
   } catch (error: any) {
+    console.error('❌ Purchase error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    
     if (error.name === 'AbortError') {
       throw new Error('Purchase cancelled by user');
     }
+    
+    if (error.message && error.message.includes('not found')) {
+      throw error; // Re-throw product not found errors
+    }
+    
+    if (error.message && error.message.includes('not configured')) {
+      throw error; // Re-throw configuration errors
+    }
+    
     console.error('Error during purchase:', error);
-    throw new Error('Failed to complete purchase. Please try again.');
+    throw new Error(`Purchase failed: ${error.message || 'Unknown error'}. Please try again.`);
   }
 };
 
