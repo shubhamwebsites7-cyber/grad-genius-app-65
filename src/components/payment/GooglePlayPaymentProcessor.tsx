@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import * as googlePlayBilling from '@/services/googlePlayBilling';
 import { getGooglePlayProductId } from '@/config/googlePlayProducts';
+import { getPlatform, shouldUseGooglePlay } from '@/utils/platformDetection';
 
 interface GooglePlayPaymentProcessorProps {
   planId: string;
@@ -35,9 +36,33 @@ export const GooglePlayPaymentProcessor = ({
   const [billingAvailable, setBillingAvailable] = useState<boolean | null>(null);
 
   // Check if Google Play Billing is available
-  useState(() => {
-    googlePlayBilling.isGooglePlayBillingAvailable().then(setBillingAvailable);
-  });
+  useEffect(() => {
+    const checkBillingAvailability = async () => {
+      console.log('=== Google Play Billing Check ===');
+      console.log('Checking billing availability...');
+      
+      const available = await googlePlayBilling.isGooglePlayBillingAvailable();
+      console.log('Billing available result:', available);
+      
+      // Additional debugging info
+      const platform = getPlatform();
+      console.log('Current platform:', platform);
+      console.log('Should use Google Play:', shouldUseGooglePlay());
+      
+      setBillingAvailable(available);
+      
+      if (!available) {
+        console.error('Google Play Billing not available. Possible reasons:');
+        console.error('1. App not installed from Play Store');
+        console.error('2. Digital Goods API not enabled in TWA');
+        console.error('3. Asset links not configured properly');
+        console.error('4. App not signed with release certificate');
+        console.error('5. TWA not configured with Digital Goods API support');
+      }
+    };
+    
+    checkBillingAvailability();
+  }, []);
 
   const handlePurchase = async () => {
     if (!user) {

@@ -12,14 +12,22 @@ export type PaymentGateway = 'cashfree' | 'google-play' | 'unavailable';
  * Get current platform type
  */
 export const getPlatform = (): Platform => {
-  if (isPlayStoreApp()) {
+  // Check if running in TWA (Trusted Web Activity) from Play Store
+  const isTWA = document.referrer.includes('android-app://');
+  const hasDigitalGoodsAPI = 'getDigitalGoodsService' in window;
+  
+  // If we have Digital Goods API or it's a TWA, it's a Play Store app
+  if (isTWA || hasDigitalGoodsAPI || isPlayStoreApp()) {
+    console.log('Detected as Play Store app', { isTWA, hasDigitalGoodsAPI, isPlayStoreApp: isPlayStoreApp() });
     return 'playstore-app';
   }
   
   if (isStandalone() && isAndroid()) {
+    console.log('Detected as PWA installed');
     return 'pwa-installed';
   }
   
+  console.log('Detected as web browser');
   return 'web';
 };
 
@@ -109,14 +117,23 @@ export const markAsPlayStoreApp = (): void => {
  * Check if Digital Goods API is available (for PWA Google Play Billing)
  */
 export const isDigitalGoodsAPIAvailable = async (): Promise<boolean> => {
+  console.log('Checking Digital Goods API availability...');
+  console.log('Window has getDigitalGoodsService:', 'getDigitalGoodsService' in window);
+  console.log('User agent:', navigator.userAgent);
+  console.log('Is standalone:', window.matchMedia('(display-mode: standalone)').matches);
+  console.log('Document referrer:', document.referrer);
+  
   if (!('getDigitalGoodsService' in window)) {
+    console.log('Digital Goods API not found in window object');
     return false;
   }
   
   try {
     const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing');
+    console.log('Digital Goods service obtained:', !!service);
     return !!service;
-  } catch {
+  } catch (error) {
+    console.error('Error getting Digital Goods service:', error);
     return false;
   }
 };
