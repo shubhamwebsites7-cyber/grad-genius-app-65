@@ -200,6 +200,7 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
       supportedMethods: 'https://play.google.com/billing',
       data: {
         sku: productId,
+        type: 'subscription'
       }
     }]);
     
