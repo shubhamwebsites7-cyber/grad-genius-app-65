@@ -10,12 +10,13 @@ export interface ProductMapping {
   name: string;
 }
 
-// IMPORTANT: These product IDs must match exactly what you configure in Google Play Console
+// IMPORTANT: For subscriptions, use format: productId:basePlanId
+// These must match your Google Play Console subscription product IDs and base plan IDs
 export const GOOGLE_PLAY_PRODUCT_IDS = {
-  ONE_MONTH: 'examtrakr_1month',
-  THREE_MONTHS: 'examtrakr_3month',
-  SIX_MONTHS: 'examtrakr_6month',
-  TWELVE_MONTHS: 'examtrakr_12month',
+  ONE_MONTH: 'examtrakr_1month:monthly',
+  THREE_MONTHS: 'examtrakr_3month:quarterly',
+  SIX_MONTHS: 'examtrakr_6month:6months',
+  TWELVE_MONTHS: 'examtrakr_12month:12monthspro',
 } as const;
 
 /**
