@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { DownloadAppBanner } from '@/components/DownloadAppBanner';
-import { GooglePlayPaymentProcessor } from '@/components/payment/GooglePlayPaymentProcessor';
+// GooglePlayPaymentProcessor removed - now using direct purchase in handlePlanPurchase
 import { shouldShowAppDownload, shouldUseGooglePlay, getPlatform } from '@/utils/platformDetection';
 import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 import { PremiumFeatures } from '@/components/pricing/PremiumFeatures';
@@ -62,8 +62,7 @@ const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [offer, setOffer] = useState<PricingOffer | null>(null);
   const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [showGooglePlayPayment, setShowGooglePlayPayment] = useState(false);
-  const [selectedPlanForGooglePlay, setSelectedPlanForGooglePlay] = useState<SubscriptionPlan | null>(null);
+  // Removed: showGooglePlayPayment and selectedPlanForGooglePlay - now using direct purchase
   const [platform, setPlatform] = useState<string>('web');
   const [showDownloadBanner, setShowDownloadBanner] = useState(false);
 
@@ -228,8 +227,8 @@ const Pricing = () => {
     }
   };
 
-  const handlePlanPurchase = async () => {
-    const plan = plans.find(p => p.id === selectedPlan);
+  const handlePlanPurchase = async (planToUse?: SubscriptionPlan) => {
+    const plan = planToUse || plans.find(p => p.id === selectedPlan);
     if (!plan) {
       toast({
         title: 'Error',
@@ -257,11 +256,92 @@ const Pricing = () => {
       return;
     }
 
-    // Check if we should use Google Play Billing
+    // Check if we should use Google Play Billing - DIRECT purchase, no popup
     if (shouldUseGooglePlay(userCountry)) {
-      console.log('🎮 Using Google Play Billing');
-      setSelectedPlanForGooglePlay(plan);
-      setShowGooglePlayPayment(true);
+      console.log('🎮 Using Google Play Billing for plan:', plan.name, plan.duration_months);
+      setProcessingPayment(plan.id);
+      
+      try {
+        const { getGooglePlayProductId } = await import('@/config/googlePlayProducts');
+        const { purchasePlan, isGooglePlayBillingAvailable } = await import('@/services/googlePlayBilling');
+        
+        // Check billing availability
+        const isAvailable = await isGooglePlayBillingAvailable();
+        if (!isAvailable) {
+          toast({
+            title: 'Google Play Not Available',
+            description: 'Please install the app from Google Play Store to make purchases.',
+            variant: 'destructive'
+          });
+          setProcessingPayment(null);
+          return;
+        }
+        
+        const productId = getGooglePlayProductId(plan.duration_months);
+        console.log('🛒 Starting purchase for product:', productId);
+        
+        toast({
+          title: 'Opening Google Play',
+          description: 'Please complete payment in Google Play...',
+        });
+        
+        const purchaseDetails = await purchasePlan(productId);
+        console.log('✅ Purchase completed:', purchaseDetails);
+        
+        toast({
+          title: 'Verifying Purchase',
+          description: 'Please wait while we verify your purchase...',
+        });
+        
+        // Verify purchase with backend
+        const { data, error: verifyError } = await supabase.functions.invoke(
+          'verify-google-play-purchase',
+          {
+            body: {
+              purchaseToken: purchaseDetails.purchaseToken,
+              productId: productId,
+              packageName: 'com.examtrakr.app',
+              planId: plan.id
+            }
+          }
+        );
+
+        if (verifyError || !data?.success) {
+          throw new Error(data?.error || 'Failed to verify purchase');
+        }
+
+        toast({
+          title: 'Success!',
+          description: 'Your subscription has been activated.',
+        });
+        
+        navigate('/profile?payment_status=success');
+        
+      } catch (err: any) {
+        console.error('❌ Google Play purchase error:', err);
+        
+        if (err.message?.includes('cancelled')) {
+          toast({
+            title: 'Purchase Cancelled',
+            description: 'You cancelled the purchase. You can try again anytime.',
+            variant: 'default'
+          });
+        } else if (err.message?.includes('not found') || err.message?.includes('not configured')) {
+          toast({
+            title: 'Product Not Available',
+            description: 'This subscription is being set up. Please try again later or contact support.',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Purchase Failed',
+            description: err.message || 'Something went wrong. Please try again.',
+            variant: 'destructive'
+          });
+        }
+      } finally {
+        setProcessingPayment(null);
+      }
       return;
     }
 
@@ -427,29 +507,7 @@ const Pricing = () => {
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-12">
-              {/* Google Play Payment Modal */}
-              {showGooglePlayPayment && selectedPlanForGooglePlay && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                  <div className="max-w-md w-full">
-                    <GooglePlayPaymentProcessor
-                      planId={selectedPlanForGooglePlay.id}
-                      planName={selectedPlanForGooglePlay.name}
-                      durationMonths={selectedPlanForGooglePlay.duration_months}
-                      onSuccess={() => {
-                        setShowGooglePlayPayment(false);
-                        navigate('/profile?payment_status=success');
-                      }}
-                      onFailure={() => {
-                        setShowGooglePlayPayment(false);
-                      }}
-                      onCancel={() => {
-                        setShowGooglePlayPayment(false);
-                        setSelectedPlanForGooglePlay(null);
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Google Play purchases now happen directly without modal */}
 
               {/* Download App Banner for Non-Indian Users on Web */}
               {showDownloadBanner && (
@@ -564,10 +622,10 @@ const Pricing = () => {
                             e.stopPropagation();
                             if (!showDownloadBanner) {
                               setSelectedPlan(plan.id);
-                              setTimeout(() => handlePlanPurchase(), 0);
+                              handlePlanPurchase(plan); // Pass plan directly to avoid race condition
                             }
                           }}
-                          disabled={showDownloadBanner || processingPayment === plan.id}
+                          disabled={showDownloadBanner || processingPayment !== null}
                         >
                           {processingPayment === plan.id ? (
                             <>
