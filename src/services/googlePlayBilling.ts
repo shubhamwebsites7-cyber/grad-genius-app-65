@@ -139,6 +139,12 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
   console.log('🔍 Starting purchase flow for product:', productId);
   console.log('🔍 Is TWA:', isTWA());
   
+  // For subscriptions, productId format is "productId:basePlanId"
+  // getDetails() needs just the productId, PaymentRequest needs full format
+  const baseProductId = productId.includes(':') ? productId.split(':')[0] : productId;
+  console.log('🔍 Base product ID for lookup:', baseProductId);
+  console.log('🔍 Full product ID for purchase:', productId);
+  
   // Method 1: Use navigator.playBilling (preferred for TWA)
   if (navigator.playBilling) {
     console.log('📱 Using navigator.playBilling API');
@@ -179,23 +185,24 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     const service = await getDigitalGoodsService();
     console.log('✅ Digital Goods service obtained');
     
-    // Verify the product exists
-    console.log('🔍 Checking if product exists in Play Console...');
+    // Verify the product exists using BASE product ID (without basePlanId)
+    console.log('🔍 Checking if product exists in Play Console with ID:', baseProductId);
     try {
-      const productDetails = await service.getDetails([productId]);
+      const productDetails = await service.getDetails([baseProductId]);
       console.log('📦 Product details:', productDetails);
       
       if (!productDetails || productDetails.length === 0) {
-        throw new Error(`Product ${productId} not found in Google Play Console.`);
+        console.warn(`⚠️ Product ${baseProductId} not found in getDetails, but continuing with purchase...`);
+      } else {
+        console.log('✅ Product exists, proceeding with purchase...');
       }
-      console.log('✅ Product exists, proceeding with purchase...');
     } catch (detailsError) {
-      console.error('❌ Error getting product details:', detailsError);
-      // Continue anyway - product might still work
+      console.warn('⚠️ Error getting product details (continuing anyway):', detailsError);
+      // Continue anyway - product might still work with PaymentRequest
     }
     
-    // Create payment request
-    console.log('💳 Creating payment request...');
+    // Create payment request with FULL productId:basePlanId format
+    console.log('💳 Creating payment request with sku:', productId);
     const paymentRequest = new (window as any).PaymentRequest([{
       supportedMethods: 'https://play.google.com/billing',
       data: {
