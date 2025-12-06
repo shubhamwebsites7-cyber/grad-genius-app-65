@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
-import { BookOpen, User, Mail, Lock, Phone } from 'lucide-react';
+import { User, Mail, Lock, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -167,12 +167,8 @@ const Signup = () => {
         
         <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-md space-y-8">
-            {/* Logo and Header */}
+            {/* Header */}
             <div className="text-center">
-              <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-                <BookOpen className="h-8 w-8 text-primary" />
-                <span className="text-2xl font-bold text-foreground">Examtrakr</span>
-              </Link>
               <h1 className="text-3xl font-bold text-foreground">Create your account</h1>
               <p className="mt-2 text-muted-foreground">
                 Start your exam preparation journey today
