@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { create } from 'https://deno.land/x/djwt@v3.0.2/mod.ts';
@@ -7,215 +8,234 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface PurchaseRequest {
-  purchaseToken: string;
-  productId: string;
-  packageName: string;
-  planId: string;
-}
+// Convert ISO8601 trial period ("P3D") → days
+const getDaysFromISO = (iso: string | null): number => {
+  if (!iso) return 0;
+  const match = iso.match(/P(\d+)D/);
+  return match ? parseInt(match[1], 10) : 0;
+};
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get authenticated user
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    // ------------------ AUTH CHECK ------------------
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("❌ No authorization header");
+      throw new Error("Unauthorized");
     }
 
-    const { purchaseToken, productId, packageName, planId }: PurchaseRequest = await req.json();
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      console.error("❌ Auth error:", authError);
+      throw new Error("Unauthorized");
+    }
 
-    console.log('🔍 Verifying Google Play purchase:', { 
-      userId: user.id, 
-      productId, 
-      packageName,
-      planId 
-    });
+    console.log("✅ User authenticated:", user.id);
 
-    // Check for duplicate purchase token
-    const { data: existingPayment } = await supabase
-      .from('payments')
-      .select('id, payment_status')
-      .eq('google_play_purchase_token', purchaseToken)
+    // ------------------ BODY PARSE ------------------
+    const { purchaseToken, productId, packageName, planId } = await req.json();
+
+    console.log("📦 Purchase request:", { productId, packageName, planId, userId: user.id });
+
+    if (!purchaseToken || !productId || !packageName || !planId) {
+      throw new Error("Missing required fields: purchaseToken, productId, packageName, planId");
+    }
+
+    // ------------------ DUPLICATE CHECK ------------------
+    const { data: existing } = await supabase
+      .from("payments")
+      .select("id, payment_status")
+      .eq("google_play_purchase_token", purchaseToken)
       .maybeSingle();
 
-    if (existingPayment) {
-      if (existingPayment.payment_status === 'completed') {
-        console.log('⚠️ Purchase already processed:', purchaseToken);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'This purchase has already been processed' 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    if (existing && existing.payment_status === "completed") {
+      console.log("⚠️ Duplicate purchase detected:", purchaseToken);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "This purchase has already been processed",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Get Google Play service account credentials
-    const serviceAccountJson = Deno.env.get('GOOGLE_PLAY_SERVICE_ACCOUNT');
+    // ------------------ GOOGLE JWT CREATION ------------------
+    const serviceAccountJson = Deno.env.get("GOOGLE_PLAY_SERVICE_ACCOUNT");
     if (!serviceAccountJson) {
-      console.error('❌ Google Play service account not configured');
-      throw new Error('Payment verification not configured. Please contact support.');
+      console.error("❌ GOOGLE_PLAY_SERVICE_ACCOUNT secret not configured");
+      throw new Error("Google Play credentials not configured. Please contact support.");
     }
 
-    const serviceAccount = JSON.parse(serviceAccountJson);
+    let serviceAccount;
+    try {
+      serviceAccount = JSON.parse(serviceAccountJson);
+    } catch (parseError) {
+      console.error("❌ Failed to parse service account JSON:", parseError);
+      throw new Error("Invalid Google Play credentials configuration");
+    }
 
-    // Helper function to convert PEM to binary for Web Crypto API
-    const pemToBinary = (pem: string): Uint8Array => {
-      const pemContents = pem
-        .replace(/-----BEGIN PRIVATE KEY-----/, '')
-        .replace(/-----END PRIVATE KEY-----/, '')
-        .replace(/\s/g, '');
-      const binaryString = atob(pemContents);
+    console.log("✅ Service account loaded:", serviceAccount.client_email);
+
+    const pemToBinary = (pem: string): ArrayBuffer => {
+      const clean = pem
+        .replace(/-----BEGIN PRIVATE KEY-----/, "")
+        .replace(/-----END PRIVATE KEY-----/, "")
+        .replace(/\s/g, "");
+      const binaryString = atob(clean);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      return bytes;
+      return bytes.buffer as ArrayBuffer;
     };
 
-    // Import the private key for signing
-    const privateKeyData = pemToBinary(serviceAccount.private_key);
     const privateKey = await crypto.subtle.importKey(
-      'pkcs8',
-      privateKeyData.buffer as ArrayBuffer,
-      {
-        name: 'RSASSA-PKCS1-v1_5',
-        hash: 'SHA-256',
-      },
+      "pkcs8",
+      pemToBinary(serviceAccount.private_key),
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
       false,
-      ['sign']
+      ["sign"]
     );
 
-    // Create JWT with proper RS256 signature
     const now = Math.floor(Date.now() / 1000);
+
     const jwt = await create(
-      { alg: 'RS256', typ: 'JWT' },
+      { alg: "RS256", typ: "JWT" },
       {
         iss: serviceAccount.client_email,
-        scope: 'https://www.googleapis.com/auth/androidpublisher',
-        aud: 'https://oauth2.googleapis.com/token',
+        scope: "https://www.googleapis.com/auth/androidpublisher",
+        aud: "https://oauth2.googleapis.com/token",
         exp: now + 3600,
         iat: now,
       },
       privateKey
     );
 
-    console.log('✅ JWT signed successfully with RS256');
+    console.log("✅ JWT created successfully");
 
-    // Get access token
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    // ------------------ GET ACCESS TOKEN ------------------
+    const accessRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
         assertion: jwt,
       }),
     });
 
-    if (!tokenResponse.ok) {
-      throw new Error('Failed to get Google API access token');
+    if (!accessRes.ok) {
+      const errorText = await accessRes.text();
+      console.error("❌ Google auth failed:", errorText);
+      throw new Error("Failed to authenticate with Google");
     }
 
-    const { access_token } = await tokenResponse.json();
+    const { access_token } = await accessRes.json();
+    console.log("✅ Google access token obtained");
 
-    // Verify purchase with Google Play API
+    // ------------------ VERIFY GOOGLE PLAY PURCHASE ------------------
     const verifyUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}`;
-    
-    const verifyResponse = await fetch(verifyUrl, {
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Content-Type': 'application/json',
-      },
+
+    console.log("🔍 Verifying purchase with Google Play API...");
+
+    const verifyRes = await fetch(verifyUrl, {
+      headers: { Authorization: `Bearer ${access_token}` },
     });
 
-    if (!verifyResponse.ok) {
-      const errorData = await verifyResponse.text();
-      console.error('❌ Google Play verification failed:', errorData);
-      throw new Error('Failed to verify purchase with Google Play');
+    if (!verifyRes.ok) {
+      const errorText = await verifyRes.text();
+      console.error("❌ Google Play verification failed:", errorText);
+      throw new Error("Failed to verify purchase with Google Play");
     }
 
-    const purchaseData = await verifyResponse.json();
-    
-    console.log('✅ Google Play verification successful:', purchaseData);
+    const purchase = await verifyRes.json();
+    console.log("✅ Google Play verification response:", JSON.stringify(purchase, null, 2));
 
-    // Check purchase state
-    const subscriptionState = purchaseData.subscriptionState;
-    if (subscriptionState !== 'SUBSCRIPTION_STATE_ACTIVE') {
-      throw new Error('Subscription is not active');
+    if (purchase.subscriptionState !== "SUBSCRIPTION_STATE_ACTIVE" && 
+        purchase.subscriptionState !== "SUBSCRIPTION_STATE_IN_TRIAL") {
+      console.error("❌ Invalid subscription state:", purchase.subscriptionState);
+      throw new Error(`Subscription is not active. State: ${purchase.subscriptionState}`);
     }
 
-    // Get plan details
+    // ------------------ GET PLAN ------------------
     const { data: plan, error: planError } = await supabase
-      .from('subscription_plans')
-      .select('id, name, duration_months')
-      .eq('id', planId)
+      .from("subscription_plans")
+      .select("*")
+      .eq("id", planId)
       .single();
 
     if (planError || !plan) {
-      throw new Error('Invalid plan ID');
+      console.error("❌ Plan not found:", planId, planError);
+      throw new Error("Invalid plan ID");
     }
 
-    // Check if user has already used trial
-    const { data: existingTrialSub } = await supabase
-      .from('user_subscriptions')
-      .select('id, accumulated_days')
-      .eq('user_id', user.id)
-      .eq('trial_used', true)
+    console.log("✅ Plan found:", plan.name, plan.duration_months, "months");
+
+    // ------------------ TRIAL LOGIC ------------------
+    const googleTrialISO = purchase.lineItems?.[0]?.offerDetails?.trialPeriod || null;
+    const trialDays = getDaysFromISO(googleTrialISO);
+    const isInTrialState = purchase.subscriptionState === "SUBSCRIPTION_STATE_IN_TRIAL";
+
+    console.log("🔍 Trial info:", { googleTrialISO, trialDays, isInTrialState });
+
+    // Has user already used trial?
+    const { data: prevSub } = await supabase
+      .from("user_subscriptions")
+      .select("trial_used, accumulated_days")
+      .eq("user_id", user.id)
       .maybeSingle();
 
-    const hasUsedTrial = !!existingTrialSub;
-    const previousAccumulatedDays = existingTrialSub?.accumulated_days || 0;
+    const hasUsedTrial = prevSub?.trial_used === true;
+    const previousDays = prevSub?.accumulated_days || 0;
 
-    // Calculate subscription dates with 3-day trial
-    const startDate = new Date();
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 3); // 3 days trial
+    // Apply trial only if: Google says there's a trial AND user hasn't used trial before
+    const applyTrial = (trialDays > 0 || isInTrialState) && !hasUsedTrial;
 
-    // Determine if this is a trial subscription
-    const isTrial = !hasUsedTrial && (
-      purchaseData.lineItems?.[0]?.offerDetails?.basePlanId?.includes('trial') ||
-      purchaseData.subscriptionState === 'SUBSCRIPTION_STATE_IN_TRIAL'
-    );
+    console.log("🔍 Trial logic:", { hasUsedTrial, previousDays, applyTrial });
 
-    // If user gets trial, paid period starts after trial ends
-    const paidStartDate = isTrial ? trialEndDate : startDate;
-    const paidEndDate = new Date(paidStartDate);
-    paidEndDate.setMonth(paidEndDate.getMonth() + plan.duration_months);
+    // Calculate subscription dates
+    const start = new Date();
+    const effectiveTrialDays = applyTrial ? (trialDays || 3) : 0; // Default 3 days if in trial state
+    const trialEnd = new Date(start.getTime() + effectiveTrialDays * 86400000);
 
-    // Calculate total days for this subscription (including trial if applicable)
-    const subscriptionDays = Math.floor((paidEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const totalAccumulatedDays = previousAccumulatedDays + subscriptionDays;
+    const paidStart = applyTrial ? trialEnd : start;
+    const paidEnd = new Date(paidStart);
+    paidEnd.setMonth(paidEnd.getMonth() + plan.duration_months);
 
-    // Extract price from Google Play response (in micros)
-    const priceMicros = purchaseData.lineItems?.[0]?.priceAmountMicros || 0;
-    const amount = Number(priceMicros) / 1000000;
-    const currency = purchaseData.lineItems?.[0]?.priceCurrencyCode || 'USD';
+    const paidDays = Math.floor((paidEnd.getTime() - paidStart.getTime()) / 86400000);
+    const totalDays = previousDays + paidDays;
 
-    // Create payment record
+    console.log("📅 Subscription dates:", {
+      start: start.toISOString(),
+      trialEnd: applyTrial ? trialEnd.toISOString() : null,
+      paidEnd: paidEnd.toISOString(),
+      totalDays
+    });
+
+    // ------------------ PAYMENT RECORD ------------------
+    const micros = purchase.lineItems?.[0]?.priceAmountMicros || 0;
+    const amount = Number(micros) / 1_000_000;
+    const currency = purchase.lineItems?.[0]?.priceCurrencyCode || "USD";
+
     const { data: payment, error: paymentError } = await supabase
-      .from('payments')
+      .from("payments")
       .insert({
         user_id: user.id,
         plan_id: plan.id,
-        amount: amount,
-        currency: currency,
-        payment_method: 'google_play',
-        payment_status: 'completed',
-        external_payment_id: purchaseData.latestOrderId || purchaseToken,
-        platform: 'google_play',
+        amount,
+        currency,
+        payment_method: "google_play",
+        payment_status: "completed",
+        external_payment_id: purchase.latestOrderId || purchaseToken,
+        platform: "google_play",
         google_play_purchase_token: purchaseToken,
         google_play_product_id: productId,
       })
@@ -223,75 +243,65 @@ serve(async (req) => {
       .single();
 
     if (paymentError) {
-      console.error('❌ Failed to create payment record:', paymentError);
-      throw new Error('Failed to record payment');
+      console.error("❌ Failed to create payment record:", paymentError);
+      throw new Error("Failed to record payment");
     }
 
-    console.log('✅ Payment record created:', payment.id);
+    console.log("✅ Payment record created:", payment.id);
 
-    // Create or update subscription with trial and accumulated days
-    const { data: subscription, error: subscriptionError } = await supabase
-      .from('user_subscriptions')
-      .insert({
+    // ------------------ UPSERT SUBSCRIPTION ------------------
+    const { data: subscription, error: subError } = await supabase
+      .from("user_subscriptions")
+      .upsert({
         user_id: user.id,
         plan_id: plan.id,
-        status: 'active',
-        starts_at: startDate.toISOString(),
-        expires_at: paidEndDate.toISOString(),
-        payment_method: 'google_play',
-        external_subscription_id: purchaseData.latestOrderId || purchaseToken,
+        status: "active",
+        starts_at: start.toISOString(),
+        expires_at: paidEnd.toISOString(),
+        payment_method: "google_play",
+        external_subscription_id: purchase.latestOrderId || purchaseToken,
         last_payment_id: payment.id,
-        purchase_platform: 'google_play',
-        // Trial fields
-        is_trial: isTrial,
-        trial_starts_at: isTrial ? startDate.toISOString() : null,
-        trial_ends_at: isTrial ? trialEndDate.toISOString() : null,
-        trial_used: true, // Mark that user has used their trial
-        accumulated_days: totalAccumulatedDays,
-      })
+        purchase_platform: "google_play",
+        is_trial: applyTrial,
+        trial_used: applyTrial ? true : hasUsedTrial,
+        trial_starts_at: applyTrial ? start.toISOString() : null,
+        trial_ends_at: applyTrial ? trialEnd.toISOString() : null,
+        accumulated_days: totalDays,
+      }, { onConflict: "user_id" })
       .select()
       .single();
 
-    if (subscriptionError) {
-      console.error('❌ Failed to create subscription:', subscriptionError);
-      throw new Error('Failed to create subscription');
+    if (subError) {
+      console.error("❌ Failed to create subscription:", subError);
+      throw new Error("Failed to create subscription");
     }
 
-    console.log('✅ Subscription created:', subscription.id);
+    console.log("✅ Subscription created/updated:", subscription.id);
 
-    // Update payment with subscription_id
+    // Link payment → subscription
     await supabase
-      .from('payments')
+      .from("payments")
       .update({ subscription_id: subscription.id })
-      .eq('id', payment.id);
+      .eq("id", payment.id);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         subscription: {
           id: subscription.id,
-          status: 'active',
-          expiresAt: paidEndDate.toISOString(),
-        }
+          status: "active",
+          expiresAt: paidEnd.toISOString(),
+          isTrial: applyTrial,
+        },
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (error: any) {
-    console.error('❌ Error:', error);
-    
+  } catch (err: any) {
+    console.error("❌ Error:", err.message, err.stack);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || 'Failed to verify purchase' 
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      }
+      JSON.stringify({ success: false, error: err.message }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
     );
   }
 });
