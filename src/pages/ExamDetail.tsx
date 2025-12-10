@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -78,25 +79,18 @@ const ExamDetail = () => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState(false);
   const [calculatedDifficulties, setCalculatedDifficulties] = useState<{ [key: string]: string }>({});
-  const [loading, setLoading] = useState(true);
   const [exam, setExam] = useState<Exam | null>(null);
   const [completedTopicIds, setCompletedTopicIds] = useState<Set<string>>(new Set());
   const [enrolling, setEnrolling] = useState(false);
   const [topicVoteCounts, setTopicVoteCounts] = useState<{ [key: string]: number }>({});
   const [userTopicRatings, setUserTopicRatings] = useState<{ [key: string]: string }>({});
 
-  useEffect(() => {
-    if (examId) {
-      fetchExamData();
-    }
-  }, [examId, user]);
-
-  const fetchExamData = async () => {
-    try {
-      setLoading(true);
-
+  // Use React Query for caching exam data
+  const { data: examData, isLoading: loading, refetch: refetchExamData } = useQuery({
+    queryKey: ['exam-detail', examId, user?.id],
+    queryFn: async () => {
       // Fetch exam details with category
-      const { data: examData, error: examError } = await supabase
+      const { data: examDataResult, error: examError } = await supabase
         .from('exams')
         .select(`
           *,
@@ -107,7 +101,7 @@ const ExamDetail = () => {
         .single();
 
       if (examError) throw examError;
-      if (!examData) throw new Error('Exam not found');
+      if (!examDataResult) throw new Error('Exam not found');
 
       // Check enrollment status
       let isEnrolled = false;
@@ -163,8 +157,6 @@ const ExamDetail = () => {
         }
       }
 
-      setCompletedTopicIds(completedIds);
-
       // Fetch vote counts and user ratings in parallel for all topics
       const topicIds = topicsData?.map((t: any) => t.id) || [];
       const diffMap: { [key: string]: string } = {};
@@ -219,10 +211,6 @@ const ExamDetail = () => {
           }
         }
       }
-      
-      setCalculatedDifficulties(diffMap);
-      setTopicVoteCounts(voteCountMap);
-      setUserTopicRatings(userRatingsMap);
 
       // Build exam structure
       const subjects: Subject[] = (subjectsData || []).map((subject: any) => {
@@ -266,39 +254,49 @@ const ExamDetail = () => {
       const completedCount = allTopics.filter(t => t.isCompleted).length;
       const progressPercentage = allTopics.length > 0 ? Math.round((completedCount / allTopics.length) * 100) : 0;
 
-      const typedExamData = examData as any;
+      const typedExamData = examDataResult as any;
       const categoryData = typedExamData.exam_categories || {};
       const categoryName = categoryData.name || 'General';
       const categoryColor = categoryData.color || undefined;
       
-      setExam({
-        id: typedExamData.id,
-        name: typedExamData.name,
-        full_name: typedExamData.full_name || undefined,
-        description: typedExamData.description || undefined,
-        type: typedExamData.exam_type || 'General',
-        categoryName,
-        categoryColor,
-        subjects,
-        enrolledStudents: `${typedExamData.enrollment_count || 0}+`,
-        isEnrolled,
-        progress: progressPercentage,
-        completedTopics: completedCount,
-        totalTopics: allTopics.length,
-        total_marks: typedExamData.total_marks || undefined
-      });
+      return {
+        exam: {
+          id: typedExamData.id,
+          name: typedExamData.name,
+          full_name: typedExamData.full_name || undefined,
+          description: typedExamData.description || undefined,
+          type: typedExamData.exam_type || 'General',
+          categoryName,
+          categoryColor,
+          subjects,
+          enrolledStudents: `${typedExamData.enrollment_count || 0}+`,
+          isEnrolled,
+          progress: progressPercentage,
+          completedTopics: completedCount,
+          totalTopics: allTopics.length,
+          total_marks: typedExamData.total_marks || undefined
+        } as Exam,
+        completedIds,
+        diffMap,
+        voteCountMap,
+        userRatingsMap
+      };
+    },
+    enabled: !!examId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+  });
 
-    } catch (error) {
-      console.error('Error fetching exam data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load exam data.',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+  // Update local state when query data changes
+  useEffect(() => {
+    if (examData) {
+      setExam(examData.exam);
+      setCompletedTopicIds(examData.completedIds);
+      setCalculatedDifficulties(examData.diffMap);
+      setTopicVoteCounts(examData.voteCountMap);
+      setUserTopicRatings(examData.userRatingsMap);
     }
-  };
+  }, [examData]);
 
   const handleTopicToggle = async (topicId: string) => {
     if (!user || !exam) {
