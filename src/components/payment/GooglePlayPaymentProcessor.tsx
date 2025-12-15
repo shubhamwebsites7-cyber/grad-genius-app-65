@@ -125,21 +125,55 @@ export const GooglePlayPaymentProcessor = ({
 
     } catch (err: any) {
       console.error('❌ Purchase error:', err);
+      console.error('❌ Error message:', err.message);
       
+      let errorTitle = 'Purchase Failed';
       let errorMessage = 'Failed to complete purchase. Please try again.';
+      let isCancelled = false;
       
-      if (err.message.includes('cancelled')) {
-        errorMessage = 'Purchase was cancelled.';
+      // Parse error type from our custom error format
+      const message = err.message || '';
+      
+      if (message.startsWith('CANCELLED:')) {
+        isCancelled = true;
+        errorTitle = 'Purchase Cancelled';
+        errorMessage = 'You cancelled the purchase. You can try again anytime.';
         onCancel?.();
-      } else if (err.message.includes('not available')) {
+      } else if (message.startsWith('SETUP_ERROR:')) {
+        errorTitle = 'Setup Required';
+        errorMessage = message.replace('SETUP_ERROR:', '').trim();
+        // Log detailed setup instructions
+        console.error('=== SETUP ERROR - CHECK THE FOLLOWING ===');
+        console.error('1. twa-manifest.json must have: "playBilling": { "enabled": true }');
+        console.error('2. App must be installed from Google Play Store (not sideloaded)');
+        console.error('3. assetlinks.json must be properly configured');
+        console.error('4. Product IDs must match exactly in Play Console');
+        console.error('5. Subscription must be active in Play Console');
+        onFailure?.();
+      } else if (message.startsWith('VERIFICATION_ERROR:')) {
+        errorTitle = 'Verification Failed';
+        errorMessage = message.replace('VERIFICATION_ERROR:', '').trim();
+        onFailure?.();
+      } else if (message.startsWith('PURCHASE_ERROR:')) {
+        errorTitle = 'Purchase Error';
+        errorMessage = message.replace('PURCHASE_ERROR:', '').trim();
+        onFailure?.();
+      } else if (message.includes('not available') || message.includes('not supported')) {
+        errorTitle = 'Billing Not Available';
         errorMessage = 'Google Play Billing is not available. Please install the app from Play Store.';
-      } else if (err.message) {
-        errorMessage = err.message;
+        onFailure?.();
+      } else {
+        errorMessage = message || 'An unexpected error occurred. Please try again.';
+        onFailure?.();
       }
 
-      setError(errorMessage);
-      toast.error(errorMessage);
-      onFailure?.();
+      setError(`${errorTitle}: ${errorMessage}`);
+      
+      if (isCancelled) {
+        toast.info(errorMessage);
+      } else {
+        toast.error(errorTitle, { description: errorMessage });
+      }
     } finally {
       setLoading(false);
       setVerifying(false);
