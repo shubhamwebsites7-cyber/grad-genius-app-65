@@ -42,12 +42,12 @@ serve(async (req) => {
     console.log("✅ User authenticated:", user.id);
 
     // ------------------ BODY PARSE ------------------
-    const { purchaseToken, productId, packageName, planId } = await req.json();
+    const { purchaseToken, productId, packageName } = await req.json();
 
-    console.log("📦 Purchase request:", { productId, packageName, planId, userId: user.id });
+    console.log("📦 Purchase request:", { productId, packageName, userId: user.id });
 
-    if (!purchaseToken || !productId || !packageName || !planId) {
-      throw new Error("Missing required fields: purchaseToken, productId, packageName, planId");
+    if (!purchaseToken || !productId || !packageName) {
+      throw new Error("Missing required fields: purchaseToken, productId, packageName");
     }
 
     // ------------------ DUPLICATE CHECK ------------------
@@ -159,22 +159,44 @@ serve(async (req) => {
     const purchase = await verifyRes.json();
     console.log("✅ Google Play verification response:", JSON.stringify(purchase, null, 2));
 
+    // ------------------ VALIDATE SUBSCRIPTION STATE ------------------
     if (purchase.subscriptionState !== "SUBSCRIPTION_STATE_ACTIVE" && 
         purchase.subscriptionState !== "SUBSCRIPTION_STATE_IN_TRIAL") {
       console.error("❌ Invalid subscription state:", purchase.subscriptionState);
       throw new Error(`Subscription is not active. State: ${purchase.subscriptionState}`);
     }
 
-    // ------------------ GET PLAN ------------------
+    // ------------------ VALIDATE SKU MATCHES ------------------
+    const purchasedSku = purchase.lineItems?.[0]?.productId;
+    console.log("🔍 SKU validation:", { frontendSku: productId, purchasedSku });
+
+    if (!purchasedSku) {
+      console.error("❌ No productId found in Google Play response");
+      throw new Error("Invalid purchase: no product ID in response");
+    }
+
+    if (purchasedSku !== productId) {
+      console.error("❌ SKU mismatch:", { frontendSku: productId, purchasedSku });
+      throw new Error(`SKU mismatch: expected ${productId}, got ${purchasedSku}`);
+    }
+
+    console.log("✅ SKU validated successfully:", purchasedSku);
+
+    // ------------------ GET PLAN BY GOOGLE PRODUCT ID ------------------
     const { data: plan, error: planError } = await supabase
       .from("subscription_plans")
       .select("*")
-      .eq("id", planId)
-      .single();
+      .eq("google_product_id", productId)
+      .maybeSingle();
 
-    if (planError || !plan) {
-      console.error("❌ Plan not found:", planId, planError);
-      throw new Error("Invalid plan ID");
+    if (planError) {
+      console.error("❌ Error fetching plan:", planError);
+      throw new Error("Failed to fetch subscription plan");
+    }
+
+    if (!plan) {
+      console.error("❌ No plan found for Google product ID:", productId);
+      throw new Error(`No subscription plan configured for product: ${productId}`);
     }
 
     console.log("✅ Plan found:", plan.name, plan.duration_months, "months");
