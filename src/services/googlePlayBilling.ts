@@ -220,11 +220,9 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     console.warn('⚠️ Billing diagnostics errors:', diagnostics.errors);
   }
   
-  // For subscriptions, productId format is "productId:basePlanId"
-  // getDetails() needs just the productId, PaymentRequest needs full format
-  const baseProductId = productId.includes(':') ? productId.split(':')[0] : productId;
-  console.log('🔍 Base product ID for lookup:', baseProductId);
-  console.log('🔍 Full product ID for purchase:', productId);
+  // Use SKU directly (no basePlanId splitting needed)
+  const sku = productId;
+  console.log('🔍 SKU for purchase:', sku);
   
   // Method 1: Use navigator.playBilling (preferred for TWA)
   if (navigator.playBilling) {
@@ -234,7 +232,7 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
       console.log('✅ playBilling initialized');
       
       const details = {
-        sku: productId,
+        sku: sku,
         type: 'subs' // subscription type
       };
       
@@ -285,15 +283,15 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     const service = await getDigitalGoodsService();
     console.log('✅ Digital Goods service obtained');
     
-    // Verify the product exists using BASE product ID (without basePlanId)
-    console.log('🔍 Checking if product exists in Play Console with ID:', baseProductId);
+    // Verify the product exists using SKU
+    console.log('🔍 Checking if product exists in Play Console with SKU:', sku);
     try {
-      const productDetails = await service.getDetails([baseProductId]);
+      const productDetails = await service.getDetails([sku]);
       console.log('📦 Product details from Play Console:', JSON.stringify(productDetails, null, 2));
       
       if (!productDetails || productDetails.length === 0) {
-        console.warn(`⚠️ Product ${baseProductId} not found in Play Console. Make sure:`);
-        console.warn('1. Product ID matches exactly in Play Console');
+        console.warn(`⚠️ Product ${sku} not found in Play Console. Make sure:`);
+        console.warn('1. SKU matches exactly in Play Console');
         console.warn('2. Subscription is active in Play Console');
         console.warn('3. App package name matches');
       } else {
@@ -304,14 +302,13 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
       // Continue anyway - product might still work with PaymentRequest
     }
     
-    // Create payment request with FULL productId:basePlanId format
-    console.log('💳 Creating payment request with sku:', productId);
+    // Create payment request with SKU only
+    console.log('💳 Creating payment request with sku:', sku);
     
     const paymentMethodData = [{
       supportedMethods: 'https://play.google.com/billing',
       data: {
-        sku: productId,
-        type: 'subscription'
+        sku: sku
       }
     }];
     
