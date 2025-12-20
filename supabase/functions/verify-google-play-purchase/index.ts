@@ -8,13 +8,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Convert ISO8601 trial period ("P3D") → days
-const getDaysFromISO = (iso: string | null): number => {
-  if (!iso) return 0;
-  const match = iso.match(/P(\d+)D/);
-  return match ? parseInt(match[1], 10) : 0;
-};
-
+// Trial functionality removed - direct subscription only
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -201,45 +195,17 @@ serve(async (req) => {
 
     console.log("✅ Plan found:", plan.name, plan.duration_months, "months");
 
-    // ------------------ TRIAL LOGIC ------------------
-    const googleTrialISO = purchase.lineItems?.[0]?.offerDetails?.trialPeriod || null;
-    const trialDays = getDaysFromISO(googleTrialISO);
-    const isInTrialState = purchase.subscriptionState === "SUBSCRIPTION_STATE_IN_TRIAL";
-
-    console.log("🔍 Trial info:", { googleTrialISO, trialDays, isInTrialState });
-
-    // Has user already used trial?
-    const { data: prevSub } = await supabase
-      .from("user_subscriptions")
-      .select("trial_used, accumulated_days")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const hasUsedTrial = prevSub?.trial_used === true;
-    const previousDays = prevSub?.accumulated_days || 0;
-
-    // Apply trial only if: Google says there's a trial AND user hasn't used trial before
-    const applyTrial = (trialDays > 0 || isInTrialState) && !hasUsedTrial;
-
-    console.log("🔍 Trial logic:", { hasUsedTrial, previousDays, applyTrial });
-
-    // Calculate subscription dates
+    // ------------------ CALCULATE SUBSCRIPTION DATES (NO TRIAL) ------------------
     const start = new Date();
-    const effectiveTrialDays = applyTrial ? (trialDays || 3) : 0; // Default 3 days if in trial state
-    const trialEnd = new Date(start.getTime() + effectiveTrialDays * 86400000);
-
-    const paidStart = applyTrial ? trialEnd : start;
-    const paidEnd = new Date(paidStart);
+    const paidEnd = new Date(start);
     paidEnd.setMonth(paidEnd.getMonth() + plan.duration_months);
 
-    const paidDays = Math.floor((paidEnd.getTime() - paidStart.getTime()) / 86400000);
-    const totalDays = previousDays + paidDays;
+    const paidDays = Math.floor((paidEnd.getTime() - start.getTime()) / 86400000);
 
     console.log("📅 Subscription dates:", {
       start: start.toISOString(),
-      trialEnd: applyTrial ? trialEnd.toISOString() : null,
       paidEnd: paidEnd.toISOString(),
-      totalDays
+      paidDays
     });
 
     // ------------------ PAYMENT RECORD ------------------
@@ -271,7 +237,7 @@ serve(async (req) => {
 
     console.log("✅ Payment record created:", payment.id);
 
-    // ------------------ UPSERT SUBSCRIPTION ------------------
+    // ------------------ UPSERT SUBSCRIPTION (NO TRIAL) ------------------
     const { data: subscription, error: subError } = await supabase
       .from("user_subscriptions")
       .upsert({
@@ -284,11 +250,11 @@ serve(async (req) => {
         external_subscription_id: purchase.latestOrderId || purchaseToken,
         last_payment_id: payment.id,
         purchase_platform: "google_play",
-        is_trial: applyTrial,
-        trial_used: applyTrial ? true : hasUsedTrial,
-        trial_starts_at: applyTrial ? start.toISOString() : null,
-        trial_ends_at: applyTrial ? trialEnd.toISOString() : null,
-        accumulated_days: totalDays,
+        is_trial: false,
+        trial_used: false,
+        trial_starts_at: null,
+        trial_ends_at: null,
+        accumulated_days: paidDays,
       }, { onConflict: "user_id" })
       .select()
       .single();
@@ -313,7 +279,7 @@ serve(async (req) => {
           id: subscription.id,
           status: "active",
           expiresAt: paidEnd.toISOString(),
-          isTrial: applyTrial,
+          isTrial: false,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
