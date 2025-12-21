@@ -22,20 +22,6 @@ export const PricingFAQ = () => {
         <Collapsible className="group border-2 rounded-xl bg-card overflow-hidden hover:border-primary/30 transition-all duration-300 hover:shadow-md">
           <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/30 transition-colors">
             <h3 className="text-lg font-bold text-left group-hover:text-primary transition-colors">
-              What do I get with the 3-day free trial?
-            </h3>
-            <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all duration-300 group-data-[state=open]:rotate-180" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="px-6 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-            <p className="text-muted-foreground leading-relaxed">
-              During your 3-day free trial, you get complete access to all premium features - unlimited exam access, all topics unlocked, full resources library, and progress tracking. No credit card required to start!
-            </p>
-          </CollapsibleContent>
-        </Collapsible>
-
-        <Collapsible className="group border-2 rounded-xl bg-card overflow-hidden hover:border-primary/30 transition-all duration-300 hover:shadow-md">
-          <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/30 transition-colors">
-            <h3 className="text-lg font-bold text-left group-hover:text-primary transition-colors">
               What benefits do I get with a paid plan?
             </h3>
             <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all duration-300 group-data-[state=open]:rotate-180" />
@@ -50,13 +36,13 @@ export const PricingFAQ = () => {
         <Collapsible className="group border-2 rounded-xl bg-card overflow-hidden hover:border-primary/30 transition-all duration-300 hover:shadow-md">
           <CollapsibleTrigger className="w-full p-6 flex items-center justify-between hover:bg-muted/30 transition-colors">
             <h3 className="text-lg font-bold text-left group-hover:text-primary transition-colors">
-              How does billing work after the trial?
+              How does billing work?
             </h3>
             <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all duration-300 group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
           <CollapsibleContent className="px-6 pb-6 data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
             <p className="text-muted-foreground leading-relaxed">
-              After your 3-day free trial, you'll be charged for your selected plan duration (1, 3, 6, or 12 months). The billing is automatic and you can cancel anytime before renewal. You'll receive reminders before any charges.
+              You'll be charged for your selected plan duration (1, 3, 6, or 12 months). The billing is automatic and you can cancel anytime before renewal. You'll receive reminders before any charges.
             </p>
           </CollapsibleContent>
         </Collapsible>
