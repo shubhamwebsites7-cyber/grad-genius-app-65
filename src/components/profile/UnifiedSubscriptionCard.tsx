@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Crown, Calendar, TrendingUp, Clock, Award, ExternalLink } from 'lucide-react';
+import { CreditCard, Crown, Calendar, TrendingUp, Award, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,9 +16,6 @@ interface ProgressData {
   elapsed_days: number;
   remaining_days: number;
   progress_percentage: number;
-  is_in_trial: boolean;
-  trial_days_total: number;
-  trial_days_elapsed: number;
   accumulated_total_days: number;
 }
 
@@ -132,9 +129,6 @@ export const UnifiedSubscriptionCard = () => {
           purchase_platform,
           created_at,
           updated_at,
-          is_trial,
-          trial_starts_at,
-          trial_ends_at,
           accumulated_days,
           subscription_plans!plan_id (
             name,
@@ -162,8 +156,7 @@ export const UnifiedSubscriptionCard = () => {
       if (data) {
         const subRecord = data as any;
         const plan = subRecord.subscription_plans;
-        const isTrial = subRecord.is_trial === true;
-        const planName = isTrial ? '🎁 Free Trial' : (plan?.name || 'Free Plan');
+        const planName = plan?.name || 'Free Plan';
         const isPremium = plan?.name !== 'Free Plan' && plan?.name != null;
         
         setSubscriptionRecord(subRecord);
@@ -181,7 +174,7 @@ export const UnifiedSubscriptionCard = () => {
               })
             : '-',
           price: plan?.name || '₹0',
-          isPremium: isPremium || isTrial
+          isPremium: isPremium
         });
       }
     } catch (error) {
@@ -229,9 +222,6 @@ export const UnifiedSubscriptionCard = () => {
     elapsed_days = 0, 
     remaining_days = 0, 
     progress_percentage = 0,
-    is_in_trial = false,
-    trial_days_total = 0,
-    trial_days_elapsed = 0,
     accumulated_total_days = 0
   } = progressData || {};
 
@@ -256,12 +246,7 @@ export const UnifiedSubscriptionCard = () => {
               </p>
             </div>
           </div>
-          {is_in_trial && (
-            <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
-              Free Trial
-            </Badge>
-          )}
-          {!is_in_trial && subscriptionData.isPremium && (
+          {subscriptionData.isPremium && (
             <Badge variant={getStatusBadgeVariant(subscriptionData.status)}>
               {subscriptionData.status}
             </Badge>
@@ -277,7 +262,7 @@ export const UnifiedSubscriptionCard = () => {
             <span className="text-sm font-medium">{subscriptionData.nextBilling}</span>
           </div>
           
-          {platform && subscriptionData.isPremium && !is_in_trial && (
+          {platform && subscriptionData.isPremium && (
             <div className="flex items-center justify-between py-2 border-b">
               <span className="text-sm text-muted-foreground">Platform</span>
               <span className="text-sm font-medium capitalize">{platform}</span>
@@ -288,48 +273,26 @@ export const UnifiedSubscriptionCard = () => {
         {/* Progress Section */}
         {showProgress && (
           <div className="space-y-4 pt-2">
-            {/* Show only Trial Progress when in trial */}
-            {is_in_trial ? (
-              <div className="space-y-3 p-4 bg-blue-500/5 rounded-lg border border-blue-500/10">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-600" />
-                    Free Trial
-                  </span>
-                  <span className="text-sm font-semibold text-blue-600">
-                    Day {trial_days_elapsed + 1} of {trial_days_total}
-                  </span>
-                </div>
-                <Progress 
-                  value={((trial_days_elapsed + 1) / trial_days_total) * 100} 
-                  className="h-2 bg-blue-500/10"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {trial_days_total - trial_days_elapsed} days of free access remaining
-                </p>
+            {/* Current Period Progress */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Current Period
+                </span>
+                <span className="text-sm font-semibold">
+                  Day {elapsed_days} of {total_days}
+                </span>
               </div>
-            ) : (
-              /* Show Current Period Progress when not in trial */
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    Current Period
-                  </span>
-                  <span className="text-sm font-semibold">
-                    Day {elapsed_days} of {total_days}
-                  </span>
-                </div>
-                <Progress value={progress_percentage} className="h-2.5" />
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">{progress_percentage}% completed</span>
-                  <span className="font-medium text-primary">{remaining_days} days left</span>
-                </div>
+              <Progress value={progress_percentage} className="h-2.5" />
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">{progress_percentage}% completed</span>
+                <span className="font-medium text-primary">{remaining_days} days left</span>
               </div>
-            )}
+            </div>
 
-            {/* Total Access - only show when not in trial and has accumulated days */}
-            {!is_in_trial && accumulated_total_days > 0 && (
+            {/* Total Access - only show when has accumulated days */}
+            {accumulated_total_days > 0 && (
               <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">

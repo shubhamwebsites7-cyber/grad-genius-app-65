@@ -55,15 +55,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const isValid = expiresAt > new Date();
 
         if (isValid) {
-          const displayName = subscriptionData.is_trial 
-            ? '🎁 Free Trial' 
-            : plan.name || 'Premium Plan';
-          
           setSubscription({
             isPremium: true,
-            planName: displayName,
+            planName: plan.name || 'Premium Plan',
             expiresAt: subscriptionData.expires_at,
-            status: subscriptionData.is_trial ? 'trial' : 'active'
+            status: 'active'
           });
         } else {
           // Expired subscription
@@ -75,56 +71,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
         }
       } else {
-        // No subscription - try to activate free trial
-        await activateFreeTrial(userId);
+        // No subscription found
+        setSubscription({
+          isPremium: false,
+          planName: 'Free Plan',
+          expiresAt: null,
+          status: 'free'
+        });
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);
-      setSubscription({
-        isPremium: false,
-        planName: 'Free Plan',
-        expiresAt: null,
-        status: 'free'
-      });
-    }
-  };
-
-  const activateFreeTrial = async (userId: string) => {
-    try {
-      // @ts-expect-error - Custom RPC function not in generated types
-      const { data, error } = await supabase.rpc('activate_free_trial', {
-        p_user_id: userId
-      });
-
-      if (error) {
-        console.error('Error activating trial:', error);
-        setSubscription({
-          isPremium: false,
-          planName: 'Free Plan',
-          expiresAt: null,
-          status: 'free'
-        });
-        return;
-      }
-
-      const trialData = data as any;
-      if (trialData && Array.isArray(trialData) && trialData.length > 0 && trialData[0].success) {
-        setSubscription({
-          isPremium: true,
-          planName: '🎁 Free Trial',
-          expiresAt: trialData[0].trial_ends_at,
-          status: 'trial'
-        });
-      } else {
-        setSubscription({
-          isPremium: false,
-          planName: 'Free Plan',
-          expiresAt: null,
-          status: 'free'
-        });
-      }
-    } catch (error) {
-      console.error('Error in trial activation:', error);
       setSubscription({
         isPremium: false,
         planName: 'Free Plan',
