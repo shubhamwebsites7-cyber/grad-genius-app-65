@@ -8,7 +8,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Trial functionality removed - direct subscription only
+// Valid Google Play product IDs - MUST match Play Console exactly
+const VALID_PRODUCT_IDS = [
+  'examtrakr_1month',
+  'examtrakr_3month',
+  'examtrakr_6month',
+  'examtrakr_12month'
+];
+
+// Map product ID to duration months
+const PRODUCT_DURATION_MAP: Record<string, number> = {
+  'examtrakr_1month': 1,
+  'examtrakr_3month': 3,
+  'examtrakr_6month': 6,
+  'examtrakr_12month': 12
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -43,6 +58,14 @@ serve(async (req) => {
     if (!purchaseToken || !productId || !packageName) {
       throw new Error("Missing required fields: purchaseToken, productId, packageName");
     }
+
+    // ------------------ VALIDATE PRODUCT ID ------------------
+    if (!VALID_PRODUCT_IDS.includes(productId)) {
+      console.error("❌ Invalid product ID:", productId);
+      console.error("❌ Valid IDs are:", VALID_PRODUCT_IDS);
+      throw new Error(`Invalid product ID: ${productId}. Must be one of: ${VALID_PRODUCT_IDS.join(', ')}`);
+    }
+    console.log("✅ Product ID validated:", productId);
 
     // ------------------ DUPLICATE CHECK ------------------
     const { data: existing } = await supabase
@@ -139,6 +162,7 @@ serve(async (req) => {
     const verifyUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}`;
 
     console.log("🔍 Verifying purchase with Google Play API...");
+    console.log("🔍 Verify URL:", verifyUrl);
 
     const verifyRes = await fetch(verifyUrl, {
       headers: { Authorization: `Bearer ${access_token}` },
@@ -154,11 +178,17 @@ serve(async (req) => {
     console.log("✅ Google Play verification response:", JSON.stringify(purchase, null, 2));
 
     // ------------------ VALIDATE SUBSCRIPTION STATE ------------------
-    if (purchase.subscriptionState !== "SUBSCRIPTION_STATE_ACTIVE" && 
-        purchase.subscriptionState !== "SUBSCRIPTION_STATE_IN_TRIAL") {
+    const validStates = [
+      "SUBSCRIPTION_STATE_ACTIVE",
+      "SUBSCRIPTION_STATE_IN_GRACE_PERIOD",
+      "SUBSCRIPTION_STATE_PENDING"
+    ];
+    
+    if (!validStates.includes(purchase.subscriptionState)) {
       console.error("❌ Invalid subscription state:", purchase.subscriptionState);
       throw new Error(`Subscription is not active. State: ${purchase.subscriptionState}`);
     }
+    console.log("✅ Subscription state valid:", purchase.subscriptionState);
 
     // ------------------ VALIDATE SKU MATCHES ------------------
     const purchasedSku = purchase.lineItems?.[0]?.productId;
@@ -176,29 +206,85 @@ serve(async (req) => {
 
     console.log("✅ SKU validated successfully:", purchasedSku);
 
-    // ------------------ GET PLAN BY GOOGLE PRODUCT ID ------------------
-    const { data: plan, error: planError } = await supabase
+    // ------------------ GET DURATION FROM PRODUCT ID ------------------
+    const durationMonths = PRODUCT_DURATION_MAP[productId];
+    if (!durationMonths) {
+      console.error("❌ No duration mapping for product:", productId);
+      throw new Error(`No duration configured for product: ${productId}`);
+    }
+    console.log("✅ Duration determined:", durationMonths, "months");
+
+    // ------------------ GET OR CREATE PLAN ------------------
+    // Try to find plan by google_product_id first
+    let { data: plan, error: planError } = await supabase
       .from("subscription_plans")
       .select("*")
       .eq("google_product_id", productId)
       .maybeSingle();
 
     if (planError) {
-      console.error("❌ Error fetching plan:", planError);
-      throw new Error("Failed to fetch subscription plan");
+      console.error("❌ Error fetching plan by google_product_id:", planError);
+    }
+
+    // If not found, try by duration
+    if (!plan) {
+      console.log("🔍 Plan not found by google_product_id, trying by duration...");
+      const { data: planByDuration, error: durationError } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("duration_months", durationMonths)
+        .eq("is_active", true)
+        .maybeSingle();
+      
+      if (durationError) {
+        console.error("❌ Error fetching plan by duration:", durationError);
+      }
+      
+      plan = planByDuration;
     }
 
     if (!plan) {
-      console.error("❌ No plan found for Google product ID:", productId);
+      console.error("❌ No plan found for product:", productId, "duration:", durationMonths);
       throw new Error(`No subscription plan configured for product: ${productId}`);
     }
 
     console.log("✅ Plan found:", plan.name, plan.duration_months, "months");
 
-    // ------------------ CALCULATE SUBSCRIPTION DATES (NO TRIAL) ------------------
+    // ------------------ ACKNOWLEDGE PURCHASE (CRITICAL) ------------------
+    // Note: For subscriptionsv2, acknowledgement is done via the subscriptions.acknowledge endpoint
+    const acknowledgeUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions/${productId}/tokens/${purchaseToken}:acknowledge`;
+    
+    console.log("🔔 Acknowledging purchase with Google Play API...");
+    
+    try {
+      const ackRes = await fetch(acknowledgeUrl, {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      
+      if (ackRes.ok) {
+        console.log("✅ Purchase acknowledged successfully via Google Play API");
+      } else {
+        const ackError = await ackRes.text();
+        console.warn("⚠️ Acknowledgement response:", ackRes.status, ackError);
+        // Continue - purchase might already be acknowledged
+        if (ackRes.status === 400 && ackError.includes("already acknowledged")) {
+          console.log("✅ Purchase was already acknowledged");
+        }
+      }
+    } catch (ackError: any) {
+      console.warn("⚠️ Backend acknowledgement error (continuing):", ackError.message);
+      // Don't fail the whole flow - subscription was created
+    }
+
+    // ------------------ CALCULATE SUBSCRIPTION DATES ------------------
     const start = new Date();
     const paidEnd = new Date(start);
-    paidEnd.setMonth(paidEnd.getMonth() + plan.duration_months);
+    paidEnd.setMonth(paidEnd.getMonth() + durationMonths);
 
     const paidDays = Math.floor((paidEnd.getTime() - start.getTime()) / 86400000);
 
@@ -209,9 +295,11 @@ serve(async (req) => {
     });
 
     // ------------------ PAYMENT RECORD ------------------
-    const micros = purchase.lineItems?.[0]?.priceAmountMicros || 0;
+    const micros = purchase.lineItems?.[0]?.autoRenewingPlan?.priceAmountMicros || 
+                   purchase.lineItems?.[0]?.priceAmountMicros || 0;
     const amount = Number(micros) / 1_000_000;
-    const currency = purchase.lineItems?.[0]?.priceCurrencyCode || "USD";
+    const currency = purchase.lineItems?.[0]?.autoRenewingPlan?.priceCurrencyCode || 
+                     purchase.lineItems?.[0]?.priceCurrencyCode || "INR";
 
     const { data: payment, error: paymentError } = await supabase
       .from("payments")
@@ -237,7 +325,7 @@ serve(async (req) => {
 
     console.log("✅ Payment record created:", payment.id);
 
-    // ------------------ UPSERT SUBSCRIPTION (NO TRIAL) ------------------
+    // ------------------ UPSERT SUBSCRIPTION ------------------
     const { data: subscription, error: subError } = await supabase
       .from("user_subscriptions")
       .upsert({
@@ -272,6 +360,9 @@ serve(async (req) => {
       .update({ subscription_id: subscription.id })
       .eq("id", payment.id);
 
+    console.log("✅ Payment linked to subscription");
+    console.log("=== PURCHASE FLOW COMPLETE ===");
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -279,7 +370,7 @@ serve(async (req) => {
           id: subscription.id,
           status: "active",
           expiresAt: paidEnd.toISOString(),
-          isTrial: false,
+          durationMonths: durationMonths,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import * as googlePlayBilling from '@/services/googlePlayBilling';
-import { getGooglePlayProductId } from '@/config/googlePlayProducts';
+import { getGooglePlayProductId, isValidGooglePlayProductId } from '@/config/googlePlayProducts';
 import { getPlatform, shouldUseGooglePlay } from '@/utils/platformDetection';
 
 interface GooglePlayPaymentProcessorProps {
@@ -34,48 +34,70 @@ export const GooglePlayPaymentProcessor = ({
   const [purchaseComplete, setPurchaseComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [billingAvailable, setBillingAvailable] = useState<boolean | null>(null);
+  const [diagnostics, setDiagnostics] = useState<googlePlayBilling.BillingDiagnostics | null>(null);
+  
+  // Prevent duplicate clicks
+  const purchaseInProgress = useRef(false);
 
-  // Check if Google Play Billing is available
+  // STRICT Check if Google Play Billing is available
   useEffect(() => {
     const checkBillingAvailability = async () => {
-      console.log('=== Google Play Billing Check ===');
-      console.log('Checking billing availability...');
+      console.log('=== Google Play Billing Check (STRICT) ===');
       
+      // Get full diagnostics
+      const diag = await googlePlayBilling.getBillingDiagnostics();
+      console.log('📊 Billing diagnostics:', diag);
+      setDiagnostics(diag);
+      
+      // STRICT: Check actual billing availability
       const available = await googlePlayBilling.isGooglePlayBillingAvailable();
-      console.log('Billing available result:', available);
+      console.log('🔍 Billing available (strict check):', available);
       
-      // Additional debugging info
       const platform = getPlatform();
-      console.log('Current platform:', platform);
-      console.log('Should use Google Play:', shouldUseGooglePlay());
+      console.log('📱 Current platform:', platform);
+      console.log('🎯 Should use Google Play:', shouldUseGooglePlay());
       
       setBillingAvailable(available);
       
       if (!available) {
-        console.error('Google Play Billing not available. Possible reasons:');
-        console.error('1. App not installed from Play Store');
-        console.error('2. Digital Goods API not enabled in TWA');
-        console.error('3. Asset links not configured properly');
-        console.error('4. App not signed with release certificate');
-        console.error('5. TWA not configured with Digital Goods API support');
+        console.error('❌ Google Play Billing NOT available. Diagnostics:', {
+          isTWA: diag.isTWA,
+          isStandalone: diag.isStandalone,
+          hasDigitalGoods: diag.hasDigitalGoods,
+          hasPaymentRequest: diag.hasPaymentRequest,
+          canUseBilling: diag.canUseBilling,
+          errors: diag.errors
+        });
       }
     };
     
     checkBillingAvailability();
   }, []);
 
-  const handlePurchase = async () => {
+  const handlePurchase = useCallback(async () => {
+    // Prevent duplicate clicks
+    if (purchaseInProgress.current) {
+      console.log('⚠️ Purchase already in progress, ignoring click');
+      return;
+    }
+    
     if (!user) {
       toast.error('Please login to continue');
       return;
     }
 
+    purchaseInProgress.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      // Get Google Play product ID
+      // VALIDATE: Get and validate Google Play product ID
       const productId = getGooglePlayProductId(durationMonths);
+      
+      if (!isValidGooglePlayProductId(productId)) {
+        throw new Error(`Invalid product ID: ${productId}`);
+      }
+      
       console.log('🛒 Initiating Google Play purchase:', { 
         planId, 
         productId, 
@@ -83,19 +105,20 @@ export const GooglePlayPaymentProcessor = ({
         userId: user.id 
       });
 
-      // Initiate purchase
+      // Initiate purchase (includes mandatory acknowledge)
       toast.info('Opening Google Play payment...');
       console.log('📱 Calling purchasePlan with product:', productId);
       const purchaseDetails = await googlePlayBilling.purchasePlan(productId);
       console.log('🎉 purchasePlan returned successfully:', purchaseDetails);
       
-      console.log('✅ Purchase completed:', purchaseDetails);
-      toast.success('Purchase successful! Verifying...');
+      console.log('✅ Purchase completed, token:', purchaseDetails.purchaseToken.substring(0, 20) + '...');
+      toast.success('Purchase successful! Verifying with server...');
       
       setLoading(false);
       setVerifying(true);
 
       // Verify purchase with backend
+      console.log('🔍 Sending to backend for verification...');
       const { data, error: verifyError } = await supabase.functions.invoke(
         'verify-google-play-purchase',
         {
@@ -108,11 +131,17 @@ export const GooglePlayPaymentProcessor = ({
         }
       );
 
-      if (verifyError || !data?.success) {
+      if (verifyError) {
+        console.error('❌ Supabase function error:', verifyError);
+        throw new Error(verifyError.message || 'Failed to verify purchase with server');
+      }
+      
+      if (!data?.success) {
+        console.error('❌ Backend verification failed:', data);
         throw new Error(data?.error || 'Failed to verify purchase');
       }
 
-      console.log('✅ Purchase verified:', data);
+      console.log('✅ Purchase verified by backend:', data);
       
       setPurchaseComplete(true);
       toast.success('Subscription activated successfully!');
@@ -142,13 +171,13 @@ export const GooglePlayPaymentProcessor = ({
       } else if (message.startsWith('SETUP_ERROR:')) {
         errorTitle = 'Setup Required';
         errorMessage = message.replace('SETUP_ERROR:', '').trim();
-        // Log detailed setup instructions
-        console.error('=== SETUP ERROR - CHECK THE FOLLOWING ===');
+        console.error('=== SETUP ERROR DETAILS ===');
         console.error('1. twa-manifest.json must have: "playBilling": { "enabled": true }');
-        console.error('2. App must be installed from Google Play Store (not sideloaded)');
+        console.error('2. App must be installed from Google Play Store');
         console.error('3. assetlinks.json must be properly configured');
         console.error('4. Product IDs must match exactly in Play Console');
         console.error('5. Subscription must be active in Play Console');
+        console.error('Diagnostics:', diagnostics);
         onFailure?.();
       } else if (message.startsWith('VERIFICATION_ERROR:')) {
         errorTitle = 'Verification Failed';
@@ -177,9 +206,11 @@ export const GooglePlayPaymentProcessor = ({
     } finally {
       setLoading(false);
       setVerifying(false);
+      purchaseInProgress.current = false;
     }
-  };
+  }, [user, planId, durationMonths, planName, onSuccess, onFailure, onCancel, diagnostics]);
 
+  // Billing not available UI
   if (billingAvailable === false) {
     return (
       <Card className="w-full max-w-md mx-auto border-destructive/50">
@@ -192,9 +223,25 @@ export const GooglePlayPaymentProcessor = ({
         <CardContent className="space-y-4">
           <Alert variant="destructive">
             <AlertDescription>
-              Google Play Billing is not available on this device. Please install the app from Google Play Store to make purchases.
+              Google Play Billing is not available. Please install the app from Google Play Store to make purchases.
             </AlertDescription>
           </Alert>
+          
+          {/* Debug info for development */}
+          {diagnostics && (
+            <div className="text-xs bg-muted p-2 rounded space-y-1">
+              <p><strong>Debug Info:</strong></p>
+              <p>TWA: {diagnostics.isTWA ? '✅' : '❌'}</p>
+              <p>Standalone: {diagnostics.isStandalone ? '✅' : '❌'}</p>
+              <p>Digital Goods API: {diagnostics.hasDigitalGoods ? '✅' : '❌'}</p>
+              <p>PaymentRequest: {diagnostics.hasPaymentRequest ? '✅' : '❌'}</p>
+              <p>Can Use Billing: {diagnostics.canUseBilling ? '✅' : '❌'}</p>
+              {diagnostics.errors.length > 0 && (
+                <p className="text-destructive">Errors: {diagnostics.errors.join(', ')}</p>
+              )}
+            </div>
+          )}
+          
           <Button 
             variant="outline" 
             className="w-full"
@@ -207,6 +254,7 @@ export const GooglePlayPaymentProcessor = ({
     );
   }
 
+  // Purchase complete UI
   if (purchaseComplete) {
     return (
       <Card className="w-full max-w-md mx-auto border-green-500/50">
@@ -233,6 +281,7 @@ export const GooglePlayPaymentProcessor = ({
     );
   }
 
+  // Main purchase UI
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
