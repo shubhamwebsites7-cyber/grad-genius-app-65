@@ -213,7 +213,7 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
     setProcessingPayment(plan.id);
 
     try {
-      const { purchasePlan, isGooglePlayBillingAvailable } = await import('@/services/googlePlayBilling');
+      const { purchasePlan, isGooglePlayBillingAvailable, getProducts } = await import('@/services/googlePlayBilling');
 
       const isAvailable = await isGooglePlayBillingAvailable();
       if (!isAvailable) {
@@ -225,8 +225,27 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
         return false;
       }
 
-      const productId = getGooglePlayProductId(plan.duration_months);
+      // Use google_product_id from database if available, otherwise fallback to generated ID
+      const productId = plan.google_product_id || getGooglePlayProductId(plan.duration_months);
       console.log('🛒 Starting purchase for product:', productId);
+      console.log('🛒 Plan google_product_id from DB:', plan.google_product_id);
+      console.log('🛒 Plan duration_months:', plan.duration_months);
+
+      // Verify product exists in Play Store before attempting purchase
+      try {
+        const products = await getProducts([productId]);
+        console.log('📦 Available products:', products);
+        if (!products || products.length === 0) {
+          toast({
+            title: 'Product Setup Required',
+            description: `Product ${productId} is not yet available in Google Play Console. Please contact support.`,
+            variant: 'destructive',
+          });
+          return false;
+        }
+      } catch (productErr: any) {
+        console.error('⚠️ Could not verify product, attempting purchase anyway:', productErr);
+      }
 
       toast({ title: 'Opening Google Play', description: 'Please complete payment in Google Play...' });
 
@@ -257,9 +276,14 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
       if (err.message?.includes('cancelled') || err.message?.includes('CANCELLED')) {
         toast({ title: 'Purchase Cancelled', description: 'You can try again anytime.' });
       } else if (err.message?.includes('not found') || err.message?.includes('SETUP_ERROR')) {
+        console.error('🚨 Product setup issue:', {
+          productId: plan.google_product_id || getGooglePlayProductId(plan.duration_months),
+          planId: plan.id,
+          error: err.message
+        });
         toast({
           title: 'Product Not Available',
-          description: 'This subscription is being set up. Please try again later.',
+          description: 'Subscription products are being configured. Please try again in a few minutes or contact support.',
           variant: 'destructive',
         });
       } else {

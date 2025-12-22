@@ -317,24 +317,21 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     service = await getDigitalGoodsService();
     console.log('✅ Digital Goods service obtained');
     
-    // Verify the product exists using SKU
+    // Try to verify the product exists (but don't block purchase if this fails)
     console.log('🔍 Checking if product exists in Play Console with SKU:', sku);
     try {
       const productDetails = await service.getDetails([sku]);
       console.log('📦 Product details from Play Console:', JSON.stringify(productDetails, null, 2));
       
       if (!productDetails || productDetails.length === 0) {
-        console.error(`❌ Product ${sku} not found in Play Console`);
-        throw new Error(`SETUP_ERROR: Product ${sku} not found in Play Console. Verify: 1) SKU matches exactly, 2) Subscription is active, 3) Package name matches`);
+        console.warn(`⚠️ Product ${sku} not returned by getDetails - proceeding with PaymentRequest anyway`);
+        // Don't throw error - product might still work with PaymentRequest
       } else {
-        console.log('✅ Product exists in Play Console, proceeding with purchase...');
+        console.log('✅ Product exists in Play Console:', productDetails[0]);
       }
     } catch (detailsError: any) {
-      if (detailsError.message?.includes('SETUP_ERROR')) {
-        throw detailsError;
-      }
-      console.warn('⚠️ Error getting product details:', detailsError.message);
-      // Continue anyway - product might still work with PaymentRequest
+      console.warn('⚠️ Error getting product details (non-blocking):', detailsError.message);
+      // Continue anyway - PaymentRequest might still work
     }
     
     // Create payment request with SKU only
