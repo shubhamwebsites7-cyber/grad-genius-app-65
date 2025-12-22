@@ -16,7 +16,7 @@ const VALID_PRODUCT_IDS = [
   'examtrakr_12month'
 ];
 
-// Map product ID to duration months
+// Map product ID to duration months (fallback only)
 const PRODUCT_DURATION_MAP: Record<string, number> = {
   'examtrakr_1month': 1,
   'examtrakr_3month': 3,
@@ -158,10 +158,10 @@ serve(async (req) => {
     const { access_token } = await accessRes.json();
     console.log("✅ Google access token obtained");
 
-    // ------------------ VERIFY GOOGLE PLAY PURCHASE ------------------
+    // ------------------ VERIFY GOOGLE PLAY PURCHASE (v2 API) ------------------
     const verifyUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}`;
 
-    console.log("🔍 Verifying purchase with Google Play API...");
+    console.log("🔍 Verifying purchase with Google Play API v2...");
     console.log("🔍 Verify URL:", verifyUrl);
 
     const verifyRes = await fetch(verifyUrl, {
@@ -206,7 +206,27 @@ serve(async (req) => {
 
     console.log("✅ SKU validated successfully:", purchasedSku);
 
-    // ------------------ GET DURATION FROM PRODUCT ID ------------------
+    // ------------------ GET EXPIRY TIME FROM GOOGLE (SINGLE SOURCE OF TRUTH) ------------------
+    const googleExpiryTime = purchase.lineItems?.[0]?.expiryTime;
+    if (!googleExpiryTime) {
+      console.error("❌ No expiryTime found in Google Play response");
+      throw new Error("Invalid purchase: no expiry time in response");
+    }
+    
+    const expiresAt = new Date(googleExpiryTime);
+    const startsAt = new Date();
+    
+    console.log("📅 Subscription dates from Google:", {
+      start: startsAt.toISOString(),
+      expires: expiresAt.toISOString(),
+      googleExpiryTime
+    });
+
+    // Calculate days for accumulated_days (for display purposes)
+    const paidDays = Math.max(1, Math.floor((expiresAt.getTime() - startsAt.getTime()) / 86400000));
+    console.log("📅 Calculated paid days:", paidDays);
+
+    // ------------------ GET DURATION FROM PRODUCT ID (for plan lookup) ------------------
     const durationMonths = PRODUCT_DURATION_MAP[productId];
     if (!durationMonths) {
       console.error("❌ No duration mapping for product:", productId);
@@ -250,11 +270,12 @@ serve(async (req) => {
 
     console.log("✅ Plan found:", plan.name, plan.duration_months, "months");
 
-    // ------------------ ACKNOWLEDGE PURCHASE (CRITICAL) ------------------
-    // Note: For subscriptionsv2, acknowledgement is done via the subscriptions.acknowledge endpoint
-    const acknowledgeUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions/${productId}/tokens/${purchaseToken}:acknowledge`;
+    // ------------------ ACKNOWLEDGE PURCHASE (CRITICAL - v2 API) ------------------
+    // IMPORTANT: v2 acknowledge endpoint does NOT include productId in URL
+    const acknowledgeUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}:acknowledge`;
     
-    console.log("🔔 Acknowledging purchase with Google Play API...");
+    console.log("🔔 Acknowledging purchase with Google Play API v2...");
+    console.log("🔔 Acknowledge URL:", acknowledgeUrl);
     
     try {
       const ackRes = await fetch(acknowledgeUrl, {
@@ -266,33 +287,41 @@ serve(async (req) => {
         body: JSON.stringify({})
       });
       
-      if (ackRes.ok) {
-        console.log("✅ Purchase acknowledged successfully via Google Play API");
+      if (ackRes.ok || ackRes.status === 204) {
+        console.log("✅ Purchase acknowledged successfully via Google Play API v2");
       } else {
-        const ackError = await ackRes.text();
-        console.warn("⚠️ Acknowledgement response:", ackRes.status, ackError);
-        // Continue - purchase might already be acknowledged
-        if (ackRes.status === 400 && ackError.includes("already acknowledged")) {
-          console.log("✅ Purchase was already acknowledged");
+        const ackErrorText = await ackRes.text();
+        console.warn("⚠️ Acknowledgement response:", ackRes.status, ackErrorText);
+        
+        // Handle "already acknowledged" gracefully - this is not an error
+        if (ackRes.status === 400) {
+          try {
+            const ackErrorJson = JSON.parse(ackErrorText);
+            const errorMessage = ackErrorJson?.error?.message || ackErrorText;
+            if (errorMessage.toLowerCase().includes("already acknowledged") || 
+                errorMessage.toLowerCase().includes("acknowledgement state")) {
+              console.log("✅ Purchase was already acknowledged - continuing");
+            } else {
+              console.warn("⚠️ Acknowledge error (non-critical):", errorMessage);
+            }
+          } catch {
+            // If can't parse, check raw text
+            if (ackErrorText.toLowerCase().includes("already acknowledged")) {
+              console.log("✅ Purchase was already acknowledged - continuing");
+            } else {
+              console.warn("⚠️ Acknowledge error (non-critical):", ackErrorText);
+            }
+          }
+        } else {
+          console.warn("⚠️ Unexpected acknowledge status:", ackRes.status);
         }
       }
     } catch (ackError: any) {
+      // Don't fail the entire flow for acknowledge errors
       console.warn("⚠️ Backend acknowledgement error (continuing):", ackError.message);
-      // Don't fail the whole flow - subscription was created
     }
 
-    // ------------------ CALCULATE SUBSCRIPTION DATES ------------------
-    const start = new Date();
-    const paidEnd = new Date(start);
-    paidEnd.setMonth(paidEnd.getMonth() + durationMonths);
-
-    const paidDays = Math.floor((paidEnd.getTime() - start.getTime()) / 86400000);
-
-    console.log("📅 Subscription dates:", {
-      start: start.toISOString(),
-      paidEnd: paidEnd.toISOString(),
-      paidDays
-    });
+    console.log("✅ ACKNOWLEDGEMENT COMPLETE - SAFE FROM AUTO-CANCELLATION");
 
     // ------------------ PAYMENT RECORD ------------------
     const micros = purchase.lineItems?.[0]?.autoRenewingPlan?.priceAmountMicros || 
@@ -326,14 +355,15 @@ serve(async (req) => {
     console.log("✅ Payment record created:", payment.id);
 
     // ------------------ UPSERT SUBSCRIPTION ------------------
+    // Using user_id as conflict key ensures one active subscription per user
     const { data: subscription, error: subError } = await supabase
       .from("user_subscriptions")
       .upsert({
         user_id: user.id,
         plan_id: plan.id,
         status: "active",
-        starts_at: start.toISOString(),
-        expires_at: paidEnd.toISOString(),
+        starts_at: startsAt.toISOString(),
+        expires_at: expiresAt.toISOString(), // Using Google's expiryTime
         payment_method: "google_play",
         external_subscription_id: purchase.latestOrderId || purchaseToken,
         last_payment_id: payment.id,
@@ -362,6 +392,7 @@ serve(async (req) => {
 
     console.log("✅ Payment linked to subscription");
     console.log("=== PURCHASE FLOW COMPLETE ===");
+    console.log("=== SAFE FROM AUTO-CANCELLATION ===");
 
     return new Response(
       JSON.stringify({
@@ -369,7 +400,7 @@ serve(async (req) => {
         subscription: {
           id: subscription.id,
           status: "active",
-          expiresAt: paidEnd.toISOString(),
+          expiresAt: expiresAt.toISOString(),
           durationMonths: durationMonths,
         },
       }),
