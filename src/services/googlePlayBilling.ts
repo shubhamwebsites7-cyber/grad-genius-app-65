@@ -317,21 +317,22 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     service = await getDigitalGoodsService();
     console.log('✅ Digital Goods service obtained');
     
-    // Try to verify the product exists (but don't block purchase if this fails)
-    console.log('🔍 Checking if product exists in Play Console with SKU:', sku);
+    // NOTE: getDetails() may return empty even for valid products
+    // This is NOT a blocker - we proceed directly with PaymentRequest
+    // Google Play handles product validation during the actual purchase flow
+    console.log('🔍 Proceeding with PaymentRequest for SKU:', sku);
+    console.log('ℹ️ Note: Product validation happens during PaymentRequest.show()');
+    
+    // Optional: Try to get details for logging only (non-blocking)
     try {
       const productDetails = await service.getDetails([sku]);
-      console.log('📦 Product details from Play Console:', JSON.stringify(productDetails, null, 2));
-      
-      if (!productDetails || productDetails.length === 0) {
-        console.warn(`⚠️ Product ${sku} not returned by getDetails - proceeding with PaymentRequest anyway`);
-        // Don't throw error - product might still work with PaymentRequest
+      if (productDetails && productDetails.length > 0) {
+        console.log('📦 Product details available:', JSON.stringify(productDetails[0], null, 2));
       } else {
-        console.log('✅ Product exists in Play Console:', productDetails[0]);
+        console.log('ℹ️ getDetails() returned empty - this is normal, product validation will happen during purchase');
       }
     } catch (detailsError: any) {
-      console.warn('⚠️ Error getting product details (non-blocking):', detailsError.message);
-      // Continue anyway - PaymentRequest might still work
+      console.log('ℹ️ getDetails() call failed (non-blocking, proceeding with purchase):', detailsError.message);
     }
     
     // Create payment request with SKU only
@@ -428,6 +429,12 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     
     if (error.name === 'InvalidStateError') {
       throw new Error('SETUP_ERROR: Payment request in invalid state. Please try again.');
+    }
+    
+    // Handle "item not available" or similar Google Play errors
+    const errorMsg = error.message?.toLowerCase() || '';
+    if (errorMsg.includes('not available') || errorMsg.includes('item unavailable') || errorMsg.includes('product not found')) {
+      throw new Error('SETUP_ERROR: Product not available in Google Play. Please ensure: 1) Subscription has an active Base Plan in Play Console, 2) Base Plan is set to active status, 3) App is published (at least internal testing track)');
     }
     
     throw new Error(`PURCHASE_ERROR: ${error.message || 'Unknown error occurred during purchase'}`);
