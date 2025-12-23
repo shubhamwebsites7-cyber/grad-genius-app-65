@@ -3,8 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { getPlatform, shouldUseGooglePlay, shouldShowAppDownload, type Platform } from '@/utils/platformDetection';
-import { getGooglePlayProductId } from '@/config/googlePlayProducts';
+import { getPlatform, shouldUseCashfree, type Platform } from '@/utils/platformDetection';
 
 // Types
 export interface PlanPricing {
@@ -64,9 +63,9 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({ hours: 0, minutes: 0, seconds: 0 });
   const [platform, setPlatform] = useState<Platform>('web');
 
-  // Derived state
-  const isGooglePlay = shouldUseGooglePlay(userCountry);
-  const showDownloadBanner = shouldShowAppDownload(userCountry) && platform === 'web';
+  // Derived state - Cashfree only for Indian users
+  const canUseCashfree = shouldUseCashfree(userCountry);
+  const isPaymentAvailable = canUseCashfree;
   const selectedPlan = plans.find(p => p.id === selectedPlanId) || null;
 
   // Detect platform on mount
@@ -208,97 +207,6 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
     }
   }, []);
 
-  // Handle Google Play purchase
-  const handleGooglePlayPurchase = async (plan: SubscriptionPlan) => {
-    setProcessingPayment(plan.id);
-
-    try {
-      const { purchasePlan, isGooglePlayBillingAvailable, getProducts } = await import('@/services/googlePlayBilling');
-
-      const isAvailable = await isGooglePlayBillingAvailable();
-      if (!isAvailable) {
-        toast({
-          title: 'Google Play Not Available',
-          description: 'Please install the app from Google Play Store to make purchases.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-
-      // Use google_product_id from database if available, otherwise fallback to generated ID
-      const productId = plan.google_product_id || getGooglePlayProductId(plan.duration_months);
-      console.log('🛒 Starting purchase for product:', productId);
-      console.log('🛒 Plan google_product_id from DB:', plan.google_product_id);
-      console.log('🛒 Plan duration_months:', plan.duration_months);
-
-      // Verify product exists in Play Store before attempting purchase
-      try {
-        const products = await getProducts([productId]);
-        console.log('📦 Available products:', products);
-        if (!products || products.length === 0) {
-          toast({
-            title: 'Product Setup Required',
-            description: `Product ${productId} is not yet available in Google Play Console. Please contact support.`,
-            variant: 'destructive',
-          });
-          return false;
-        }
-      } catch (productErr: any) {
-        console.error('⚠️ Could not verify product, attempting purchase anyway:', productErr);
-      }
-
-      toast({ title: 'Opening Google Play', description: 'Please complete payment in Google Play...' });
-
-      const purchaseDetails = await purchasePlan(productId);
-      console.log('✅ Purchase completed:', purchaseDetails);
-
-      toast({ title: 'Verifying Purchase', description: 'Please wait while we verify your purchase...' });
-
-      const { data, error: verifyError } = await supabase.functions.invoke('verify-google-play-purchase', {
-        body: {
-          purchaseToken: purchaseDetails.purchaseToken,
-          productId,
-          packageName: 'com.examtrakr.app',
-          planId: plan.id,
-        },
-      });
-
-      if (verifyError || !data?.success) {
-        throw new Error(data?.error || 'Failed to verify purchase');
-      }
-
-      toast({ title: 'Success!', description: 'Your subscription has been activated.' });
-      navigate('/profile?payment_status=success');
-      return true;
-    } catch (err: any) {
-      console.error('❌ Google Play purchase error:', err);
-
-      if (err.message?.includes('cancelled') || err.message?.includes('CANCELLED')) {
-        toast({ title: 'Purchase Cancelled', description: 'You can try again anytime.' });
-      } else if (err.message?.includes('not found') || err.message?.includes('SETUP_ERROR')) {
-        console.error('🚨 Product setup issue:', {
-          productId: plan.google_product_id || getGooglePlayProductId(plan.duration_months),
-          planId: plan.id,
-          error: err.message
-        });
-        toast({
-          title: 'Product Not Available',
-          description: 'Subscription products are being configured. Please try again in a few minutes or contact support.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Purchase Failed',
-          description: err.message || 'Something went wrong. Please try again.',
-          variant: 'destructive',
-        });
-      }
-      return false;
-    } finally {
-      setProcessingPayment(null);
-    }
-  };
-
   // Handle Cashfree purchase
   const handleCashfreePurchase = async (plan: SubscriptionPlan) => {
     // Validate phone
@@ -377,19 +285,16 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
       return;
     }
 
-    if (showDownloadBanner) {
+    if (!isPaymentAvailable) {
       toast({
-        title: 'Download Required',
-        description: 'Please download our app from Play Store to subscribe.',
+        title: 'Payment Not Available',
+        description: 'Payments are currently only available for users in India.',
+        variant: 'destructive',
       });
       return;
     }
 
-    if (isGooglePlay) {
-      await handleGooglePlayPurchase(targetPlan);
-    } else {
-      await handleCashfreePurchase(targetPlan);
-    }
+    await handleCashfreePurchase(targetPlan);
   };
 
   // Auto-fetch on mount
@@ -440,8 +345,9 @@ export const usePricingPlans = (options: UsePricingPlansOptions = { autoFetch: t
     timeRemaining,
     platform,
     // Derived
-    isGooglePlay,
-    showDownloadBanner,
+    isGooglePlay: false, // Always false - Google Play disabled
+    showDownloadBanner: false, // Disabled
+    isPaymentAvailable,
     // Actions
     setSelectedPlanId,
     setPhoneNumber: setPhoneNumberWithValidation,

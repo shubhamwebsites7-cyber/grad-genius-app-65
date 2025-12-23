@@ -1,11 +1,13 @@
-const CACHE_NAME = 'examtrakr-v7';
+const CACHE_NAME = 'examtrakr-v8';
 const urlsToCache = [
   '/',
+  '/?utm_source=twa',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
   '/examtrakr.png',
-  '/favicon.png'
+  '/favicon.png',
+  '/offline.html'
 ];
 
 const OFFLINE_PAGE = '/offline.html';
@@ -94,7 +96,8 @@ self.addEventListener('fetch', (event) => {
       request.destination === 'script' || 
       url.pathname.endsWith('.js') || 
       url.pathname.endsWith('.html') ||
-      url.pathname === '/') {
+      url.pathname === '/' ||
+      url.pathname === '/?utm_source=twa') {
     event.respondWith(
       fetch(request)
         .then((response) => {
