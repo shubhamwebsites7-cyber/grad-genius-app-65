@@ -8,12 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertCircle, Loader2, Phone } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Phone, Globe } from 'lucide-react';
 import { DownloadAppBanner } from '@/components/DownloadAppBanner';
 import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 import { PremiumFeatures } from '@/components/pricing/PremiumFeatures';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 import { useAuth } from '@/hooks/useAuth';
+import { isTWAApp } from '@/utils/platformDetection';
 
 const Pricing = () => {
   const { user } = useAuth();
@@ -26,7 +27,6 @@ const Pricing = () => {
     phoneNumber,
     phoneError,
     selectedPlanId,
-    isGooglePlay,
     showDownloadBanner,
     setSelectedPlanId,
     setPhoneNumber,
@@ -34,6 +34,9 @@ const Pricing = () => {
     formatPrice,
     getDurationLabel,
   } = usePricingPlans();
+
+  // Check if running in TWA (Play Store app) - payments disabled
+  const isTWA = isTWAApp();
 
   return (
     <>
@@ -73,13 +76,29 @@ const Pricing = () => {
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-12">
+              {/* TWA App Message - No payments in Play Store app */}
+              {isTWA && (
+                <div className="max-w-2xl mx-auto">
+                  <Alert className="border-primary/30 bg-primary/5">
+                    <Globe className="h-5 w-5 text-primary" />
+                    <AlertDescription className="text-base">
+                      <strong>Subscription available on website only</strong>
+                      <p className="mt-2 text-muted-foreground">
+                        To subscribe, please visit examtrakr.com in your browser. 
+                        You can continue using the app for content tracking and progress monitoring.
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+
               {/* Download App Banner for Non-Indian Users on Web */}
-              {showDownloadBanner && (
+              {showDownloadBanner && !isTWA && (
                 <DownloadAppBanner countryName={userCountry === 'US' ? 'United States' : 'your country'} />
               )}
 
-              {/* Phone Number Input - Only for Cashfree (Indian users) */}
-              {user && userCountry === 'IN' && !showDownloadBanner && (
+              {/* Phone Number Input - Only for Cashfree (Indian users on web, not TWA) */}
+              {user && userCountry === 'IN' && !showDownloadBanner && !isTWA && (
                 <div className="max-w-md mx-auto space-y-2">
                   <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
                     <Phone className="h-4 w-4" />
@@ -110,94 +129,90 @@ const Pricing = () => {
                 </div>
               )}
 
-              {/* Pricing Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-                {plans.map((plan) => {
-                  const isSelected = selectedPlanId === plan.id;
-                  const isProcessing = processingPayment === plan.id;
+              {/* Pricing Cards Grid - Hidden for TWA users */}
+              {!isTWA && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                  {plans.map((plan) => {
+                    const isSelected = selectedPlanId === plan.id;
+                    const isProcessing = processingPayment === plan.id;
 
-                  return (
-                    <Card
-                      key={plan.id}
-                      onClick={() => !showDownloadBanner && setSelectedPlanId(plan.id)}
-                      className={`relative cursor-pointer transition-all duration-200 ${
-                        isSelected && !showDownloadBanner
-                          ? 'border-primary border-2 shadow-md'
-                          : 'border-border hover:shadow-md'
-                      } ${showDownloadBanner ? 'opacity-60 cursor-not-allowed' : ''} ${
-                        plan.is_popular ? 'shadow-sm' : ''
-                      }`}
-                    >
-                      {/* Popular Badge */}
-                      {plan.is_popular && (
-                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
-                          <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-xs">
-                            Best Value
-                          </Badge>
-                        </div>
-                      )}
-
-                      <CardContent className="p-4 pt-6 space-y-4">
-                        {/* Duration */}
-                        <div className="text-center">
-                          <h3 className="text-lg font-semibold text-foreground">
-                            {getDurationLabel(plan.duration_months)}
-                          </h3>
-                        </div>
-
-                        {/* Pricing */}
-                        {plan.pricing ? (
-                          <div className="text-center space-y-1">
-                            {plan.pricing.original_price && (
-                              <div className="text-xs text-muted-foreground line-through">
-                                {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
-                              </div>
-                            )}
-                            <div className="text-2xl font-bold text-foreground">
-                              {formatPrice(plan.pricing.price, plan.pricing.currency)}
-                            </div>
-                            {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                              <Badge variant="secondary" className="bg-success/10 text-success text-xs">
-                                Save {plan.pricing.discount_percentage}%
-                              </Badge>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center text-xs text-muted-foreground">
-                            Pricing not available
+                    return (
+                      <Card
+                        key={plan.id}
+                        onClick={() => !showDownloadBanner && setSelectedPlanId(plan.id)}
+                        className={`relative cursor-pointer transition-all duration-200 ${
+                          isSelected && !showDownloadBanner
+                            ? 'border-primary border-2 shadow-md'
+                            : 'border-border hover:shadow-md'
+                        } ${showDownloadBanner ? 'opacity-60 cursor-not-allowed' : ''} ${
+                          plan.is_popular ? 'shadow-sm' : ''
+                        }`}
+                      >
+                        {plan.is_popular && (
+                          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+                            <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-xs">
+                              Best Value
+                            </Badge>
                           </div>
                         )}
 
-                        {/* Purchase Button */}
-                        <Button
-                          variant={plan.is_popular ? 'default' : 'outline'}
-                          size="sm"
-                          className="w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!showDownloadBanner) {
-                              setSelectedPlanId(plan.id);
-                              handlePurchase(plan);
-                            }
-                          }}
-                          disabled={showDownloadBanner || processingPayment !== null || !plan.pricing}
-                        >
-                          {isProcessing ? (
-                            <>
-                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                              Processing...
-                            </>
-                          ) : isGooglePlay ? (
-                            'Subscribe'
+                        <CardContent className="p-4 pt-6 space-y-4">
+                          <div className="text-center">
+                            <h3 className="text-lg font-semibold text-foreground">
+                              {getDurationLabel(plan.duration_months)}
+                            </h3>
+                          </div>
+
+                          {plan.pricing ? (
+                            <div className="text-center space-y-1">
+                              {plan.pricing.original_price && (
+                                <div className="text-xs text-muted-foreground line-through">
+                                  {formatPrice(plan.pricing.original_price, plan.pricing.currency)}
+                                </div>
+                              )}
+                              <div className="text-2xl font-bold text-foreground">
+                                {formatPrice(plan.pricing.price, plan.pricing.currency)}
+                              </div>
+                              {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
+                                <Badge variant="secondary" className="bg-success/10 text-success text-xs">
+                                  Save {plan.pricing.discount_percentage}%
+                                </Badge>
+                              )}
+                            </div>
                           ) : (
-                            'Choose Plan'
+                            <div className="text-center text-xs text-muted-foreground">
+                              Pricing not available
+                            </div>
                           )}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+
+                          <Button
+                            variant={plan.is_popular ? 'default' : 'outline'}
+                            size="sm"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!showDownloadBanner) {
+                                setSelectedPlanId(plan.id);
+                                handlePurchase(plan);
+                              }
+                            }}
+                            disabled={showDownloadBanner || processingPayment !== null || !plan.pricing}
+                          >
+                            {isProcessing ? (
+                              <>
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              'Choose Plan'
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Premium Features Section */}
               <PremiumFeatures />
