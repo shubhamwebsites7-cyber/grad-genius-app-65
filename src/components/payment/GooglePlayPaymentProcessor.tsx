@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import * as googlePlayBilling from '@/services/googlePlayBilling';
-import { getGooglePlayProductId, isValidGooglePlayProductId } from '@/config/googlePlayProducts';
+import { getGooglePlayProductId, getGooglePlaySKU, isValidGooglePlayProductId } from '@/config/googlePlayProducts';
 import { getPlatform, shouldUseGooglePlay } from '@/utils/platformDetection';
 
 interface GooglePlayPaymentProcessorProps {
@@ -91,8 +91,9 @@ export const GooglePlayPaymentProcessor = ({
     setError(null);
 
     try {
-      // VALIDATE: Get and validate Google Play product ID
+      // Get product ID and full SKU (productId:basePlanId format for prepaid subscriptions)
       const productId = getGooglePlayProductId(durationMonths);
+      const fullSku = getGooglePlaySKU(durationMonths);
       
       if (!isValidGooglePlayProductId(productId)) {
         throw new Error(`Invalid product ID: ${productId}`);
@@ -100,15 +101,16 @@ export const GooglePlayPaymentProcessor = ({
       
       console.log('🛒 Initiating Google Play purchase:', { 
         planId, 
-        productId, 
+        productId,
+        fullSku,
         durationMonths,
         userId: user.id 
       });
 
-      // Initiate purchase (includes mandatory acknowledge)
+      // Initiate purchase with full SKU (includes mandatory acknowledge)
       toast.info('Opening Google Play payment...');
-      console.log('📱 Calling purchasePlan with product:', productId);
-      const purchaseDetails = await googlePlayBilling.purchasePlan(productId);
+      console.log('📱 Calling purchasePlan with SKU:', fullSku);
+      const purchaseDetails = await googlePlayBilling.purchasePlan(fullSku);
       console.log('🎉 purchasePlan returned successfully:', purchaseDetails);
       
       console.log('✅ Purchase completed, token:', purchaseDetails.purchaseToken.substring(0, 20) + '...');
