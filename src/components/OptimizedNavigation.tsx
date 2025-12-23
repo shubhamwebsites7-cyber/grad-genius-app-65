@@ -20,7 +20,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Exams', href: '/exams', icon: BookOpen },
-  { name: 'Pricing', href: '/pricing', icon: CreditCard },
+  { name: 'Pricing', href: '/pricing', icon: CreditCard, hideOnMobile: true },
   { name: 'Profile', href: '/profile', icon: User },
   { name: 'Feedback', href: '/feedback', icon: MessageSquare },
 ];
@@ -299,7 +299,7 @@ export const Navigation = memo(() => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 shadow-lg">
         <nav className="flex justify-around items-center h-16 px-2">
-          {navItems.map((item) => (
+          {navItems.filter(item => !item.hideOnMobile).map((item) => (
             <Link
               key={item.name}
               to={item.href}
