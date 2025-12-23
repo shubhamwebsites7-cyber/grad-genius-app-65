@@ -15,16 +15,17 @@ export const isStandalone = (): boolean => {
 
 /**
  * Check if running as Play Store TWA (Trusted Web Activity)
+ * STRICT detection - only true TWA from Play Store, not regular PWA or browser
  */
 export const isPlayStoreApp = (): boolean => {
-  // TWA detection methods
+  // Only detect as Play Store app if:
+  // 1. Referrer is android-app:// (TWA launched from Play Store)
+  // 2. OR explicitly marked via localStorage (set during TWA first launch)
   const isTWA = 
     document.referrer.includes('android-app://') ||
-    (window.location.search.includes('utm_source=homescreen')) ||
-    (window.matchMedia('(display-mode: standalone)').matches && isAndroid()) ||
     localStorage.getItem('app_source') === 'playstore';
   
-  return isTWA && isStandalone();
+  return isTWA;
 };
 
 /**
