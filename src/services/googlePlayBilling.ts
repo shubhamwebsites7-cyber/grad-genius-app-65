@@ -4,9 +4,11 @@
  * 
  * CRITICAL: This service handles subscription purchases.
  * Missing acknowledge() call causes auto-cancellation after 3 days!
+ * 
+ * IMPORTANT: For PREPAID subscriptions, use format "productId:basePlanId"
  */
 
-import { isValidGooglePlayProductId } from '@/config/googlePlayProducts';
+import { isValidGooglePlayProductId, extractProductId } from '@/config/googlePlayProducts';
 
 export interface GooglePlayProduct {
   itemId: string;
@@ -214,12 +216,16 @@ export const getProducts = async (productIds: string[]): Promise<GooglePlayProdu
  * Purchase a subscription using Play Billing
  * CRITICAL: This function now includes MANDATORY acknowledgement
  */
-export const purchasePlan = async (productId: string): Promise<PurchaseDetails> => {
+export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
   console.log('=== PURCHASE FLOW START ===');
-  console.log('🔍 Product ID:', productId);
+  console.log('🔍 SKU (full format):', sku);
   console.log('🔍 Is TWA:', isTWA());
   console.log('🔍 User Agent:', navigator.userAgent);
   console.log('🔍 Referrer:', document.referrer);
+  
+  // Extract product ID for validation (handles both "productId" and "productId:basePlanId" formats)
+  const productId = extractProductId(sku);
+  console.log('🔍 Extracted Product ID:', productId);
   
   // VALIDATE: Product ID must be valid
   if (!isValidGooglePlayProductId(productId)) {
@@ -239,9 +245,8 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
     throw new Error('SETUP_ERROR: Google Play Billing APIs not available. App must be installed from Play Store with TWA billing enabled.');
   }
   
-  // Use SKU directly (no basePlanId splitting needed)
-  const sku = productId;
-  console.log('🔍 SKU for purchase:', sku);
+  // Use full SKU for purchase (productId:basePlanId format for prepaid subscriptions)
+  console.log('🔍 Full SKU for purchase:', sku);
   
   // Method 1: Use navigator.playBilling (preferred for TWA)
   if (navigator.playBilling) {
@@ -277,7 +282,7 @@ export const purchasePlan = async (productId: string): Promise<PurchaseDetails> 
       }
       
       return {
-        itemId: productId,
+        itemId: productId, // Return just the product ID for backend verification
         purchaseToken: purchaseToken,
         purchaseTime: Date.now(),
         purchaseState: 'purchased'
