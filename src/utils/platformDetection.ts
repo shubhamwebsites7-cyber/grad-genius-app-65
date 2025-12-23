@@ -35,6 +35,8 @@ export const getPlatform = (): Platform => {
  * Determine which payment gateway to use
  * @param countryCode - User's country code (e.g., 'IN', 'US')
  * @param platform - Current platform (optional, auto-detected if not provided)
+ * 
+ * TEMPORARILY MODIFIED: Google Play Billing disabled for Play Store production release
  */
 export const getPaymentGateway = (
   countryCode: string,
@@ -42,9 +44,10 @@ export const getPaymentGateway = (
 ): PaymentGateway => {
   const currentPlatform = platform || getPlatform();
   
-  // Play Store app always uses Google Play Billing
+  // TEMPORARY: Play Store app should NOT allow payments
+  // Show "unavailable" so UI can display appropriate message
   if (currentPlatform === 'playstore-app') {
-    return 'google-play';
+    return 'unavailable';
   }
   
   // Web or PWA with Indian users - use Cashfree
@@ -69,15 +72,20 @@ export const shouldShowAppDownload = (countryCode: string): boolean => {
 
 /**
  * Check if Google Play Billing should be used
+ * TEMPORARILY DISABLED: Always returns false for Play Store production release
+ * Google Play Billing will be re-enabled later
  */
 export const shouldUseGooglePlay = (countryCode?: string): boolean => {
-  const platform = getPlatform();
+  // TEMPORARY: Disable Google Play Billing completely
+  // All users should use Cashfree or see "unavailable" message
+  return false;
   
-  if (!countryCode) {
-    return platform === 'playstore-app';
-  }
-  
-  return getPaymentGateway(countryCode, platform) === 'google-play';
+  // Original logic (commented out for later re-enable):
+  // const platform = getPlatform();
+  // if (!countryCode) {
+  //   return platform === 'playstore-app';
+  // }
+  // return getPaymentGateway(countryCode, platform) === 'google-play';
 };
 
 /**
@@ -103,6 +111,14 @@ export const getPlatformName = (): string => {
     default:
       return 'Unknown Platform';
   }
+};
+
+/**
+ * Check if running in TWA (Play Store app)
+ * Used to determine if payments should be hidden
+ */
+export const isTWAApp = (): boolean => {
+  return getPlatform() === 'playstore-app';
 };
 
 /**
