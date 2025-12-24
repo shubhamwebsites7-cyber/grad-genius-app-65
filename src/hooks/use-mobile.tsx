@@ -1,71 +1,125 @@
 import * as React from "react";
-import { isStandalone, isPlayStoreApp } from "@/utils/pwaUtils";
 
 const MOBILE_BREAKPOINT = 768;
 
 /**
  * Check if running in TWA (Trusted Web Activity) mode
- * In TWA mode, we always force mobile UI regardless of screen size
+ * Uses multiple detection methods - doesn't rely on viewport width
+ * TWA shares Chrome's desktop mode setting, so we can't use screen size alone
  */
 const isTWAMode = (): boolean => {
-  // Check for TWA markers
-  const isTWA = document.referrer.includes('android-app://') ||
-                localStorage.getItem('app_source') === 'playstore' ||
-                document.documentElement.classList.contains('twa-mode');
+  if (typeof window === 'undefined') return false;
   
-  // Check for standalone display mode
-  const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
-                           (window.navigator as any).standalone === true;
+  // Method 1: Check referrer for android-app:// (most reliable for fresh launch)
+  const hasAndroidReferrer = document.referrer.includes('android-app://');
   
-  // If standalone on Android, treat as TWA
-  const isAndroid = /Android/.test(navigator.userAgent);
+  // Method 2: Check localStorage marker (persists across sessions)
+  const isMarkedAsPlayStore = localStorage.getItem('app_source') === 'playstore';
   
-  return isTWA || (isStandaloneMode && isAndroid) || isPlayStoreApp();
+  // Method 3: Check CSS class set by index.html script
+  const hasTWAClass = document.documentElement.classList.contains('twa-mode');
+  
+  // Method 4: Check standalone display mode on Android
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isStandaloneAndroid = isStandalone && isAndroid;
+  
+  // Method 5: Check for minimal-ui (some TWAs use this)
+  const isMinimalUI = window.matchMedia('(display-mode: minimal-ui)').matches;
+  const isMinimalUIAndroid = isMinimalUI && isAndroid;
+  
+  // If any TWA indicator is true, mark for future sessions
+  const isTWA = hasAndroidReferrer || isMarkedAsPlayStore || hasTWAClass || isStandaloneAndroid || isMinimalUIAndroid;
+  
+  if (isTWA && !isMarkedAsPlayStore) {
+    // Persist TWA detection for future app opens
+    try {
+      localStorage.setItem('app_source', 'playstore');
+      document.documentElement.classList.add('twa-mode');
+    } catch (e) {
+      // localStorage might not be available
+    }
+  }
+  
+  return isTWA;
+};
+
+/**
+ * Force mobile layout class on body for TWA mode
+ * This ensures CSS also respects mobile layout
+ */
+const applyTWAMobileLayout = (isTWA: boolean): void => {
+  if (typeof document === 'undefined') return;
+  
+  if (isTWA) {
+    document.documentElement.classList.add('force-mobile-layout');
+    document.body.classList.add('force-mobile-layout');
+  }
 };
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
-  const [isTWA, setIsTWA] = React.useState<boolean>(false);
+  // Initialize with TWA check for SSR safety
+  const [isTWA, setIsTWA] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return isTWAMode();
+  });
+  
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    // In TWA, always start as mobile
+    if (isTWAMode()) return true;
+    return window.innerWidth < MOBILE_BREAKPOINT;
+  });
 
   React.useEffect(() => {
-    // Check TWA mode on mount
     const twaMode = isTWAMode();
     setIsTWA(twaMode);
     
-    // If in TWA mode, always return true (mobile UI)
+    // Apply TWA mobile layout class
+    applyTWAMobileLayout(twaMode);
+    
+    // If in TWA mode, force mobile and skip responsive detection
     if (twaMode) {
       setIsMobile(true);
       console.log('[useIsMobile] TWA mode detected - forcing mobile UI');
       return;
     }
     
-    // Standard responsive detection for web
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => {
+    // Standard responsive detection for web browser
+    const checkMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
     };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
+    
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    mql.addEventListener("change", checkMobile);
+    checkMobile();
+    
+    return () => mql.removeEventListener("change", checkMobile);
   }, []);
 
-  // In TWA mode, always return true regardless of screen size
-  if (isTWA) {
-    return true;
-  }
-
-  return !!isMobile;
+  // TWA always returns true regardless of actual screen size
+  return isTWA || isMobile;
 }
 
 /**
  * Hook to detect if running in TWA mode
  */
 export function useIsTWA() {
-  const [isTWA, setIsTWA] = React.useState<boolean>(false);
+  const [isTWA, setIsTWA] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return isTWAMode();
+  });
   
   React.useEffect(() => {
-    setIsTWA(isTWAMode());
+    const twaMode = isTWAMode();
+    setIsTWA(twaMode);
+    applyTWAMobileLayout(twaMode);
   }, []);
   
   return isTWA;
 }
+
+/**
+ * Utility to check TWA mode synchronously (for non-hook contexts)
+ */
+export const checkIsTWA = (): boolean => isTWAMode();
