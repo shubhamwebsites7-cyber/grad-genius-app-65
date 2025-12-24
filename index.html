@@ -38,7 +38,7 @@
     <meta name="apple-mobile-web-app-title" content="Examtrakr" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     
-    <!-- TWA-specific: Prevent browser-like behavior -->
+    <!-- TWA-specific: Prevent browser-like behavior and force mobile layout -->
     <style>
       /* Prevent pull-to-refresh and overscroll */
       html, body {
@@ -67,6 +67,43 @@
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
       }
+      
+      /* Force mobile layout in TWA mode - override any min-width or desktop styles */
+      .twa-mode,
+      .force-mobile-layout {
+        /* Override any desktop min-width constraints */
+        min-width: 0 !important;
+        max-width: 100vw !important;
+      }
+      
+      .twa-mode *,
+      .force-mobile-layout * {
+        /* Prevent any element from forcing horizontal scroll */
+        max-width: 100% !important;
+      }
+      
+      /* Hide desktop-only elements in TWA */
+      .twa-mode .hidden-twa,
+      .force-mobile-layout .hidden-twa {
+        display: none !important;
+      }
+      
+      /* Force show mobile elements in TWA */
+      .twa-mode .show-twa,
+      .force-mobile-layout .show-twa {
+        display: block !important;
+      }
+      
+      /* Override md: breakpoint styles in TWA - force mobile behavior */
+      .twa-mode .md\:flex,
+      .force-mobile-layout .md\:flex {
+        display: none !important;
+      }
+      
+      .twa-mode .md\:hidden,
+      .force-mobile-layout .md\:hidden {
+        display: block !important;
+      }
     </style>
   </head>
 
@@ -90,13 +127,22 @@
         }
       })(window.location);
       
-      // Detect and mark TWA mode
+      // Detect and mark TWA mode early (before React hydrates)
       (function() {
         var isTWA = document.referrer.includes('android-app://') || 
-                    window.matchMedia('(display-mode: standalone)').matches;
-        if (isTWA) {
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    window.matchMedia('(display-mode: minimal-ui)').matches ||
+                    localStorage.getItem('app_source') === 'playstore';
+        var isAndroid = /Android/i.test(navigator.userAgent);
+        
+        if (isTWA || (isAndroid && window.matchMedia('(display-mode: standalone)').matches)) {
           document.documentElement.classList.add('twa-mode');
-          localStorage.setItem('app_source', 'playstore');
+          document.documentElement.classList.add('force-mobile-layout');
+          document.body.classList.add('force-mobile-layout');
+          try {
+            localStorage.setItem('app_source', 'playstore');
+          } catch(e) {}
+          console.log('[TWA] TWA mode detected and applied');
         }
       })();
     </script>

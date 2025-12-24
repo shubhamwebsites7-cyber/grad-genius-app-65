@@ -4,9 +4,11 @@
  * Check if app is running in standalone mode (installed PWA or APK)
  */
 export const isStandalone = (): boolean => {
-  // Check various standalone indicators
+  if (typeof window === 'undefined') return false;
+  
   const isStandaloneMode = 
     window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches ||
     (window.navigator as any).standalone || // iOS
     document.referrer.includes('android-app://'); // Android TWA
   
@@ -15,15 +17,33 @@ export const isStandalone = (): boolean => {
 
 /**
  * Check if running as Play Store TWA (Trusted Web Activity)
- * STRICT detection - only true TWA from Play Store, not regular PWA or browser
+ * Uses multiple detection methods - TWA shares Chrome's desktop mode
  */
 export const isPlayStoreApp = (): boolean => {
-  // Only detect as Play Store app if:
-  // 1. Referrer is android-app:// (TWA launched from Play Store)
-  // 2. OR explicitly marked via localStorage (set during TWA first launch)
-  const isTWA = 
-    document.referrer.includes('android-app://') ||
-    localStorage.getItem('app_source') === 'playstore';
+  if (typeof window === 'undefined') return false;
+  
+  // Check referrer (most reliable for fresh launch)
+  const hasAndroidReferrer = document.referrer.includes('android-app://');
+  
+  // Check localStorage marker (persists across sessions)
+  const isMarkedAsPlayStore = localStorage.getItem('app_source') === 'playstore';
+  
+  // Check CSS class set by index.html script
+  const hasTWAClass = document.documentElement.classList.contains('twa-mode');
+  
+  // Check standalone on Android
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isStandaloneAndroid = isStandalone() && isAndroid;
+  
+  const isTWA = hasAndroidReferrer || isMarkedAsPlayStore || hasTWAClass || isStandaloneAndroid;
+  
+  // Persist for future sessions
+  if (isTWA && !isMarkedAsPlayStore) {
+    try {
+      localStorage.setItem('app_source', 'playstore');
+      document.documentElement.classList.add('twa-mode');
+    } catch (e) {}
+  }
   
   return isTWA;
 };
