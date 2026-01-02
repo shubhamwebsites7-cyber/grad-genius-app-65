@@ -602,7 +602,7 @@ const Pricing = () => {
                               {formatPrice(plan.pricing.price, plan.pricing.currency)}
                             </div>
                             {plan.pricing.discount_percentage && plan.pricing.discount_percentage > 0 && (
-                              <Badge variant="secondary" className="bg-success/10 text-success text-xs">
+                              <Badge variant="secondary" className="bg-success/10 text-success text-xs pointer-events-none hover:bg-success/10">
                                 Save {plan.pricing.discount_percentage}%
                               </Badge>
                             )}
