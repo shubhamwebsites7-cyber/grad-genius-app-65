@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Navigation } from '@/components/OptimizedNavigation';
+import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,12 +14,9 @@ import { PremiumFeatures } from '@/components/pricing/PremiumFeatures';
 import { usePricingPlans } from '@/hooks/usePricingPlans';
 import { useAuth } from '@/hooks/useAuth';
 import { isTWAApp } from '@/utils/platformDetection';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const Pricing = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const {
     loading,
     plans,
@@ -40,13 +36,6 @@ const Pricing = () => {
 
   // Check if running in TWA (Play Store app)
   const isTWA = isTWAApp();
-
-  // Redirect mobile users to dashboard
-  useEffect(() => {
-    if (isMobile) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isMobile, navigate]);
 
   return (
     <>
