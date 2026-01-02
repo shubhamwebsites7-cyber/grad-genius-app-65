@@ -1,26 +1,24 @@
 /**
  * Platform Detection Utilities for Payment Routing
- * 
- * CURRENT STATE: Google Play Billing DISABLED
- * All payments go through Cashfree (India) or show unavailable message
+ * Determines which payment gateway to use based on platform and country
  */
 
 import { isStandalone, isAndroid, isPlayStoreApp } from './pwaUtils';
 
 export type Platform = 'web' | 'pwa-installed' | 'playstore-app';
-export type PaymentGateway = 'cashfree' | 'unavailable';
+export type PaymentGateway = 'cashfree' | 'google-play' | 'unavailable';
 
 /**
  * Get current platform type
  */
 export const getPlatform = (): Platform => {
   // Check if running in TWA (Trusted Web Activity) from Play Store
-  const isTWA = document.referrer.includes('android-app://') ||
-                localStorage.getItem('app_source') === 'playstore' ||
-                document.documentElement.classList.contains('twa-mode');
+  const isTWA = document.referrer.includes('android-app://');
+  const hasDigitalGoodsAPI = 'getDigitalGoodsService' in window;
   
-  if (isTWA || isPlayStoreApp()) {
-    console.log('Detected as Play Store app', { isTWA, isPlayStoreApp: isPlayStoreApp() });
+  // If we have Digital Goods API or it's a TWA, it's a Play Store app
+  if (isTWA || hasDigitalGoodsAPI || isPlayStoreApp()) {
+    console.log('Detected as Play Store app', { isTWA, hasDigitalGoodsAPI, isPlayStoreApp: isPlayStoreApp() });
     return 'playstore-app';
   }
   
@@ -37,38 +35,49 @@ export const getPlatform = (): Platform => {
  * Determine which payment gateway to use
  * @param countryCode - User's country code (e.g., 'IN', 'US')
  * @param platform - Current platform (optional, auto-detected if not provided)
- * 
- * CURRENT: Google Play Billing disabled - Only Cashfree for India
  */
 export const getPaymentGateway = (
   countryCode: string,
   platform?: Platform
 ): PaymentGateway => {
-  // Indian users can use Cashfree on any platform
+  const currentPlatform = platform || getPlatform();
+  
+  // Play Store app always uses Google Play Billing
+  if (currentPlatform === 'playstore-app') {
+    return 'google-play';
+  }
+  
+  // Web or PWA with Indian users - use Cashfree
   if (countryCode === 'IN') {
     return 'cashfree';
   }
   
-  // Non-Indian users: show unavailable
+  // Non-Indian users on web/PWA should download app
   return 'unavailable';
 };
 
 /**
  * Check if user should be shown app download prompt
- * DISABLED: No longer showing download prompts
  */
 export const shouldShowAppDownload = (countryCode: string): boolean => {
-  // Disable download prompts - we want users to use web payments
-  return false;
+  const platform = getPlatform();
+  const gateway = getPaymentGateway(countryCode, platform);
+  
+  // Show download prompt for non-Indian users on web/PWA
+  return gateway === 'unavailable';
 };
 
 /**
  * Check if Google Play Billing should be used
- * DISABLED: Always returns false
  */
 export const shouldUseGooglePlay = (countryCode?: string): boolean => {
-  // Google Play Billing is disabled
-  return false;
+  const platform = getPlatform();
+  
+  if (!countryCode) {
+    return platform === 'playstore-app';
+  }
+  
+  return getPaymentGateway(countryCode, platform) === 'google-play';
 };
 
 /**
@@ -97,16 +106,34 @@ export const getPlatformName = (): string => {
 };
 
 /**
- * Check if running in TWA (Play Store app)
- */
-export const isTWAApp = (): boolean => {
-  return getPlatform() === 'playstore-app';
-};
-
-/**
  * Mark app as installed from Play Store
  */
 export const markAsPlayStoreApp = (): void => {
   localStorage.setItem('app_source', 'playstore');
   localStorage.setItem('pwa-installed', 'true');
+};
+
+/**
+ * Check if Digital Goods API is available (for PWA Google Play Billing)
+ */
+export const isDigitalGoodsAPIAvailable = async (): Promise<boolean> => {
+  console.log('Checking Digital Goods API availability...');
+  console.log('Window has getDigitalGoodsService:', 'getDigitalGoodsService' in window);
+  console.log('User agent:', navigator.userAgent);
+  console.log('Is standalone:', window.matchMedia('(display-mode: standalone)').matches);
+  console.log('Document referrer:', document.referrer);
+  
+  if (!('getDigitalGoodsService' in window)) {
+    console.log('Digital Goods API not found in window object');
+    return false;
+  }
+  
+  try {
+    const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing');
+    console.log('Digital Goods service obtained:', !!service);
+    return !!service;
+  } catch (error) {
+    console.error('Error getting Digital Goods service:', error);
+    return false;
+  }
 };

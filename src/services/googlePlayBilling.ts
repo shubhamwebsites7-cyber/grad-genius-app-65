@@ -1,14 +1,7 @@
 /**
  * Google Play Billing Service
  * Handles in-app purchases via Play Billing for TWA
- * 
- * CRITICAL: This service handles subscription purchases.
- * Missing acknowledge() call causes auto-cancellation after 3 days!
- * 
- * IMPORTANT: For PREPAID subscriptions, use format "productId:basePlanId"
  */
-
-import { isValidGooglePlayProductId, extractProductId } from '@/config/googlePlayProducts';
 
 export interface GooglePlayProduct {
   itemId: string;
@@ -33,7 +26,6 @@ export interface BillingDiagnostics {
   hasPlayBilling: boolean;
   hasDigitalGoods: boolean;
   hasPaymentRequest: boolean;
-  canUseBilling: boolean;
   userAgent: string;
   referrer: string;
   errors: string[];
@@ -69,16 +61,11 @@ export const getBillingDiagnostics = async (): Promise<BillingDiagnostics> => {
   const hasDigitalGoods = 'getDigitalGoodsService' in window;
   const hasPaymentRequest = 'PaymentRequest' in window;
   
-  let canUseBilling = false;
-  
-  // Test Digital Goods API with actual billing URL
+  // Test Digital Goods API
   if (hasDigitalGoods) {
     try {
       const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing');
-      if (service) {
-        canUseBilling = true;
-        console.log('✅ Digital Goods service available and working');
-      } else {
+      if (!service) {
         errors.push('Digital Goods service returned null - TWA may not have billing enabled');
       }
     } catch (e: any) {
@@ -92,7 +79,6 @@ export const getBillingDiagnostics = async (): Promise<BillingDiagnostics> => {
   if (hasPlayBilling) {
     try {
       await navigator.playBilling!.init();
-      canUseBilling = true;
     } catch (e: any) {
       errors.push(`playBilling.init() error: ${e.message}`);
     }
@@ -106,7 +92,6 @@ export const getBillingDiagnostics = async (): Promise<BillingDiagnostics> => {
     hasPlayBilling,
     hasDigitalGoods,
     hasPaymentRequest,
-    canUseBilling,
     userAgent,
     referrer,
     errors
@@ -131,61 +116,66 @@ export const isTWA = (): boolean => {
 };
 
 /**
- * STRICT Check if Google Play Billing is available
- * Returns true ONLY if billing APIs are fully functional
+ * Check if Google Play Billing is available (supports both APIs)
  */
 export const isGooglePlayBillingAvailable = async (): Promise<boolean> => {
-  console.log('🔍 Checking Google Play Billing availability (STRICT)...');
+  console.log('🔍 Checking Google Play Billing availability...');
   
-  // MANDATORY: Must have PaymentRequest API
-  if (!('PaymentRequest' in window)) {
-    console.error('❌ PaymentRequest API not available');
-    return false;
-  }
-  
-  // MANDATORY: Must have Digital Goods API
-  if (!('getDigitalGoodsService' in window)) {
-    console.error('❌ Digital Goods API not available');
-    return false;
-  }
-  
-  // MANDATORY: Digital Goods service must work with Play billing URL
-  try {
-    const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing');
-    if (!service) {
-      console.error('❌ Digital Goods service returned null');
-      return false;
+  // Method 1: Check navigator.playBilling (TWA Play Billing)
+  if (navigator.playBilling) {
+    console.log('✅ navigator.playBilling is available');
+    try {
+      await navigator.playBilling.init();
+      console.log('✅ playBilling.init() succeeded');
+      return true;
+    } catch (error) {
+      console.log('⚠️ playBilling.init() failed:', error);
     }
-    console.log('✅ Digital Goods API verified working');
-    return true;
-  } catch (error: any) {
-    console.error('❌ Digital Goods API check failed:', error.message);
-    return false;
   }
+  
+  // Method 2: Check Digital Goods API
+  if ('getDigitalGoodsService' in window) {
+    console.log('🔍 Checking Digital Goods API...');
+    try {
+      const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing');
+      if (service) {
+        console.log('✅ Digital Goods API is available');
+        return true;
+      }
+    } catch (error) {
+      console.log('⚠️ Digital Goods API check failed:', error);
+    }
+  }
+  
+  // Method 3: Check if TWA and assume billing might work
+  if (isTWA()) {
+    console.log('🔍 Running in TWA mode, billing might be available');
+    return true;
+  }
+  
+  console.log('❌ Google Play Billing not available');
+  return false;
 };
 
 /**
- * Get the Digital Goods Service (with strict validation)
+ * Get the Digital Goods Service (fallback method)
  */
 const getDigitalGoodsService = async () => {
   if (!('getDigitalGoodsService' in window)) {
-    throw new Error('SETUP_ERROR: Digital Goods API not available. App must be installed from Google Play Store.');
+    throw new Error('Digital Goods API not available. Make sure the app is installed from Google Play Store and TWA is configured with playBilling enabled.');
   }
   
   try {
     const service = await (window as any).getDigitalGoodsService('https://play.google.com/billing');
     if (!service) {
-      throw new Error('SETUP_ERROR: Could not get Digital Goods service. Ensure playBilling is enabled in twa-manifest.json');
+      throw new Error('Could not get Digital Goods service. Check that playBilling is enabled in twa-manifest.json');
     }
     return service;
   } catch (error: any) {
-    if (error.message?.includes('SETUP_ERROR')) {
-      throw error;
-    }
     if (error.message?.includes('not supported')) {
-      throw new Error('SETUP_ERROR: Google Play Billing not supported. Ensure app is installed from Play Store.');
+      throw new Error('Google Play Billing not supported. Ensure the app is installed from Play Store and Digital Goods API is enabled.');
     }
-    throw new Error(`SETUP_ERROR: Google Play Billing initialization failed: ${error.message}`);
+    throw new Error(`Google Play Billing initialization failed: ${error.message}`);
   }
 };
 
@@ -214,23 +204,13 @@ export const getProducts = async (productIds: string[]): Promise<GooglePlayProdu
 
 /**
  * Purchase a subscription using Play Billing
- * CRITICAL: This function now includes MANDATORY acknowledgement
  */
-export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
+export const purchasePlan = async (productId: string): Promise<PurchaseDetails> => {
   console.log('=== PURCHASE FLOW START ===');
-  console.log('🔍 SKU (full format):', sku);
+  console.log('🔍 Product ID:', productId);
   console.log('🔍 Is TWA:', isTWA());
   console.log('🔍 User Agent:', navigator.userAgent);
   console.log('🔍 Referrer:', document.referrer);
-  
-  // Extract product ID for validation (handles both "productId" and "productId:basePlanId" formats)
-  const productId = extractProductId(sku);
-  console.log('🔍 Extracted Product ID:', productId);
-  
-  // VALIDATE: Product ID must be valid
-  if (!isValidGooglePlayProductId(productId)) {
-    throw new Error(`SETUP_ERROR: Invalid product ID: ${productId}. Must be one of examtrakr_1month, examtrakr_3month, examtrakr_6month, examtrakr_12month`);
-  }
   
   // Get diagnostics first
   const diagnostics = await getBillingDiagnostics();
@@ -240,13 +220,9 @@ export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
     console.warn('⚠️ Billing diagnostics errors:', diagnostics.errors);
   }
   
-  // STRICT: Must have billing APIs available
-  if (!diagnostics.canUseBilling) {
-    throw new Error('SETUP_ERROR: Google Play Billing APIs not available. App must be installed from Play Store with TWA billing enabled.');
-  }
-  
-  // Use full SKU for purchase (productId:basePlanId format for prepaid subscriptions)
-  console.log('🔍 Full SKU for purchase:', sku);
+  // Use SKU directly (no basePlanId splitting needed)
+  const sku = productId;
+  console.log('🔍 SKU for purchase:', sku);
   
   // Method 1: Use navigator.playBilling (preferred for TWA)
   if (navigator.playBilling) {
@@ -265,25 +241,12 @@ export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
       console.log('✅ Payment flow result:', result);
       
       if (!result || !result.purchaseToken) {
-        throw new Error('VERIFICATION_ERROR: No purchase token received from Google Play');
-      }
-      
-      const purchaseToken = result.purchaseToken || result.token;
-      
-      // CRITICAL: Acknowledge the purchase to prevent auto-cancellation
-      console.log('🔔 Acknowledging purchase (MANDATORY)...');
-      try {
-        const service = await getDigitalGoodsService();
-        await service.acknowledge(purchaseToken, 'repeatable');
-        console.log('✅ Purchase acknowledged successfully');
-      } catch (ackError: any) {
-        console.warn('⚠️ Frontend acknowledgement failed (backend will handle):', ackError.message);
-        // Continue - backend will also acknowledge
+        throw new Error('No purchase token received from Google Play');
       }
       
       return {
-        itemId: productId, // Return just the product ID for backend verification
-        purchaseToken: purchaseToken,
+        itemId: productId,
+        purchaseToken: result.purchaseToken || result.token,
         purchaseTime: Date.now(),
         purchaseState: 'purchased'
       };
@@ -311,33 +274,32 @@ export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
   // Method 2: Use Digital Goods API + PaymentRequest
   console.log('📱 Using Digital Goods API + PaymentRequest');
   
-  // STRICT: Check if PaymentRequest is available
+  // Check if PaymentRequest is available
   if (!('PaymentRequest' in window)) {
-    throw new Error('SETUP_ERROR: PaymentRequest API not available. The app is not properly configured as a TWA.');
+    throw new Error('SETUP_ERROR: PaymentRequest API not available. The app may not be properly configured as a TWA.');
   }
   
-  let service: any;
-  
   try {
-    service = await getDigitalGoodsService();
+    const service = await getDigitalGoodsService();
     console.log('✅ Digital Goods service obtained');
     
-    // NOTE: getDetails() may return empty even for valid products
-    // This is NOT a blocker - we proceed directly with PaymentRequest
-    // Google Play handles product validation during the actual purchase flow
-    console.log('🔍 Proceeding with PaymentRequest for SKU:', sku);
-    console.log('ℹ️ Note: Product validation happens during PaymentRequest.show()');
-    
-    // Optional: Try to get details for logging only (non-blocking)
+    // Verify the product exists using SKU
+    console.log('🔍 Checking if product exists in Play Console with SKU:', sku);
     try {
       const productDetails = await service.getDetails([sku]);
-      if (productDetails && productDetails.length > 0) {
-        console.log('📦 Product details available:', JSON.stringify(productDetails[0], null, 2));
+      console.log('📦 Product details from Play Console:', JSON.stringify(productDetails, null, 2));
+      
+      if (!productDetails || productDetails.length === 0) {
+        console.warn(`⚠️ Product ${sku} not found in Play Console. Make sure:`);
+        console.warn('1. SKU matches exactly in Play Console');
+        console.warn('2. Subscription is active in Play Console');
+        console.warn('3. App package name matches');
       } else {
-        console.log('ℹ️ getDetails() returned empty - this is normal, product validation will happen during purchase');
+        console.log('✅ Product exists in Play Console, proceeding with purchase...');
       }
     } catch (detailsError: any) {
-      console.log('ℹ️ getDetails() call failed (non-blocking, proceeding with purchase):', detailsError.message);
+      console.warn('⚠️ Error getting product details:', detailsError.message);
+      // Continue anyway - product might still work with PaymentRequest
     }
     
     // Create payment request with SKU only
@@ -361,12 +323,17 @@ export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
     
     console.log('✅ Payment request created');
     
-    // STRICT: Check if can make payment
-    const canMakePayment = await paymentRequest.canMakePayment();
-    console.log('🔍 canMakePayment result:', canMakePayment);
-    
-    if (!canMakePayment) {
-      throw new Error('SETUP_ERROR: Google Play Billing cannot process this payment. Check: 1) App is installed from Play Store, 2) playBilling is enabled in twa-manifest.json, 3) Product exists in Play Console');
+    // Check if can make payment
+    try {
+      const canMakePayment = await paymentRequest.canMakePayment();
+      console.log('🔍 canMakePayment result:', canMakePayment);
+      
+      if (!canMakePayment) {
+        throw new Error('SETUP_ERROR: Google Play Billing cannot process this payment. Check: 1) App is installed from Play Store, 2) playBilling is enabled in twa-manifest.json, 3) Product exists in Play Console');
+      }
+    } catch (canPayError: any) {
+      console.error('❌ canMakePayment error:', canPayError);
+      throw new Error(`SETUP_ERROR: Payment availability check failed: ${canPayError.message}`);
     }
     
     console.log('💳 Showing payment UI...');
@@ -376,27 +343,16 @@ export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
     console.log('✅ Payment response received:', paymentResponse);
     console.log('✅ Payment details:', paymentResponse.details);
     
-    // Get purchase details BEFORE completing
+    // Complete the payment
+    await paymentResponse.complete('success');
+    console.log('✅ Payment completed');
+    
+    // Get purchase details
     const purchaseToken = paymentResponse.details?.purchaseToken;
     
     if (!purchaseToken) {
       console.error('❌ No purchase token in response:', paymentResponse.details);
-      await paymentResponse.complete('fail');
       throw new Error('VERIFICATION_ERROR: No purchase token received from Google Play');
-    }
-    
-    // Complete the payment with 'success'
-    await paymentResponse.complete('success');
-    console.log('✅ Payment completed with success');
-    
-    // CRITICAL: Acknowledge the purchase to prevent auto-cancellation
-    console.log('🔔 Acknowledging purchase (MANDATORY)...');
-    try {
-      await service.acknowledge(purchaseToken, 'repeatable');
-      console.log('✅ Purchase acknowledged successfully via Digital Goods API');
-    } catch (ackError: any) {
-      console.warn('⚠️ Frontend acknowledgement failed (backend will handle):', ackError.message);
-      // Continue - backend will also acknowledge
     }
     
     console.log('✅ Purchase token received:', purchaseToken.substring(0, 20) + '...');
@@ -434,12 +390,6 @@ export const purchasePlan = async (sku: string): Promise<PurchaseDetails> => {
     
     if (error.name === 'InvalidStateError') {
       throw new Error('SETUP_ERROR: Payment request in invalid state. Please try again.');
-    }
-    
-    // Handle "item not available" or similar Google Play errors
-    const errorMsg = error.message?.toLowerCase() || '';
-    if (errorMsg.includes('not available') || errorMsg.includes('item unavailable') || errorMsg.includes('product not found')) {
-      throw new Error('SETUP_ERROR: Product not available in Google Play. Please ensure: 1) Subscription has an active Base Plan in Play Console, 2) Base Plan is set to active status, 3) App is published (at least internal testing track)');
     }
     
     throw new Error(`PURCHASE_ERROR: ${error.message || 'Unknown error occurred during purchase'}`);
@@ -484,17 +434,14 @@ export const getPurchases = async (): Promise<PurchaseDetails[]> => {
 };
 
 /**
- * Acknowledge a purchase (REQUIRED for subscriptions to prevent auto-cancellation)
- * CRITICAL: Must call this after purchase OR backend must acknowledge
+ * Acknowledge a purchase (required for subscriptions)
  */
 export const acknowledgePurchase = async (purchaseToken: string): Promise<void> => {
-  console.log('🔔 Acknowledging purchase token:', purchaseToken.substring(0, 20) + '...');
   try {
     const service = await getDigitalGoodsService();
-    await service.acknowledge(purchaseToken, 'repeatable');
-    console.log('✅ Purchase acknowledged successfully');
-  } catch (error: any) {
-    console.error('❌ Error acknowledging purchase:', error);
+    await service.acknowledge(purchaseToken);
+  } catch (error) {
+    console.error('Error acknowledging purchase:', error);
     throw error;
   }
 };

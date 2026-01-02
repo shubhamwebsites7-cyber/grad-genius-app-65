@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ExamTrakr – Track Your Exam Progress & Study Smarter</title>
     <meta name="description" content="Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!" />
     <meta name="author" content="Examtrakr" />
@@ -37,37 +37,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Examtrakr" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-    
-    <!-- TWA-specific: Prevent browser-like behavior -->
-    <style>
-      /* Prevent pull-to-refresh and overscroll */
-      html, body {
-        overscroll-behavior: none;
-        overscroll-behavior-y: none;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      /* TWA standalone mode optimizations */
-      @media all and (display-mode: standalone) {
-        html, body {
-          height: 100%;
-          overflow: hidden;
-        }
-        #root {
-          height: 100%;
-          overflow-y: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-      }
-      
-      /* Safe area insets for notched devices */
-      body {
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-      }
-    </style>
   </head>
 
   <body>
@@ -89,19 +58,11 @@
           );
         }
       })(window.location);
-      
-      // Detect and mark TWA mode
-      (function() {
-        var isTWA = document.referrer.includes('android-app://') || 
-                    window.matchMedia('(display-mode: standalone)').matches;
-        if (isTWA) {
-          document.documentElement.classList.add('twa-mode');
-          localStorage.setItem('app_source', 'playstore');
-        }
-      })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <!-- Google Play Billing for TWA -->
+    <script src="https://www.gstatic.com/android/commerce/js/launch.js"></script>
     <script>
       // Register Service Worker for PWA and caching
       if ('serviceWorker' in navigator) {
