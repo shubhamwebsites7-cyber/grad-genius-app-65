@@ -323,9 +323,12 @@ export default function Landing() {
                 GoalGrip
               </span>
             </div>
-            <p className="text-muted-foreground text-sm">
-              © {new Date().getFullYear()} GoalGrip. Built with ❤️ for your success.
-            </p>
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <Link to="/privacy" className="hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <span>© {new Date().getFullYear()} GoalGrip</span>
+            </div>
           </div>
         </div>
       </footer>

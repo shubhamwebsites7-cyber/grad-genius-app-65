@@ -2,10 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <title>GoalGrip - Health & Productivity Tracker</title>
-    <meta name="description" content="GoalGrip is your all-in-one health & productivity companion. Track calories, monitor weight, manage tasks, set goals, and build exercise habits - all in one beautiful app.">
+    <meta name="description" content="GoalGrip is your all-in-one health & productivity companion. Track calories, monitor weight, manage tasks, set goals, and build exercise habits - all in one beautiful app." />
     <meta name="author" content="GoalGrip" />
+    <meta name="keywords" content="health tracker, calorie counter, weight tracker, todo list, goal setting, exercise tracker, fitness app, productivity app" />
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#0d9488" />
@@ -13,28 +14,38 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="GoalGrip" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="GoalGrip" />
+    <meta name="msapplication-TileColor" content="#0d9488" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
     <link rel="manifest" href="/manifest.json" />
     
     <!-- App Icons -->
     <link rel="icon" href="/pwa-192x192.png" type="image/png" />
+    <link rel="icon" href="/pwa-512x512.png" type="image/png" sizes="512x512" />
     <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png" />
+    <link rel="mask-icon" href="/pwa-maskable-512x512.png" color="#0d9488" />
 
     <!-- Open Graph -->
-    
-    
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/pwa-512x512.png" />
+    <meta property="og:url" content="https://goalgrip.lovable.app/" />
+    <meta property="og:site_name" content="GoalGrip" />
+    <meta property="og:title" content="GoalGrip - Health & Productivity Tracker" />
+    <meta property="og:description" content="GoalGrip is your all-in-one health & productivity companion. Track calories, monitor weight, manage tasks, set goals, and build exercise habits." />
+    <meta property="og:image" content="https://goalgrip.lovable.app/pwa-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    
-    
-    <meta name="twitter:image" content="/pwa-512x512.png" />
-  <meta property="og:title" content="GoalGrip - Health & Productivity Tracker">
-  <meta name="twitter:title" content="GoalGrip - Health & Productivity Tracker">
-  <meta property="og:description" content="GoalGrip is your all-in-one health & productivity companion. Track calories, monitor weight, manage tasks, set goals, and build exercise habits.">
-  <meta name="twitter:description" content="GoalGrip is your all-in-one health & productivity companion. Track calories, monitor weight, manage tasks, set goals, and build exercise habits.">
-</head>
+    <meta name="twitter:title" content="GoalGrip - Health & Productivity Tracker" />
+    <meta name="twitter:description" content="GoalGrip is your all-in-one health & productivity companion. Track calories, monitor weight, manage tasks, set goals, and build exercise habits." />
+    <meta name="twitter:image" content="https://goalgrip.lovable.app/pwa-512x512.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://goalgrip.lovable.app/" />
+  </head>
 
   <body>
     <div id="root"></div>
@@ -46,7 +57,7 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then((registration) => {
-              console.log('Service Worker registered successfully');
+              console.log('GoalGrip Service Worker registered successfully');
               
               // Check for updates every 60 seconds
               setInterval(() => {
@@ -58,8 +69,7 @@
                 const newWorker = registration.installing;
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New service worker available, reload the page
-                    console.log('New version available! Reloading...');
+                    console.log('New GoalGrip version available! Reloading...');
                     window.location.reload();
                   }
                 });
