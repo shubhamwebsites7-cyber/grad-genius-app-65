@@ -1,3 +1,6 @@
+# GoalGrip - Health & Productivity Tracker
+# https://goalgrip.lovable.app
+
 User-agent: Googlebot
 Allow: /
 
@@ -12,3 +15,6 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://goalgrip.lovable.app/sitemap.xml
