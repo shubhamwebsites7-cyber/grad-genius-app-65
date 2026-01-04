@@ -2,110 +2,113 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* GoalGrip Design System - Modern Health & Productivity App */
 
 @layer base {
   :root {
-    --background: 110 60% 98%;
-    --foreground: 140 20% 15%;
+    /* Core palette - Vibrant teal & coral for energy and motivation */
+    --background: 180 20% 98%;
+    --foreground: 200 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 140 20% 15%;
+    --card-foreground: 200 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 140 20% 15%;
+    --popover-foreground: 200 25% 15%;
 
-    --primary: 140 80% 25%;
-    --primary-foreground: 0 0% 98%;
+    /* Primary - Deep teal for trust and health */
+    --primary: 174 70% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 110 30% 90%;
-    --secondary-foreground: 140 20% 15%;
+    --secondary: 180 25% 92%;
+    --secondary-foreground: 200 25% 15%;
 
-    --muted: 110 25% 95%;
-    --muted-foreground: 140 10% 50%;
+    --muted: 180 20% 95%;
+    --muted-foreground: 200 15% 45%;
 
-    --accent: 45 100% 70%;
-    --accent-foreground: 140 20% 15%;
+    /* Accent - Warm coral for energy and action */
+    --accent: 15 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 110 20% 88%;
-    --input: 110 20% 88%;
-    --ring: 140 80% 25%;
+    --border: 180 15% 88%;
+    --input: 180 15% 88%;
+    --ring: 174 70% 35%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    /* Calorie tracker specific colors */
-    --success: 120 60% 50%;
-    --success-foreground: 0 0% 98%;
-    --warning: 45 100% 60%;
-    --warning-foreground: 140 20% 15%;
-    --info: 200 80% 60%;
-    --info-foreground: 0 0% 98%;
+    /* Feature-specific colors */
+    --success: 158 64% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 200 25% 15%;
+    --info: 200 85% 55%;
+    --info-foreground: 0 0% 100%;
 
     /* Gradient colors */
-    --gradient-primary: 140 80% 25%;
-    --gradient-secondary: 120 60% 50%;
-    --gradient-accent: 45 100% 70%;
+    --gradient-start: 174 70% 35%;
+    --gradient-mid: 190 75% 45%;
+    --gradient-end: 15 85% 60%;
 
-    --sidebar-background: 110 60% 98%;
-    --sidebar-foreground: 140 20% 15%;
-    --sidebar-primary: 140 80% 25%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 110 30% 90%;
-    --sidebar-accent-foreground: 140 20% 15%;
-    --sidebar-border: 110 20% 88%;
-    --sidebar-ring: 140 80% 25%;
+    /* Sidebar */
+    --sidebar-background: 180 20% 98%;
+    --sidebar-foreground: 200 25% 15%;
+    --sidebar-primary: 174 70% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 25% 92%;
+    --sidebar-accent-foreground: 200 25% 15%;
+    --sidebar-border: 180 15% 88%;
+    --sidebar-ring: 174 70% 35%;
   }
 
   .dark {
-    --background: 140 15% 8%;
-    --foreground: 110 60% 95%;
+    --background: 200 20% 7%;
+    --foreground: 180 20% 95%;
 
-    --card: 140 15% 10%;
-    --card-foreground: 110 60% 95%;
+    --card: 200 18% 10%;
+    --card-foreground: 180 20% 95%;
 
-    --popover: 140 15% 10%;
-    --popover-foreground: 110 60% 95%;
+    --popover: 200 18% 10%;
+    --popover-foreground: 180 20% 95%;
 
-    --primary: 140 60% 70%;
-    --primary-foreground: 140 15% 8%;
+    --primary: 174 65% 55%;
+    --primary-foreground: 200 20% 7%;
 
-    --secondary: 140 10% 20%;
-    --secondary-foreground: 110 60% 95%;
+    --secondary: 200 15% 18%;
+    --secondary-foreground: 180 20% 95%;
 
-    --muted: 140 10% 15%;
-    --muted-foreground: 110 30% 65%;
+    --muted: 200 15% 15%;
+    --muted-foreground: 180 15% 60%;
 
-    --accent: 45 80% 60%;
-    --accent-foreground: 140 15% 8%;
+    --accent: 15 80% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 110 60% 95%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 180 20% 95%;
 
-    --border: 140 10% 20%;
-    --input: 140 10% 20%;
-    --ring: 140 60% 70%;
+    --border: 200 15% 18%;
+    --input: 200 15% 18%;
+    --ring: 174 65% 55%;
 
-    /* Dark mode calorie tracker colors */
-    --success: 120 50% 60%;
-    --success-foreground: 140 15% 8%;
-    --warning: 45 90% 65%;
-    --warning-foreground: 140 15% 8%;
-    --info: 200 60% 70%;
-    --info-foreground: 140 15% 8%;
+    /* Dark mode feature colors */
+    --success: 158 55% 50%;
+    --success-foreground: 200 20% 7%;
+    --warning: 38 85% 55%;
+    --warning-foreground: 200 20% 7%;
+    --info: 200 70% 60%;
+    --info-foreground: 200 20% 7%;
 
-    --sidebar-background: 140 15% 8%;
-    --sidebar-foreground: 110 60% 95%;
-    --sidebar-primary: 140 60% 70%;
-    --sidebar-primary-foreground: 140 15% 8%;
-    --sidebar-accent: 140 10% 20%;
-    --sidebar-accent-foreground: 110 60% 95%;
-    --sidebar-border: 140 10% 20%;
-    --sidebar-ring: 140 60% 70%;
+    /* Sidebar dark */
+    --sidebar-background: 200 20% 7%;
+    --sidebar-foreground: 180 20% 95%;
+    --sidebar-primary: 174 65% 55%;
+    --sidebar-primary-foreground: 200 20% 7%;
+    --sidebar-accent: 200 15% 18%;
+    --sidebar-accent-foreground: 180 20% 95%;
+    --sidebar-border: 200 15% 18%;
+    --sidebar-ring: 174 65% 55%;
   }
 }
 
@@ -117,4 +120,23 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.5); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }

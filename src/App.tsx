@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./pages/ProtectedRoute";
 import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
 import CalendarView from "./pages/CalendarView";
 import Weight from "./pages/Weight";
 import Todo from "./pages/Todo";
@@ -22,9 +23,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/" element={
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <Layout />
             </ProtectedRoute>
