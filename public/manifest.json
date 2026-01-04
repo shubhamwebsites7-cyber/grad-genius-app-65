@@ -3,26 +3,49 @@
   "short_name": "GoalGrip",
   "description": "Your all-in-one health & productivity companion. Track calories, weight, tasks, goals and exercise habits.",
   "start_url": "/dashboard",
+  "id": "/dashboard",
   "display": "standalone",
   "background_color": "#f5fafa",
   "theme_color": "#0d9488",
   "orientation": "portrait-primary",
   "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/pwa-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/pwa-512x512.png", 
+      "src": "/pwa-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["health", "fitness", "lifestyle"],
+  "screenshots": [
+    {
+      "src": "/screenshots/screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "GoalGrip Dashboard"
+    }
+  ],
+  "categories": ["health", "fitness", "lifestyle", "productivity"],
   "lang": "en",
   "dir": "ltr"
 }

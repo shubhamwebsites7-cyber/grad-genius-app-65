@@ -1,14 +1,18 @@
-const CACHE_VERSION = 'v2-' + new Date().getTime();
-const CACHE_NAME = 'trackmycalories-' + CACHE_VERSION;
+const CACHE_VERSION = 'v3-' + new Date().getTime();
+const CACHE_NAME = 'goalgrip-' + CACHE_VERSION;
 const STATIC_ASSETS = [
+  '/',
+  '/dashboard',
   '/manifest.json',
   '/pwa-192x192.png',
-  '/pwa-512x512.png'
+  '/pwa-512x512.png',
+  '/pwa-maskable-192x192.png',
+  '/pwa-maskable-512x512.png'
 ];
 
 // Install Service Worker - force immediate activation
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force the waiting service worker to become active
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -21,17 +25,15 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
-      // Delete old caches
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME && cacheName.startsWith('trackmycalories-')) {
+            if (cacheName !== CACHE_NAME && (cacheName.startsWith('goalgrip-') || cacheName.startsWith('trackmycalories-'))) {
               return caches.delete(cacheName);
             }
           })
         );
       }),
-      // Take control of all clients immediately
       self.clients.claim()
     ])
   );
@@ -42,12 +44,16 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip cross-origin requests
+  if (url.origin !== location.origin) {
+    return;
+  }
+
   // Network first for HTML/navigation requests
-  if (request.mode === 'navigate' || request.headers.get('accept').includes('text/html')) {
+  if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone and cache the response
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
@@ -55,16 +61,17 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Fallback to cache if offline
-          return caches.match(request);
+          return caches.match(request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/dashboard');
+          });
         })
     );
     return;
   }
 
-  // Cache first for static assets (images, fonts, etc.)
+  // Cache first for static assets
   if (request.destination === 'image' || request.destination === 'font' || 
-      url.pathname.match(/\.(png|jpg|jpeg|svg|gif|woff|woff2|ttf|eot)$/)) {
+      url.pathname.match(/\.(png|jpg|jpeg|svg|gif|woff|woff2|ttf|eot|ico)$/)) {
     event.respondWith(
       caches.match(request)
         .then((response) => {
@@ -79,11 +86,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network first for everything else (JS, CSS, API calls)
+  // Network first for everything else
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Don't cache API calls or external requests
         if (url.origin === location.origin && !url.pathname.includes('/rest/')) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -98,7 +104,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Listen for messages from clients to force update
+// Listen for messages
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
