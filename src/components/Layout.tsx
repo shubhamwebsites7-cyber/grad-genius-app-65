@@ -35,11 +35,11 @@ export function Layout() {
   };
 
   const navigationItems = [
-    { href: '/', icon: Utensils, label: 'Calories' },
-    { href: '/weight', icon: Weight, label: 'Weight' },
-    { href: '/todo', icon: CheckSquare, label: 'Todo' },
-    { href: '/goals', icon: Target, label: 'Goals' },
-    { href: '/exercise', icon: Dumbbell, label: 'Exercise' },
+    { href: '/dashboard', icon: Utensils, label: 'Calories' },
+    { href: '/dashboard/weight', icon: Weight, label: 'Weight' },
+    { href: '/dashboard/todo', icon: CheckSquare, label: 'Todo' },
+    { href: '/dashboard/goals', icon: Target, label: 'Goals' },
+    { href: '/dashboard/exercise', icon: Dumbbell, label: 'Exercise' },
   ];
 
   const currentPage = navigationItems.find(item => item.href === location.pathname);

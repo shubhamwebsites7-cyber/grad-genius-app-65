@@ -1,11 +1,11 @@
 {
-  "name": "GoalGrip - Personal Tracker",
+  "name": "GoalGrip - Health & Productivity Tracker",
   "short_name": "GoalGrip",
-  "description": "Your personal calorie, weight, todo & goal tracking companion",
-  "start_url": "/",
+  "description": "Your all-in-one health & productivity companion. Track calories, weight, tasks, goals and exercise habits.",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#6366f1",
+  "background_color": "#f5fafa",
+  "theme_color": "#0d9488",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
