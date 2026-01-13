@@ -1,6 +1,8 @@
 /**
  * Google Play Product ID Mapping
  * Maps internal plan IDs to Google Play Console product IDs
+ * 
+ * IMPORTANT: Package name for native Android app: com.examtrakr.android
  */
 
 export interface ProductMapping {
@@ -9,6 +11,9 @@ export interface ProductMapping {
   duration: number;
   name: string;
 }
+
+// Native Android App Package Name
+export const ANDROID_PACKAGE_NAME = 'com.examtrakr.android';
 
 // IMPORTANT: Use only Subscription IDs (SKUs) - NOT productId:basePlanId format
 // These must match your Google Play Console subscription product IDs exactly
@@ -49,4 +54,25 @@ export const getAllGooglePlayProductIds = (): string[] => {
  */
 export const isValidGooglePlayProductId = (productId: string): boolean => {
   return Object.values(GOOGLE_PLAY_PRODUCT_IDS).includes(productId as any);
+};
+
+/**
+ * Get product details for display
+ */
+export const getProductDetails = (durationMonths: number): ProductMapping => {
+  const productId = getGooglePlayProductId(durationMonths);
+  
+  const names: Record<number, string> = {
+    1: '1 Month Premium',
+    3: '3 Months Premium',
+    6: '6 Months Premium',
+    12: '12 Months Premium',
+  };
+  
+  return {
+    planId: `premium_${durationMonths}m`,
+    playStoreProductId: productId,
+    duration: durationMonths,
+    name: names[durationMonths] || `${durationMonths} Months Premium`,
+  };
 };

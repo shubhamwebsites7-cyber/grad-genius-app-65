@@ -4,14 +4,21 @@
  */
 
 import { isStandalone, isAndroid, isPlayStoreApp } from './pwaUtils';
+import { isNativeAndroidApp, isNativeBillingAvailable } from '../services/nativeAndroidBridge';
 
-export type Platform = 'web' | 'pwa-installed' | 'playstore-app';
-export type PaymentGateway = 'cashfree' | 'google-play' | 'unavailable';
+export type Platform = 'web' | 'pwa-installed' | 'playstore-app' | 'native-android';
+export type PaymentGateway = 'cashfree' | 'google-play' | 'native-google-play' | 'unavailable';
 
 /**
  * Get current platform type
  */
 export const getPlatform = (): Platform => {
+  // Check if running in native Android WebView app (com.examtrakr.android)
+  if (isNativeAndroidApp()) {
+    console.log('Detected as Native Android App (com.examtrakr.android)');
+    return 'native-android';
+  }
+  
   // Check if running in TWA (Trusted Web Activity) from Play Store
   const isTWA = document.referrer.includes('android-app://');
   const hasDigitalGoodsAPI = 'getDigitalGoodsService' in window;
@@ -42,7 +49,16 @@ export const getPaymentGateway = (
 ): PaymentGateway => {
   const currentPlatform = platform || getPlatform();
   
-  // Play Store app always uses Google Play Billing
+  // Native Android app uses native Google Play Billing
+  if (currentPlatform === 'native-android') {
+    if (isNativeBillingAvailable()) {
+      return 'native-google-play';
+    }
+    // Fall back to Cashfree if native billing not available
+    return countryCode === 'IN' ? 'cashfree' : 'unavailable';
+  }
+  
+  // Play Store app (TWA) uses Google Play Billing
   if (currentPlatform === 'playstore-app') {
     return 'google-play';
   }
@@ -68,16 +84,34 @@ export const shouldShowAppDownload = (countryCode: string): boolean => {
 };
 
 /**
- * Check if Google Play Billing should be used
+ * Check if Google Play Billing should be used (either native or TWA)
  */
 export const shouldUseGooglePlay = (countryCode?: string): boolean => {
   const platform = getPlatform();
   
   if (!countryCode) {
-    return platform === 'playstore-app';
+    return platform === 'playstore-app' || platform === 'native-android';
   }
   
-  return getPaymentGateway(countryCode, platform) === 'google-play';
+  const gateway = getPaymentGateway(countryCode, platform);
+  return gateway === 'google-play' || gateway === 'native-google-play';
+};
+
+/**
+ * Check if native Android Google Play Billing should be used
+ */
+export const shouldUseNativeGooglePlay = (countryCode?: string): boolean => {
+  const platform = getPlatform();
+  
+  if (platform !== 'native-android') {
+    return false;
+  }
+  
+  if (!countryCode) {
+    return isNativeBillingAvailable();
+  }
+  
+  return getPaymentGateway(countryCode, platform) === 'native-google-play';
 };
 
 /**
@@ -94,6 +128,8 @@ export const getPlatformName = (): string => {
   const platform = getPlatform();
   
   switch (platform) {
+    case 'native-android':
+      return 'ExamTrakr Android App';
     case 'playstore-app':
       return 'Google Play Store App';
     case 'pwa-installed':
@@ -111,6 +147,14 @@ export const getPlatformName = (): string => {
 export const markAsPlayStoreApp = (): void => {
   localStorage.setItem('app_source', 'playstore');
   localStorage.setItem('pwa-installed', 'true');
+};
+
+/**
+ * Mark app as native Android app
+ */
+export const markAsNativeAndroidApp = (): void => {
+  localStorage.setItem('app_source', 'native-android');
+  localStorage.setItem('native-app-installed', 'true');
 };
 
 /**
