@@ -102,7 +102,7 @@ export const GooglePlayPaymentProcessor = ({
           body: {
             purchaseToken: purchaseDetails.purchaseToken,
             productId: productId,
-            packageName: 'com.examtrakr.www.twa',
+            packageName: 'com.examtrakr.android',
             planId: planId
           }
         }
@@ -198,7 +198,7 @@ export const GooglePlayPaymentProcessor = ({
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => window.open('https://play.google.com/store/apps/details?id=com.examtrakr.www.twa', '_blank')}
+            onClick={() => window.open('https://play.google.com/store/apps/details?id=com.examtrakr.android', '_blank')}
           >
             Open Play Store
           </Button>

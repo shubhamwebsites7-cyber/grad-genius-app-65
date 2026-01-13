@@ -52,7 +52,7 @@ export const registerNativeAndroidCallbacks = (): void => {
         body: {
           purchaseToken: purchase.purchaseToken,
           productId: purchase.productId,
-          packageName: 'com.examtrakr.app', // Your package name
+          packageName: 'com.examtrakr.android',
         }
       });
 
