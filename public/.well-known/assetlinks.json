@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.examtrakr.www.twa",
+    "package_name": "com.examtrakr.android",
     "sha256_cert_fingerprints": ["2B:CA:1F:95:BE:4C:06:BB:AA:10:18:03:44:A3:D5:B6:B0:AC:F5:2A:B0:BE:6E:86:A4:09:18:22:83:D8:6B:03"]
   }
 }]
