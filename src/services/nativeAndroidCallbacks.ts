@@ -50,9 +50,9 @@ export const registerNativeAndroidCallbacks = (): void => {
       // Verify purchase with backend
       const { data, error } = await supabase.functions.invoke('verify-google-play-purchase', {
         body: {
-          purchase_token: purchase.purchaseToken,
-          product_id: purchase.productId,
-          order_id: purchase.orderId,
+          purchaseToken: purchase.purchaseToken,
+          productId: purchase.productId,
+          packageName: 'com.examtrakr.app', // Your package name
         }
       });
 
