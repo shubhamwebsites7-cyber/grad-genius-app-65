@@ -138,8 +138,8 @@ const ExamDetail = () => {
 
       if (topicsError) throw topicsError;
 
-      // Check user's subscription status - trial and paid users get all topics
-      const hasActiveSubscription = subscription.isPremium; // This includes both trial and paid users
+      // Check user's subscription status - premium users get all topics
+      const hasActiveSubscription = subscription.isPremium;
 
       // Fetch user progress
       let completedIds = new Set<string>();
@@ -226,7 +226,7 @@ const ExamDetail = () => {
               ? voteDifficulty 
               : baseDifficulty;
             
-            // Trial and paid users: all topics accessible. Free users: only first 3 topics
+            // Premium users: all topics accessible. Free users: only first 3 topics
             const isAccessible = hasActiveSubscription || index < 3;
             
             return {
