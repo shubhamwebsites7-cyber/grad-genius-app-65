@@ -8,15 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Check, AlertCircle, Loader2, Phone, Sparkles } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Phone, Sparkles, Smartphone } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { DownloadAppBanner } from '@/components/DownloadAppBanner';
-// GooglePlayPaymentProcessor removed - now using direct purchase in handlePlanPurchase
-import { getPlatform } from '@/utils/platformDetection';
+import { usePlatform } from '@/hooks/usePlatform';
+import { getGooglePlayProductId } from '@/config/googlePlayProducts';
 import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 import { PremiumFeatures } from '@/components/pricing/PremiumFeatures';
 
@@ -62,9 +62,15 @@ const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [offer, setOffer] = useState<PricingOffer | null>(null);
   const [timeRemaining, setTimeRemaining] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  // Removed: showGooglePlayPayment and selectedPlanForGooglePlay - now using direct purchase
-  const [platform, setPlatform] = useState<string>('web');
   const [showDownloadBanner, setShowDownloadBanner] = useState(false);
+  
+  // Platform detection hook
+  const { 
+    isNativeAndroid, 
+    isBillingAvailable, 
+    purchaseSubscription,
+    platform 
+  } = usePlatform(userCountry);
 
   useEffect(() => {
     fetchPricingPlans();
@@ -73,11 +79,8 @@ const Pricing = () => {
       fetchUserPhoneNumber();
     }
     
-    // Detect platform
-    const currentPlatform = getPlatform();
-    setPlatform(currentPlatform);
-    console.log('🔍 Platform detected:', currentPlatform);
-  }, [user]);
+    console.log('🔍 Platform detected:', platform, { isNativeAndroid, isBillingAvailable });
+  }, [user, platform, isNativeAndroid, isBillingAvailable]);
   
   useEffect(() => {
     // Download banner disabled - using Cashfree for all payments
@@ -252,9 +255,42 @@ const Pricing = () => {
       return;
     }
 
-    // Always use Cashfree for payments (Google Play billing disabled)
-
-    // Validate phone number
+    // ============ NATIVE ANDROID GOOGLE PLAY BILLING ============
+    if (isNativeAndroid && isBillingAvailable) {
+      console.log('📱 Using Native Android Google Play Billing');
+      
+      try {
+        setProcessingPayment(plan.id);
+        
+        // Get the Google Play product ID for this plan
+        const googleProductId = getGooglePlayProductId(plan.duration_months);
+        console.log('Google Play Product ID:', googleProductId);
+        
+        // Initiate purchase via native bridge
+        const success = await purchaseSubscription(plan.id, googleProductId);
+        
+        if (success) {
+          // Redirect to profile on success
+          setTimeout(() => {
+            navigate('/profile?payment_status=success');
+          }, 1500);
+        }
+      } catch (error) {
+        console.error('Native purchase error:', error);
+        toast({
+          title: 'Purchase Failed',
+          description: error instanceof Error ? error.message : 'Failed to complete purchase',
+          variant: 'destructive'
+        });
+      } finally {
+        setProcessingPayment(null);
+      }
+      return;
+    }
+    
+    // ============ WEB CASHFREE PAYMENT ============
+    
+    // Validate phone number for Cashfree
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length !== 10) {
       setPhoneError('Please enter a valid 10-digit phone number');
@@ -406,17 +442,27 @@ const Pricing = () => {
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-12">
-              {/* Google Play purchases now happen directly without modal */}
+              {/* Native Android Indicator */}
+              {isNativeAndroid && (
+                <div className="max-w-md mx-auto">
+                  <Alert className="bg-primary/10 border-primary/20">
+                    <Smartphone className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-primary font-medium">
+                      Pay securely with Google Play
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
 
-              {/* Download App Banner for Non-Indian Users on Web */}
-              {showDownloadBanner && (
+              {/* Download App Banner for Non-Indian Users on Web (only when NOT in native app) */}
+              {showDownloadBanner && !isNativeAndroid && (
                 <div>
                   <DownloadAppBanner countryName={userCountry === 'US' ? 'United States' : 'your country'} />
                 </div>
               )}
 
-              {/* Phone Number Input - Only show for Cashfree payments */}
-              {user && userCountry === 'IN' && !showDownloadBanner && (
+              {/* Phone Number Input - Only show for Cashfree payments (NOT in native Android app) */}
+              {user && userCountry === 'IN' && !showDownloadBanner && !isNativeAndroid && (
                 <div className="max-w-md mx-auto space-y-2">
                   <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
                     <Phone className="h-4 w-4" />

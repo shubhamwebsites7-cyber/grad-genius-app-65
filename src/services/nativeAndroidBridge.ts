@@ -52,6 +52,8 @@ declare global {
     onPurchaseCancelled?: () => void;
     onProductDetailsReceived?: (details: string) => void;
     onPurchasesReceived?: (purchases: string) => void;
+    // Legacy callback names for compatibility
+    onBillingError?: (error: string) => void;
   }
 }
 
@@ -59,12 +61,27 @@ declare global {
  * Check if running inside native Android WebView app
  */
 export const isNativeAndroidApp = (): boolean => {
+  // First check localStorage for cached detection
+  const cachedSource = localStorage.getItem('app_source');
+  if (cachedSource === 'native-android') {
+    return true;
+  }
+
   // Check for Android bridge
   if (window.AndroidBridge) {
     try {
-      return window.AndroidBridge.isNativeApp();
+      const isNative = window.AndroidBridge.isNativeApp();
+      if (isNative) {
+        // Cache the detection
+        localStorage.setItem('app_source', 'native-android');
+        localStorage.setItem('native-app-installed', 'true');
+      }
+      return isNative;
     } catch (e) {
       console.log('AndroidBridge.isNativeApp() failed:', e);
+      // If method fails but bridge exists, assume native
+      localStorage.setItem('app_source', 'native-android');
+      return true;
     }
   }
   
@@ -81,10 +98,17 @@ export const isNativeAndroidApp = (): boolean => {
     hasAndroidBridge: !!window.AndroidBridge,
     isExamTrakrApp,
     isWebView,
-    userAgent 
+    userAgent,
+    cachedSource
   });
   
-  return !!window.AndroidBridge || isExamTrakrApp;
+  // If we detect ExamTrakr app user agent, cache it
+  if (isExamTrakrApp) {
+    localStorage.setItem('app_source', 'native-android');
+    return true;
+  }
+  
+  return !!window.AndroidBridge;
 };
 
 /**

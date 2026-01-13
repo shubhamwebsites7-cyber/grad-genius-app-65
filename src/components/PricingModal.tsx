@@ -11,12 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check, AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { Check, AlertCircle, Loader2, Sparkles, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { PaymentProcessor } from '@/components/payment/PaymentProcessor';
+import { usePlatform } from '@/hooks/usePlatform';
+import { getGooglePlayProductId } from '@/config/googlePlayProducts';
+import { useNavigate } from 'react-router-dom';
 
 declare global {
   interface Window {
@@ -56,12 +58,16 @@ interface PricingModalProps {
 export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examName }: PricingModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userCountry, setUserCountry] = useState<string>('IN');
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
+
+  // Platform detection
+  const { isNativeAndroid, isBillingAvailable, purchaseSubscription } = usePlatform(userCountry);
 
   useEffect(() => {
     if (open) {
@@ -169,6 +175,38 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       return;
     }
 
+    // ============ NATIVE ANDROID GOOGLE PLAY BILLING ============
+    if (isNativeAndroid && isBillingAvailable) {
+      console.log('📱 Using Native Android Google Play Billing in Modal');
+      
+      try {
+        setProcessingPayment(plan.id);
+        
+        const googleProductId = getGooglePlayProductId(plan.duration_months);
+        console.log('Google Play Product ID:', googleProductId);
+        
+        const success = await purchaseSubscription(plan.id, googleProductId);
+        
+        if (success) {
+          onOpenChange(false);
+          setTimeout(() => {
+            navigate('/profile?payment_status=success');
+          }, 1500);
+        }
+      } catch (error) {
+        console.error('Native purchase error:', error);
+        toast({
+          title: 'Purchase Failed',
+          description: error instanceof Error ? error.message : 'Failed to complete purchase',
+          variant: 'destructive'
+        });
+      } finally {
+        setProcessingPayment(null);
+      }
+      return;
+    }
+
+    // ============ WEB CASHFREE PAYMENT ============
     if (!phoneNumber || phoneNumber.length !== 10) {
       toast({
         title: 'Phone Number Required',
@@ -214,11 +252,11 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
       }
 
       const cashfree = await window.Cashfree({
-        mode: 'production' // Production mode for live payments
+        mode: 'production'
       });
 
       // Open payment modal
-      const checkoutResult = await cashfree.checkout({
+      await cashfree.checkout({
         paymentSessionId: data.payment_session_id,
         returnUrl: `${window.location.origin}/profile?payment=success`,
       });
@@ -306,8 +344,20 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
           </Alert>
         ) : (
           <>
-            {/* Phone Number Input */}
-            {user && (
+            {/* Native Android Indicator */}
+            {isNativeAndroid && (
+              <div className="mb-4">
+                <Alert className="bg-primary/10 border-primary/20">
+                  <Smartphone className="h-4 w-4 text-primary" />
+                  <AlertDescription className="text-primary font-medium">
+                    Pay securely with Google Play
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+
+            {/* Phone Number Input - Only show for Cashfree payments (NOT in native Android) */}
+            {user && !isNativeAndroid && (
               <div className="space-y-2 mb-6 max-w-md mx-auto">
                 <Label htmlFor="phone" className="text-sm font-medium">
                   Phone Number <span className="text-destructive">*</span>
@@ -318,7 +368,6 @@ export const PricingModal = ({ open, onOpenChange, trigger = 'enrollment', examN
                   placeholder="Enter 10-digit mobile number"
                   value={phoneNumber}
                   onChange={(e) => {
-                    // Remove non-digits and take last 10 digits (trim from front)
                     const cleaned = e.target.value.replace(/\D/g, '');
                     const digits = cleaned.length > 10 ? cleaned.slice(-10) : cleaned;
                     setPhoneNumber(digits);
