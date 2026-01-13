@@ -116,9 +116,9 @@ export const usePlatform = (countryCode?: string): UsePlatformReturn => {
 
       const { data, error } = await supabase.functions.invoke('verify-google-play-purchase', {
         body: {
-          purchase_token: result.purchaseToken,
-          product_id: result.productId || googleProductId,
-          order_id: result.orderId,
+          purchaseToken: result.purchaseToken,
+          productId: result.productId || googleProductId,
+          packageName: 'com.examtrakr.android',
         }
       });
 
