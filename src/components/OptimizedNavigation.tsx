@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquare, Brain } from 'lucide-react';
+import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
@@ -19,7 +19,6 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'AI Mentor', href: '/ai-mentor', icon: Brain },
   { name: 'Exams', href: '/exams', icon: BookOpen },
   { name: 'Pricing', href: '/pricing', icon: CreditCard },
   { name: 'Profile', href: '/profile', icon: User },
