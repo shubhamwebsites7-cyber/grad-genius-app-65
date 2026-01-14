@@ -138,7 +138,8 @@ serve(async (req) => {
     // ------------------ VERIFY GOOGLE PLAY PURCHASE ------------------
     const verifyUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptionsv2/tokens/${purchaseToken}`;
 
-    console.log("🔍 Verifying purchase with Google Play API...");
+    console.log("🔍 Verifying purchase with Google Play API v2...");
+    console.log("🔍 Verify URL:", verifyUrl);
 
     const verifyRes = await fetch(verifyUrl, {
       headers: { Authorization: `Bearer ${access_token}` },
@@ -154,11 +155,18 @@ serve(async (req) => {
     console.log("✅ Google Play verification response:", JSON.stringify(purchase, null, 2));
 
     // ------------------ VALIDATE SUBSCRIPTION STATE ------------------
-    if (purchase.subscriptionState !== "SUBSCRIPTION_STATE_ACTIVE" && 
-        purchase.subscriptionState !== "SUBSCRIPTION_STATE_IN_TRIAL") {
+    const validStates = [
+      "SUBSCRIPTION_STATE_ACTIVE",
+      "SUBSCRIPTION_STATE_IN_TRIAL",
+      "SUBSCRIPTION_STATE_PENDING"
+    ];
+    
+    if (!validStates.includes(purchase.subscriptionState)) {
       console.error("❌ Invalid subscription state:", purchase.subscriptionState);
       throw new Error(`Subscription is not active. State: ${purchase.subscriptionState}`);
     }
+
+    console.log("✅ Subscription state valid:", purchase.subscriptionState);
 
     // ------------------ VALIDATE SKU MATCHES ------------------
     const purchasedSku = purchase.lineItems?.[0]?.productId;
@@ -175,6 +183,17 @@ serve(async (req) => {
     }
 
     console.log("✅ SKU validated successfully:", purchasedSku);
+
+    // ------------------ EXTRACT DATES FROM GOOGLE RESPONSE ------------------
+    const lineItem = purchase.lineItems?.[0];
+    const googleExpiryTime = lineItem?.expiryTime;
+    const googleStartTime = purchase.startTime;
+    
+    console.log("📅 Subscription dates from Google:", {
+      start: googleStartTime,
+      expires: googleExpiryTime,
+      googleExpiryTime
+    });
 
     // ------------------ GET PLAN BY GOOGLE PRODUCT ID ------------------
     const { data: plan, error: planError } = await supabase
@@ -195,12 +214,46 @@ serve(async (req) => {
 
     console.log("✅ Plan found:", plan.name, plan.duration_months, "months");
 
-    // ------------------ CALCULATE SUBSCRIPTION DATES (NO TRIAL) ------------------
-    const start = new Date();
-    const paidEnd = new Date(start);
-    paidEnd.setMonth(paidEnd.getMonth() + plan.duration_months);
+    // ------------------ ACKNOWLEDGE PURCHASE (V1 API for subscriptions) ------------------
+    // Must acknowledge to prevent automatic refund
+    if (purchase.acknowledgementState !== "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED") {
+      console.log("🔔 Acknowledging purchase with Google Play API...");
+      
+      // Use v1 API for acknowledgement - requires subscriptionId (productId) and token
+      const acknowledgeUrl = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}/purchases/subscriptions/${productId}/tokens/${purchaseToken}:acknowledge`;
+      
+      console.log("🔔 Acknowledge URL:", acknowledgeUrl);
+      
+      const ackRes = await fetch(acknowledgeUrl, {
+        method: "POST",
+        headers: { 
+          Authorization: `Bearer ${access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      });
+      
+      if (ackRes.ok || ackRes.status === 204) {
+        console.log("✅ Purchase acknowledged successfully");
+      } else {
+        const ackError = await ackRes.text();
+        console.warn("⚠️ Acknowledgement warning (continuing anyway):", ackRes.status, ackError);
+        // Don't throw - some purchases may already be acknowledged
+      }
+    } else {
+      console.log("✅ Purchase already acknowledged");
+    }
 
-    const paidDays = Math.floor((paidEnd.getTime() - start.getTime()) / 86400000);
+    // ------------------ CALCULATE SUBSCRIPTION DATES ------------------
+    // Use Google's dates if available, otherwise calculate
+    const start = googleStartTime ? new Date(googleStartTime) : new Date();
+    const paidEnd = googleExpiryTime ? new Date(googleExpiryTime) : (() => {
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + plan.duration_months);
+      return end;
+    })();
+
+    const paidDays = Math.max(1, Math.ceil((paidEnd.getTime() - start.getTime()) / 86400000));
 
     console.log("📅 Subscription dates:", {
       start: start.toISOString(),
@@ -209,9 +262,10 @@ serve(async (req) => {
     });
 
     // ------------------ PAYMENT RECORD ------------------
-    const micros = purchase.lineItems?.[0]?.priceAmountMicros || 0;
-    const amount = Number(micros) / 1_000_000;
-    const currency = purchase.lineItems?.[0]?.priceCurrencyCode || "USD";
+    // Extract price from lineItem's offerDetails or recurringPrice
+    const recurringPrice = lineItem?.autoRenewingPlan?.recurringPrice;
+    const amount = recurringPrice?.units ? Number(recurringPrice.units) : 0;
+    const currency = recurringPrice?.currencyCode || "INR";
 
     const { data: payment, error: paymentError } = await supabase
       .from("payments")
@@ -237,7 +291,7 @@ serve(async (req) => {
 
     console.log("✅ Payment record created:", payment.id);
 
-    // ------------------ UPSERT SUBSCRIPTION (NO TRIAL) ------------------
+    // ------------------ UPSERT SUBSCRIPTION ------------------
     const { data: subscription, error: subError } = await supabase
       .from("user_subscriptions")
       .upsert({
@@ -250,10 +304,6 @@ serve(async (req) => {
         external_subscription_id: purchase.latestOrderId || purchaseToken,
         last_payment_id: payment.id,
         purchase_platform: "google_play",
-        is_trial: false,
-        trial_used: false,
-        trial_starts_at: null,
-        trial_ends_at: null,
         accumulated_days: paidDays,
       }, { onConflict: "user_id" })
       .select()
@@ -278,8 +328,9 @@ serve(async (req) => {
         subscription: {
           id: subscription.id,
           status: "active",
+          startsAt: start.toISOString(),
           expiresAt: paidEnd.toISOString(),
-          isTrial: false,
+          planName: plan.name,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
