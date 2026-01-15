@@ -88,7 +88,8 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      const redirectUrl = 'https://examtrakr.com/auth/callback';
+      // IMPORTANT: must match the exact origin the TWA is running on (www vs non-www)
+      const redirectUrl = `${window.location.origin}/auth/callback`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -118,6 +119,7 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
 
   const handleResendVerification = async () => {
     if (!formData.email) {

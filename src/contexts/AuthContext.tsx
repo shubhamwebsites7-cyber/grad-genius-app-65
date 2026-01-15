@@ -98,79 +98,74 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    let initialized = false;
-    
-    // Set up auth state listener first
-    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state change:', event, session?.user?.id);
-        
-        if (!mounted) return;
-        
-        // Only update if initialized or not INITIAL_SESSION
-        if (initialized || event !== 'INITIAL_SESSION') {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            // Use setTimeout to avoid blocking auth flow
-            setTimeout(() => {
-              if (mounted) {
-                fetchSubscription(session.user.id).catch(err => 
-                  console.error('Error fetching subscription:', err)
-                );
-              }
-            }, 0);
-          } else {
-            setSubscription({
-              isPremium: false,
-              planName: 'Free Plan',
-              expiresAt: null,
-              status: 'free'
-            });
-          }
-          
-          if (initialized) {
-            setLoading(false);
-          }
-        }
-      }
-    );
 
-    // Then check for existing session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-        }
-        
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          try {
-            await fetchSubscription(session.user.id);
-          } catch (error) {
-            console.error('Error fetching subscription on init:', error);
-          }
-        }
-        
-        initialized = true;
-        setLoading(false);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          initialized = true;
-          setLoading(false);
-        }
-      }
+    const resetSubscriptionState = () => {
+      setSubscription({
+        isPremium: false,
+        planName: 'Free Plan',
+        expiresAt: null,
+        status: 'free',
+      });
     };
 
-    initializeAuth();
+    // 1) Listen for auth changes (OAuth redirect will trigger SIGNED_IN here)
+    const {
+      data: { subscription: authSubscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (import.meta.env.DEV) {
+        // Avoid logging sensitive auth details in production
+        console.log('[Auth] state:', event);
+      }
+
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+
+      if (session?.user) {
+        // Defer non-auth DB calls to avoid blocking the auth flow
+        setTimeout(() => {
+          if (!mounted) return;
+          fetchSubscription(session.user.id).catch((err) => {
+            console.error('Error fetching subscription:', err);
+          });
+        }, 0);
+      } else {
+        resetSubscriptionState();
+      }
+    });
+
+    // 2) Hydrate existing session on first load
+    (async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error && import.meta.env.DEV) {
+          console.error('Error getting session:', error);
+        }
+
+        if (!mounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+
+        if (session?.user) {
+          await fetchSubscription(session.user.id);
+        } else {
+          resetSubscriptionState();
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Error initializing auth:', error);
+        }
+        if (mounted) setLoading(false);
+      }
+    })();
 
     return () => {
       mounted = false;

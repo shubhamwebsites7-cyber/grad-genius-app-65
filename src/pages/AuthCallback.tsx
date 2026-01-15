@@ -9,7 +9,59 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the session from URL hash (Supabase puts tokens in hash)
+        // PKCE flow: Supabase returns `?code=...` which must be exchanged for a session
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get('code');
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            console.error('Auth code exchange error:', exchangeError);
+            setError(exchangeError.message);
+            setTimeout(() => navigate('/login'), 3000);
+            return;
+          }
+
+          // Don't rely on exchangeData.session (it can be null in some environments).
+          const { data, error } = await supabase.auth.getSession();
+
+          if (error) {
+            console.error('Auth session read error:', error);
+            setError(error.message);
+            setTimeout(() => navigate('/login'), 3000);
+            return;
+          }
+
+          if (data.session) {
+            navigate('/dashboard', { replace: true });
+            return;
+          }
+        }
+
+        // Implicit flow fallback: tokens are in the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (accessToken && refreshToken) {
+          const { error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (setSessionError) {
+            console.error('Set session error:', setSessionError);
+            setError(setSessionError.message);
+            setTimeout(() => navigate('/login'), 3000);
+            return;
+          }
+
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+
+        // Last attempt: check if a session already exists
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -20,53 +72,9 @@ const AuthCallback = () => {
         }
 
         if (data.session) {
-          // Successfully authenticated, redirect to dashboard
           navigate('/dashboard', { replace: true });
         } else {
-          // PKCE flow: Supabase returns `?code=...` which must be exchanged for a session
-          const url = new URL(window.location.href);
-          const code = url.searchParams.get('code');
-
-          if (code) {
-            const { data: exchangeData, error: exchangeError } =
-              await supabase.auth.exchangeCodeForSession(code);
-
-            if (exchangeError) {
-              console.error('Auth code exchange error:', exchangeError);
-              setError(exchangeError.message);
-              setTimeout(() => navigate('/login'), 3000);
-              return;
-            }
-
-            if (exchangeData.session) {
-              navigate('/dashboard', { replace: true });
-              return;
-            }
-          }
-
-          // Implicit flow fallback: tokens are in the URL hash
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          const accessToken = hashParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token');
-
-          if (accessToken && refreshToken) {
-            const { error: setSessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-
-            if (setSessionError) {
-              console.error('Set session error:', setSessionError);
-              setError(setSessionError.message);
-              setTimeout(() => navigate('/login'), 3000);
-              return;
-            }
-
-            navigate('/dashboard', { replace: true });
-          } else {
-            // No code/tokens in URL, redirect to login
-            navigate('/login', { replace: true });
-          }
+          navigate('/login', { replace: true });
         }
       } catch (err) {
         console.error('Unexpected error during auth callback:', err);
