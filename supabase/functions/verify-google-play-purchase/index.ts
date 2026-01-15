@@ -292,29 +292,88 @@ serve(async (req) => {
     console.log("✅ Payment record created:", payment.id);
 
     // ------------------ UPSERT SUBSCRIPTION ------------------
-    const { data: subscription, error: subError } = await supabase
+    // Check for existing subscription for this user (any plan - user can only have one active sub)
+    const { data: existingSub } = await supabase
       .from("user_subscriptions")
-      .upsert({
-        user_id: user.id,
-        plan_id: plan.id,
-        status: "active",
-        starts_at: start.toISOString(),
-        expires_at: paidEnd.toISOString(),
-        payment_method: "google_play",
-        external_subscription_id: purchase.latestOrderId || purchaseToken,
-        last_payment_id: payment.id,
-        purchase_platform: "google_play",
-        accumulated_days: paidDays,
-      }, { onConflict: "user_id" })
-      .select()
-      .single();
+      .select("id, plan_id, expires_at, accumulated_days")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    if (subError) {
-      console.error("❌ Failed to create subscription:", subError);
-      throw new Error("Failed to create subscription");
+    let subscription;
+    let subError;
+
+    if (existingSub) {
+      // UPDATE existing subscription
+      console.log("🔄 Updating existing subscription:", existingSub.id);
+      
+      // For renewals, extend from current expiry if still active, otherwise from now
+      const currentExpiry = new Date(existingSub.expires_at);
+      const now = new Date();
+      const effectiveStart = currentExpiry > now ? currentExpiry : start;
+      const effectiveEnd = currentExpiry > now 
+        ? new Date(currentExpiry.getTime() + (paidEnd.getTime() - start.getTime()))
+        : paidEnd;
+      
+      const newAccumulatedDays = (existingSub.accumulated_days || 0) + paidDays;
+
+      const { data: updatedSub, error: updateError } = await supabase
+        .from("user_subscriptions")
+        .update({
+          plan_id: plan.id,
+          status: "active",
+          starts_at: effectiveStart.toISOString(),
+          expires_at: effectiveEnd.toISOString(),
+          payment_method: "google_play",
+          external_subscription_id: purchase.latestOrderId || purchaseToken,
+          last_payment_id: payment.id,
+          purchase_platform: "google_play",
+          accumulated_days: newAccumulatedDays,
+          auto_renew: lineItem?.autoRenewingPlan ? true : false,
+        })
+        .eq("id", existingSub.id)
+        .select()
+        .single();
+
+      subscription = updatedSub;
+      subError = updateError;
+      
+      if (!updateError) {
+        console.log("✅ Subscription updated:", subscription.id, "expires:", effectiveEnd.toISOString());
+      }
+    } else {
+      // CREATE new subscription
+      console.log("➕ Creating new subscription for user:", user.id);
+      
+      const { data: newSub, error: insertError } = await supabase
+        .from("user_subscriptions")
+        .insert({
+          user_id: user.id,
+          plan_id: plan.id,
+          status: "active",
+          starts_at: start.toISOString(),
+          expires_at: paidEnd.toISOString(),
+          payment_method: "google_play",
+          external_subscription_id: purchase.latestOrderId || purchaseToken,
+          last_payment_id: payment.id,
+          purchase_platform: "google_play",
+          accumulated_days: paidDays,
+          auto_renew: lineItem?.autoRenewingPlan ? true : false,
+        })
+        .select()
+        .single();
+
+      subscription = newSub;
+      subError = insertError;
+      
+      if (!insertError) {
+        console.log("✅ Subscription created:", subscription.id);
+      }
     }
 
-    console.log("✅ Subscription created/updated:", subscription.id);
+    if (subError) {
+      console.error("❌ Failed to upsert subscription:", subError);
+      throw new Error("Failed to save subscription");
+    }
 
     // Link payment → subscription
     await supabase
