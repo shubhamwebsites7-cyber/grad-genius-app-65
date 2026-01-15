@@ -225,7 +225,13 @@ export const UnifiedSubscriptionCard = () => {
     accumulated_total_days = 0
   } = progressData || {};
 
-  const showProgress = progressData && total_days > 0;
+  // Use accumulated_total_days if available, otherwise fall back to total_days
+  const displayTotalDays = accumulated_total_days > 0 ? accumulated_total_days : total_days;
+  const displayProgressPercentage = displayTotalDays > 0 
+    ? Math.min(100, Math.round((elapsed_days / displayTotalDays) * 100))
+    : progress_percentage;
+  
+  const showProgress = progressData && displayTotalDays > 0;
 
   return (
     <Card>
@@ -273,40 +279,38 @@ export const UnifiedSubscriptionCard = () => {
         {/* Progress Section */}
         {showProgress && (
           <div className="space-y-4 pt-2">
-            {/* Current Period Progress */}
+            {/* Total Access - Primary display showing accumulated days */}
+            <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Award className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Total Access</p>
+                  <p className="text-xl font-bold text-primary">
+                    {displayTotalDays} days
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Progress */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-primary" />
-                  Current Period
+                  Current Progress
                 </span>
                 <span className="text-sm font-semibold">
-                  Day {elapsed_days} of {total_days}
+                  Day {elapsed_days} of {displayTotalDays}
                 </span>
               </div>
-              <Progress value={progress_percentage} className="h-2.5" />
+              <Progress value={displayProgressPercentage} className="h-2.5" />
               <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground">{progress_percentage}% completed</span>
+                <span className="text-muted-foreground">{displayProgressPercentage}% completed</span>
                 <span className="font-medium text-primary">{remaining_days} days left</span>
               </div>
             </div>
-
-            {/* Total Access - only show when has accumulated days */}
-            {accumulated_total_days > 0 && (
-              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Award className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Total Access</p>
-                    <p className="text-xl font-bold text-primary">
-                      {accumulated_total_days} days
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
