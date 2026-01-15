@@ -41,6 +41,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Refund = lazy(() => import("./pages/Refund"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
 
 // Loading component
@@ -78,6 +79,7 @@ const App = () => (
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/verify-email" element={<VerifyEmail />} />
                   <Route path="/feedback" element={<Feedback />} />
                   <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
