@@ -406,11 +406,11 @@ const Exams = () => {
               </div>
 
               {/* Toolbar */}
-              <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
+              <div className="flex flex-row gap-3 justify-between items-center">
+                <div className="flex items-center gap-2 flex-1">
+                  <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
                   <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Filter by category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -424,7 +424,6 @@ const Exams = () => {
                   </Select>
                 </div>
                 
-                  <div className="flex gap-3">
                   <Button 
                     variant="outline" 
                     className="flex items-center gap-2"
@@ -434,98 +433,9 @@ const Exams = () => {
                     <span className="hidden sm:inline">Request New Exam</span>
                     <span className="sm:hidden">Request</span>
                   </Button>
-                  <Button 
-                    variant="hero" 
-                    className="flex items-center gap-2"
-                    onClick={async () => {
-                      if (!user) {
-                        toast({
-                          title: 'Login Required',
-                          description: 'Please login to add custom exams.',
-                          variant: 'destructive'
-                        });
-                        navigate('/login');
-                        return;
-                      }
-
-                      // Check subscription
-                      const { data: subscriptionData } = await supabase
-                        .from('user_subscriptions')
-                        .select('status')
-                        .eq('user_id', user.id)
-                        .eq('status', 'active')
-                        .maybeSingle();
-
-                      if (!subscriptionData) {
-                        toast({
-                          title: 'Premium Feature',
-                          description: 'Adding custom exams is only available for premium users.',
-                          variant: 'destructive'
-                        });
-                        navigate('/pricing');
-                        return;
-                      }
-
-                      navigate('/exams/add');
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Exam
-                  </Button>
-                </div>
               </div>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
-              <Card>
-                <CardContent className="p-3 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Total Exams</p>
-                      <p className="text-lg sm:text-2xl font-bold text-primary">{exams.length}</p>
-                    </div>
-                    <BookOpen className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-3 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Active Students</p>
-                      <p className="text-lg sm:text-2xl font-bold text-success">50K+</p>
-                    </div>
-                    <Users className="h-5 w-5 sm:h-8 sm:w-8 text-success" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-3 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Success Rate</p>
-                      <p className="text-lg sm:text-2xl font-bold text-warning">89%</p>
-                    </div>
-                    <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-warning" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-3 sm:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">Avg. Prep Time</p>
-                      <p className="text-lg sm:text-2xl font-bold text-secondary">6 months</p>
-                    </div>
-                    <Clock className="h-5 w-5 sm:h-8 sm:w-8 text-secondary" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
             {/* Results Info */}
             {filteredExams.length > 0 && (

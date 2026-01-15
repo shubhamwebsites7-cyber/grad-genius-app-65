@@ -243,7 +243,6 @@ const Profile = () => {
                   onSave={handleSaveProfile}
                   onChange={handleChange}
                 />
-                <UnifiedSubscriptionCard />
               </TabsContent>
 
               <TabsContent value="billing" className="space-y-6">

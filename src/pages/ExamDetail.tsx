@@ -1014,16 +1014,16 @@ const ExamDetail = () => {
             </div>
 
             {/* Subjects */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {sortedSubjects.map(subject => {
                 const isExpanded = expandedSections.has(subject.id);
                 const subjectProgress = getSubjectProgress(subject.id);
                 const { completed: completedTopics, total: totalTopics } = getSubjectTopicCounts(subject.id);
                 
-                return (
+                  return (
                   <Card key={subject.id} className="overflow-hidden">
                     <Collapsible open={isExpanded} onOpenChange={() => toggleSection(subject.id)}>
-                      <CardHeader className="cursor-pointer transition-colors">
+                      <CardHeader className="cursor-pointer transition-colors p-3 sm:p-6">
                         {/* Mobile Layout */}
                          <div className="flex sm:hidden flex-col gap-3 w-full">
                               {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
