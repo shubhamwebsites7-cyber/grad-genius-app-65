@@ -56,14 +56,6 @@ const Dashboard = () => {
     totalTopics: 0
   });
 
-  const motivationalQuotes = [
-    "Success is the sum of small efforts repeated day in and day out.",
-    "The future belongs to those who prepare for it today.",
-    "Every expert was once a beginner.",
-    "Consistency is the key to excellence."
-  ];
-
-  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
 
   useEffect(() => {
     if (user) {
@@ -303,7 +295,7 @@ const Dashboard = () => {
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
                 <p className="text-muted-foreground mt-2">
-                  Hi Student, let's continue your preparation!
+                  Hi, let's continue your preparation!
                 </p>
               </div>
               <div className="mt-4 lg:mt-0 flex flex-col lg:items-end gap-4">
@@ -320,11 +312,6 @@ const Dashboard = () => {
                       Add Exam
                     </Link>
                   </Button>
-                </div>
-                <div className="lg:text-right">
-                  <p className="text-sm text-muted-foreground italic">
-                    "{randomQuote}"
-                  </p>
                 </div>
               </div>
             </div>
