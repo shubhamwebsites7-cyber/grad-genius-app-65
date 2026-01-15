@@ -23,7 +23,28 @@ const AuthCallback = () => {
           // Successfully authenticated, redirect to dashboard
           navigate('/dashboard', { replace: true });
         } else {
-          // No session found, try to exchange the code/token from URL
+          // PKCE flow: Supabase returns `?code=...` which must be exchanged for a session
+          const url = new URL(window.location.href);
+          const code = url.searchParams.get('code');
+
+          if (code) {
+            const { data: exchangeData, error: exchangeError } =
+              await supabase.auth.exchangeCodeForSession(code);
+
+            if (exchangeError) {
+              console.error('Auth code exchange error:', exchangeError);
+              setError(exchangeError.message);
+              setTimeout(() => navigate('/login'), 3000);
+              return;
+            }
+
+            if (exchangeData.session) {
+              navigate('/dashboard', { replace: true });
+              return;
+            }
+          }
+
+          // Implicit flow fallback: tokens are in the URL hash
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
@@ -43,7 +64,7 @@ const AuthCallback = () => {
 
             navigate('/dashboard', { replace: true });
           } else {
-            // No tokens in URL, redirect to login
+            // No code/tokens in URL, redirect to login
             navigate('/login', { replace: true });
           }
         }

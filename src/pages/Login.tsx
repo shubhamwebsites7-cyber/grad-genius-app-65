@@ -88,10 +88,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Use callback URL for proper TWA/app redirect handling
-      const redirectUrl = window.location.hostname.includes('lovable.app')
-        ? `${window.location.origin}/auth/callback`
-        : 'https://examtrakr.com/auth/callback';
+      const redirectUrl = 'https://examtrakr.com/auth/callback';
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
