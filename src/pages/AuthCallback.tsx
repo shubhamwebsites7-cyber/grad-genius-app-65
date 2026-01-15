@@ -9,6 +9,17 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // CRITICAL: Check for existing session FIRST before any code exchange
+        // This handles the Android/TWA double-callback issue where the second
+        // callback lacks code_verifier but a session already exists
+        const { data: existingSession } = await supabase.auth.getSession();
+        
+        if (existingSession?.session) {
+          console.log('Session already exists, redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+
         // PKCE flow: Supabase returns `?code=...` which must be exchanged for a session
         const url = new URL(window.location.href);
         const code = url.searchParams.get('code');
@@ -18,6 +29,15 @@ const AuthCallback = () => {
 
           if (exchangeError) {
             console.error('Auth code exchange error:', exchangeError);
+            
+            // Double-check for session - it might have been created by a parallel callback
+            const { data: retrySession } = await supabase.auth.getSession();
+            if (retrySession?.session) {
+              console.log('Session found after exchange error, redirecting');
+              navigate('/dashboard', { replace: true });
+              return;
+            }
+            
             setError(exchangeError.message);
             setTimeout(() => navigate('/login'), 3000);
             return;
@@ -52,6 +72,14 @@ const AuthCallback = () => {
 
           if (setSessionError) {
             console.error('Set session error:', setSessionError);
+            
+            // Check if session exists anyway
+            const { data: retrySession } = await supabase.auth.getSession();
+            if (retrySession?.session) {
+              navigate('/dashboard', { replace: true });
+              return;
+            }
+            
             setError(setSessionError.message);
             setTimeout(() => navigate('/login'), 3000);
             return;
@@ -61,23 +89,18 @@ const AuthCallback = () => {
           return;
         }
 
-        // Last attempt: check if a session already exists
-        const { data, error } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error('Auth callback error:', error);
-          setError(error.message);
-          setTimeout(() => navigate('/login'), 3000);
-          return;
-        }
-
-        if (data.session) {
-          navigate('/dashboard', { replace: true });
-        } else {
-          navigate('/login', { replace: true });
-        }
+        // No code or tokens - redirect to login
+        navigate('/login', { replace: true });
       } catch (err) {
         console.error('Unexpected error during auth callback:', err);
+        
+        // Even on error, check if a session exists before showing error
+        const { data: fallbackSession } = await supabase.auth.getSession();
+        if (fallbackSession?.session) {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+        
         setError('An unexpected error occurred');
         setTimeout(() => navigate('/login'), 3000);
       }
