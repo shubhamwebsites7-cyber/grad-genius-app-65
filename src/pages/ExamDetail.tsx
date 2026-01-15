@@ -1139,15 +1139,15 @@ const ExamDetail = () => {
                          </CardHeader>
                       
                       <CollapsibleContent>
-                        <CardContent className="pt-0">
-                           <div className="space-y-3">
+                        <CardContent className="pt-0 px-2 sm:px-6">
+                           <div className="space-y-2 sm:space-y-3">
                             {subject.topics.map((topic, index) => {
                               const isAccessible = topic.isAccessible || index < 3;
                               
                               return (
                                   <div
                                    key={topic.id}
-                                   className={`p-4 rounded-lg border-2 transition-all ${
+                                   className={`p-2 sm:p-4 rounded-lg border sm:border-2 transition-all ${
                                      topic.isAccessible
                                        ? topic.isCompleted
                                          ? 'border-border bg-muted/40'
