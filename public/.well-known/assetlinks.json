@@ -1,8 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.examtrakr.android",
-    "sha256_cert_fingerprints": ["2B:CA:1F:95:BE:4C:06:BB:AA:10:18:03:44:A3:D5:B6:B0:AC:F5:2A:B0:BE:6E:86:A4:09:18:22:83:D8:6B:03"]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.examtrakr.android",
+      "sha256_cert_fingerprints": [
+        "F7:B7:49:2B:EF:7D:1F:C9:02:AA:FF:80:DC:D5:44:31:5E:0F:08:50:0E:3A:75:2B:90:68:71:8C:2A:5C:ED:D2"
+      ]
+    }
   }
-}]
+]
