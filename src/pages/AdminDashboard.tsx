@@ -44,6 +44,7 @@ import { FeedbackSection } from "@/components/admin/FeedbackSection";
 import { EnhancedResourcesSection } from "@/components/admin/EnhancedResourcesSection";
 import { PricingManagementSection } from "@/components/admin/PricingManagementSection";
 import { SubscriptionsManagementSection } from "@/components/admin/SubscriptionsManagementSection";
+import { UsersManagementSection } from "@/components/admin/UsersManagementSection";
 
 interface Stats {
   totalUsers: number;
@@ -472,53 +473,7 @@ const AdminDashboard = () => {
         return <FeedbackSection />;
 
       case 'users':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Users Management</h2>
-                <p className="text-muted-foreground">Manage user accounts and permissions</p>
-              </div>
-            </div>
-            
-            <Card>
-              <CardContent className="p-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Country</TableHead>
-                      <TableHead>Enrollments</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Joined</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.full_name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.phone_number || '-'}</TableCell>
-                        <TableCell>{user.country_code || '-'}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{user.enrollment_count}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                            {user.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <UsersManagementSection />;
 
       case 'exams':
         return (
