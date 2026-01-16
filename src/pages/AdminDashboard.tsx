@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   BarChart3, 
   Users, 
@@ -30,13 +31,13 @@ import {
   AlertCircle,
   Loader2,
   ClipboardList,
-  MessageSquare
+  MessageSquare,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Navigation } from '@/components/Navigation';
-import { Footer } from '@/components/Footer';
 import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
 import { ExamRequestsSection } from "@/components/admin/ExamRequestsSection";
 import { FeedbackSection } from "@/components/admin/FeedbackSection";
@@ -96,6 +97,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   
   const [activeSection, setActiveSection] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState<Stats>({
@@ -612,57 +614,139 @@ const AdminDashboard = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="min-h-screen flex flex-col">
-        <Navigation />
-        
-        <div className="flex-1 flex">
-          {/* Sidebar */}
-          <aside className="w-64 border-r bg-card hidden lg:block">
-            <div className="p-6">
-              <h2 className="text-lg font-bold mb-6">Admin Panel</h2>
-              <nav className="space-y-2">
+      <TooltipProvider>
+        <div className="min-h-screen flex w-full">
+          {/* Fixed Sidebar */}
+          <aside 
+            className={`fixed left-0 top-0 h-screen border-r bg-card z-40 transition-all duration-300 hidden lg:flex flex-col ${
+              sidebarCollapsed ? 'w-16' : 'w-64'
+            }`}
+          >
+            <div className="flex flex-col h-full">
+              {/* Logo and Header */}
+              <div className={`p-4 border-b flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+                <Link to="/" className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
+                  {!sidebarCollapsed && (
+                    <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                      Examtrakr
+                    </span>
+                  )}
+                </Link>
+              </div>
+
+              {/* Toggle Button */}
+              <div className={`px-3 py-2 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className={sidebarCollapsed ? 'w-10 h-10 p-0' : 'w-full justify-start'}
+                >
+                  {sidebarCollapsed ? (
+                    <PanelLeft className="h-4 w-4" />
+                  ) : (
+                    <>
+                      <PanelLeftClose className="h-4 w-4 mr-2" />
+                      <span className="text-sm">Collapse</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Admin Panel Label */}
+              {!sidebarCollapsed && (
+                <div className="px-6 py-2">
+                  <h2 className="text-lg font-bold text-foreground">Admin Panel</h2>
+                </div>
+              )}
+
+              {/* Navigation Items - Scrollable */}
+              <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
-                  return (
+                  const isActive = activeSection === item.id;
+                  
+                  const buttonContent = (
                     <button
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-colors text-left ${
-                        activeSection === item.id
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
+                        isActive
                           ? 'bg-primary text-primary-foreground'
                           : 'hover:bg-muted'
-                      }`}
+                      } ${sidebarCollapsed ? 'justify-center' : ''}`}
                     >
                       <Icon className="h-5 w-5 flex-shrink-0" />
-                      <span className="text-sm">{item.label}</span>
+                      {!sidebarCollapsed && <span className="text-sm">{item.label}</span>}
                     </button>
                   );
+
+                  if (sidebarCollapsed) {
+                    return (
+                      <Tooltip key={item.id} delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          {buttonContent}
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="bg-popover text-popover-foreground border">
+                          {item.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return buttonContent;
                 })}
               </nav>
 
-              <div className="mt-8 pt-8 border-t">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
-                  <span className="text-sm">Logout</span>
-                </Button>
+              {/* Logout Button */}
+              <div className={`p-3 border-t ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
+                {sidebarCollapsed ? (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleLogout}
+                        className="w-10 h-10"
+                      >
+                        <LogOut className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="bg-popover text-popover-foreground border">
+                      Logout
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <span className="text-sm">Logout</span>
+                  </Button>
+                )}
               </div>
             </div>
           </aside>
 
-          {/* Main Content */}
-          <main className="flex-1 p-6 lg:p-8 overflow-auto">
-            <div className="max-w-7xl mx-auto">
-              {renderContent()}
+          {/* Main Content - with left margin for fixed sidebar */}
+          <main 
+            className={`flex-1 overflow-y-auto transition-all duration-300 ${
+              sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+            }`}
+          >
+            <div className="min-h-screen p-6 lg:p-8">
+              <div className="max-w-7xl mx-auto">
+                {renderContent()}
+              </div>
             </div>
           </main>
         </div>
-
-        <Footer />
-      </div>
+      </TooltipProvider>
     </>
   );
 };
