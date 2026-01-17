@@ -464,7 +464,7 @@ const AdminDashboard = () => {
         );
 
       case 'analytics':
-        return <AnalyticsSection stats={stats} />;
+        return <AnalyticsSection />;
 
       case 'exam-requests':
         return <ExamRequestsSection />;
