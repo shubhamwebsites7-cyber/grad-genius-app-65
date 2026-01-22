@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle2, Loader2, Star } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import FeedbackDayTracker from '@/components/feedback/FeedbackDayTracker';
 
 // Testing period: 14 days starting from Jan 22, 2026
@@ -18,8 +18,6 @@ const TOTAL_TESTING_DAYS = 14;
 const Feedback = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
   const [review, setReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -84,15 +82,6 @@ const Feedback = () => {
       return;
     }
 
-    if (rating === 0) {
-      toast({
-        title: 'Rating Required',
-        description: 'Please select a star rating.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
       setSubmitting(true);
 
@@ -100,7 +89,7 @@ const Feedback = () => {
         user_id: user.id,
         user_email: user.email,
         user_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
-        rating: rating,
+        rating: 5,
         review: review.trim() || null,
         feedback_day: currentDay,
         feedback_date: new Date().toISOString().split('T')[0],
@@ -239,20 +228,57 @@ const Feedback = () => {
           <div className="max-w-lg mx-auto">
             {/* Header */}
             <div className="text-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Closed Testing</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Day {currentDay} Feedback</h1>
               <p className="text-muted-foreground">
-                {TOTAL_TESTING_DAYS - currentDay} days remaining
+                Closed Testing • {TOTAL_TESTING_DAYS - currentDay} days remaining
               </p>
             </div>
 
             {/* Progress Tracker */}
-            <Card>
+            <Card className="mb-6">
               <CardContent className="pt-6 pb-4">
                 <FeedbackDayTracker
                   completedDays={completedDays}
                   currentDay={currentDay}
                   totalDays={TOTAL_TESTING_DAYS}
                 />
+              </CardContent>
+            </Card>
+
+            {/* Feedback Card */}
+            <Card>
+              <CardContent className="pt-6 pb-6 space-y-4">
+                {/* Review Text */}
+                <div>
+                  <Textarea
+                    value={review}
+                    onChange={(e) => setReview(e.target.value)}
+                    placeholder="Any bugs, suggestions, or feedback for today? (optional)"
+                    rows={4}
+                    maxLength={1000}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1 text-right">
+                    {review.length}/1000
+                  </p>
+                </div>
+
+                {/* Submit Button */}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="w-full"
+                  size="lg"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    `Submit Day ${currentDay} Feedback`
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </div>
