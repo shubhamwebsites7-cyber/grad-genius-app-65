@@ -10,12 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle2, Loader2, Star, Gift } from 'lucide-react';
-import FeedbackStreakTracker from '@/components/feedback/FeedbackStreakTracker';
 
 // Trial reward is available from Jan 22, 2026
 const TRIAL_START_DATE = new Date('2026-01-22T00:00:00Z');
 const TRIAL_DAYS = 14;
-const CHALLENGE_DAYS = 14;
 
 const Feedback = () => {
   const { user } = useAuth();
@@ -26,50 +24,27 @@ const Feedback = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [claimTrial, setClaimTrial] = useState(true);
-  const [hasSubmittedToday, setHasSubmittedToday] = useState(false);
-  const [completedDays, setCompletedDays] = useState<number[]>([]);
+  const [hasExistingFeedback, setHasExistingFeedback] = useState(false);
   const [isTrialAvailable, setIsTrialAvailable] = useState(false);
-  const [challengeComplete, setChallengeComplete] = useState(false);
 
   useEffect(() => {
     // Check if trial reward is available (after Jan 22, 2026)
     const now = new Date();
     setIsTrialAvailable(now >= TRIAL_START_DATE);
 
-    // Check user's feedback history
-    const checkFeedbackHistory = async () => {
+    // Check if user already submitted feedback
+    const checkExistingFeedback = async () => {
       if (!user) return;
-      
-      const { data: feedbackData } = await supabase
+      const { data } = await supabase
         .from('user_feedback')
-        .select('created_at, feedback_day')
+        .select('id')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
-      
-      if (feedbackData && feedbackData.length > 0) {
-        // Calculate completed days based on feedback entries
-        const days: number[] = [];
-        const today = new Date().toDateString();
-        
-        feedbackData.forEach((entry: any, index: number) => {
-          const dayNumber = entry.feedback_day || index + 1;
-          if (!days.includes(dayNumber) && dayNumber <= CHALLENGE_DAYS) {
-            days.push(dayNumber);
-          }
-          
-          // Check if submitted today
-          const entryDate = new Date(entry.created_at).toDateString();
-          if (entryDate === today) {
-            setHasSubmittedToday(true);
-          }
-        });
-        
-        setCompletedDays(days.sort((a, b) => a - b));
-        setChallengeComplete(days.length >= CHALLENGE_DAYS);
+        .single();
+      if (data) {
+        setHasExistingFeedback(true);
       }
     };
-    
-    checkFeedbackHistory();
+    checkExistingFeedback();
   }, [user]);
 
   const handleSubmit = async () => {
@@ -95,22 +70,19 @@ const Feedback = () => {
     try {
       setSubmitting(true);
 
-      const nextDay = completedDays.length + 1;
-      
       const { error } = await supabase.from('user_feedback').insert({
         user_id: user.id,
         user_email: user.email,
         user_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
         rating: rating,
         review: review.trim() || null,
-        claimed_trial: claimTrial && isTrialAvailable && nextDay === 1,
-        feedback_day: nextDay,
+        claimed_trial: claimTrial && isTrialAvailable,
       } as any);
 
       if (error) throw error;
 
-      // If user opted for trial on first day and it's available, activate 14-day premium
-      if (claimTrial && isTrialAvailable && nextDay === 1) {
+      // If user opted for trial and it's available, activate 14-day premium
+      if (claimTrial && isTrialAvailable) {
         const startsAt = new Date();
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + TRIAL_DAYS);
@@ -161,15 +133,11 @@ const Feedback = () => {
       }
 
       setSubmitted(true);
-      setCompletedDays(prev => [...prev, nextDay]);
-      setHasSubmittedToday(true);
-      
-      const isFirstDay = nextDay === 1;
       toast({
         title: 'Thank You!',
-        description: isFirstDay && claimTrial && isTrialAvailable 
+        description: claimTrial && isTrialAvailable 
           ? 'Your feedback has been submitted and 14-day premium access activated!' 
-          : `Day ${nextDay} complete! ${CHALLENGE_DAYS - nextDay} days remaining.`,
+          : 'Your feedback has been submitted successfully.',
       });
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
@@ -219,8 +187,7 @@ const Feedback = () => {
     );
   }
 
-  // Show "already submitted today" state
-  if (hasSubmittedToday && !submitted) {
+  if (hasExistingFeedback) {
     return (
       <>
         <Helmet>
@@ -230,60 +197,13 @@ const Feedback = () => {
           <Navigation />
           <main className="flex-1 flex items-center justify-center py-12 px-4">
             <Card className="max-w-md w-full text-center">
-              <CardContent className="pt-8 pb-6 space-y-6">
-                <div>
-                  <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-3" />
-                  <h2 className="text-xl font-bold mb-2">Today's Feedback Done!</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Come back tomorrow to continue your streak.
-                  </p>
-                </div>
-                
-                <FeedbackStreakTracker completedDays={completedDays} />
-                
-                {challengeComplete && (
-                  <div className="bg-success/10 rounded-lg p-4">
-                    <p className="text-sm font-medium text-success">
-                      🎉 Challenge Complete! Thank you for 14 days of feedback!
-                    </p>
-                  </div>
-                )}
-                
-                <Button asChild variant="outline" className="w-full">
-                  <a href="/exams">Explore Exams</a>
-                </Button>
-              </CardContent>
-            </Card>
-          </main>
-          <Footer />
-        </div>
-      </>
-    );
-  }
-  
-  // Show challenge complete state
-  if (challengeComplete) {
-    return (
-      <>
-        <Helmet>
-          <title>Challenge Complete | ExamTrakr</title>
-        </Helmet>
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          <main className="flex-1 flex items-center justify-center py-12 px-4">
-            <Card className="max-w-md w-full text-center">
-              <CardContent className="pt-8 pb-6 space-y-6">
-                <div>
-                  <Gift className="h-12 w-12 text-primary mx-auto mb-3" />
-                  <h2 className="text-xl font-bold mb-2">14-Day Challenge Complete!</h2>
-                  <p className="text-sm text-muted-foreground">
-                    You've completed all 14 days. Thank you for your dedication!
-                  </p>
-                </div>
-                
-                <FeedbackStreakTracker completedDays={completedDays} />
-                
-                <Button asChild variant="hero" className="w-full">
+              <CardContent className="pt-12 pb-8">
+                <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Already Submitted</h2>
+                <p className="text-muted-foreground mb-6">
+                  You've already submitted your feedback. Thank you for your support!
+                </p>
+                <Button asChild variant="hero">
                   <a href="/exams">Explore Exams</a>
                 </Button>
               </CardContent>
@@ -318,25 +238,9 @@ const Feedback = () => {
               </p>
             </div>
 
-            {/* Streak Tracker */}
-            {completedDays.length > 0 && (
-              <Card className="mb-4">
-                <CardContent className="pt-6 pb-4">
-                  <FeedbackStreakTracker completedDays={completedDays} />
-                </CardContent>
-              </Card>
-            )}
-
             {/* Feedback Card */}
             <Card>
               <CardContent className="pt-8 pb-6 space-y-6">
-                {/* Day indicator */}
-                <div className="text-center">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                    Day {completedDays.length + 1} of {CHALLENGE_DAYS}
-                  </span>
-                </div>
-
                 {/* Star Rating */}
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-4">Tap to rate</p>
@@ -386,8 +290,8 @@ const Feedback = () => {
                   </p>
                 </div>
 
-                {/* 14-Day Trial Checkbox - Only show on first day */}
-                {isTrialAvailable && completedDays.length === 0 && (
+                {/* 14-Day Trial Checkbox */}
+                {isTrialAvailable && (
                   <div className="flex items-start space-x-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
                     <Checkbox
                       id="claim-trial"
