@@ -239,91 +239,20 @@ const Feedback = () => {
           <div className="max-w-lg mx-auto">
             {/* Header */}
             <div className="text-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Day {currentDay} Feedback</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Closed Testing</h1>
               <p className="text-muted-foreground">
-                Closed Testing • {TOTAL_TESTING_DAYS - currentDay} days remaining
+                {TOTAL_TESTING_DAYS - currentDay} days remaining
               </p>
             </div>
 
             {/* Progress Tracker */}
-            <Card className="mb-6">
+            <Card>
               <CardContent className="pt-6 pb-4">
                 <FeedbackDayTracker
                   completedDays={completedDays}
                   currentDay={currentDay}
                   totalDays={TOTAL_TESTING_DAYS}
                 />
-              </CardContent>
-            </Card>
-
-            {/* Feedback Card */}
-            <Card>
-              <CardContent className="pt-8 pb-6 space-y-6">
-                {/* Star Rating */}
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-4">How was your experience today?</p>
-                  <div className="flex justify-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setRating(star)}
-                        onMouseEnter={() => setHoveredRating(star)}
-                        onMouseLeave={() => setHoveredRating(0)}
-                        className="p-1 transition-transform hover:scale-110 focus:outline-none"
-                      >
-                        <Star
-                          className={`h-10 w-10 sm:h-12 sm:w-12 transition-colors ${
-                            star <= (hoveredRating || rating)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-muted-foreground/30'
-                          }`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  {rating > 0 && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {rating === 5 && 'Excellent!'}
-                      {rating === 4 && 'Great!'}
-                      {rating === 3 && 'Good'}
-                      {rating === 2 && 'Fair'}
-                      {rating === 1 && 'Poor'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Review Text */}
-                <div>
-                  <Textarea
-                    value={review}
-                    onChange={(e) => setReview(e.target.value)}
-                    placeholder="Any bugs, suggestions, or feedback for today? (optional)"
-                    rows={4}
-                    maxLength={1000}
-                    className="resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1 text-right">
-                    {review.length}/1000
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  onClick={handleSubmit}
-                  disabled={rating === 0 || submitting}
-                  className="w-full"
-                  size="lg"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    `Submit Day ${currentDay} Feedback`
-                  )}
-                </Button>
               </CardContent>
             </Card>
           </div>
