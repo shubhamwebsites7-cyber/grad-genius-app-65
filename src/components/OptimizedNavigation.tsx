@@ -20,7 +20,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Exams', href: '/exams', icon: BookOpen },
-  { name: 'Feedback', href: '/feedback', icon: MessageSquare },
+  { name: 'Pricing', href: '/pricing', icon: CreditCard },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 
