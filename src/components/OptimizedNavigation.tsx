@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquare } from 'lucide-react';
+import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquarePlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
@@ -21,6 +21,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Exams', href: '/exams', icon: BookOpen },
   { name: 'Pricing', href: '/pricing', icon: CreditCard },
+  { name: 'Feedback', href: '/feedback', icon: MessageSquarePlus, mobileOnly: true },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 
@@ -117,7 +118,7 @@ export const Navigation = memo(() => {
             <Logo />
 
             <div className="hidden md:flex items-center space-x-8">
-              {navItems.map((item) => (
+              {navItems.filter(item => !(item as any).mobileOnly).map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
@@ -191,7 +192,7 @@ export const Navigation = memo(() => {
           {isMobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-border">
               <div className="flex flex-col space-y-4">
-                {navItems.map((item) => (
+                {navItems.filter(item => !(item as any).mobileOnly).map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
