@@ -81,8 +81,6 @@ const Feedback = () => {
         user_id: user.id,
         user_email: user.email,
         user_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
-        rating: 5,
-        review: null,
         feedback_day: currentDay,
         feedback_date: new Date().toISOString().split('T')[0],
         quiz_answers: answers,
