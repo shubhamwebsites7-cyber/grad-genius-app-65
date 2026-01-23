@@ -45,6 +45,10 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
   };
 
   const goToNext = () => {
+    // Only allow next if current question is answered
+    if (answers[currentQuestion] === null) {
+      return;
+    }
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
@@ -184,7 +188,11 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
         </Button>
         
         {currentQuestion < quizQuestions.length - 1 ? (
-          <Button onClick={goToNext} className="flex-1">
+          <Button 
+            onClick={goToNext} 
+            disabled={answers[currentQuestion] === null}
+            className="flex-1"
+          >
             अगला
           </Button>
         ) : (
