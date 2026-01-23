@@ -138,19 +138,7 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
           </div>
         </div>
         <Progress value={progressPercent} className="h-2" />
-        <p className="text-xs text-muted-foreground text-center">
-          {answeredCount}/{quizQuestions.length} उत्तर दिए गए
-        </p>
       </div>
-
-      {/* Timer Warning */}
-      {!canSubmit && (
-        <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 text-center">
-          <p className="text-sm text-warning">
-            ⏱️ कम से कम {formatTime(remainingTime)} और प्रतीक्षा करें
-          </p>
-        </div>
-      )}
 
       {/* Question Card */}
       <Card>
@@ -224,24 +212,6 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
         )}
       </div>
 
-      {/* Question Navigator */}
-      <div className="flex flex-wrap gap-2 justify-center pt-2">
-        {quizQuestions.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentQuestion(index)}
-            className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
-              currentQuestion === index
-                ? 'bg-primary text-primary-foreground'
-                : answers[index] !== null
-                ? 'bg-success text-success-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
     </div>
   );
 };

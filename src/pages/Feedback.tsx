@@ -257,12 +257,6 @@ const Feedback = () => {
 
         <main className="flex-1 py-8 sm:py-12 px-4">
           <div className="max-w-lg mx-auto">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <p className="text-muted-foreground">
-                Closed Testing • Day {currentDay}/{TOTAL_TESTING_DAYS}
-              </p>
-            </div>
 
             {/* Progress Tracker */}
             <Card className="mb-6">
