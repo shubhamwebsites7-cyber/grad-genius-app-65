@@ -1,0 +1,249 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Loader2, Clock, CheckCircle2 } from 'lucide-react';
+import { quizQuestions } from './quizData';
+import confetti from 'canvas-confetti';
+
+interface DailyQuizProps {
+  onSubmit: (answers: number[], score: number, timeTaken: number) => Promise<void>;
+  submitting: boolean;
+}
+
+const MIN_TIME_SECONDS = 90;
+
+const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<(number | null)[]>(
+    new Array(quizQuestions.length).fill(null)
+  );
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [canSubmit, setCanSubmit] = useState(false);
+
+  // Timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime((prev) => {
+        const newTime = prev + 1;
+        if (newTime >= MIN_TIME_SECONDS) {
+          setCanSubmit(true);
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    const newAnswers = [...answers];
+    newAnswers[currentQuestion] = answerIndex;
+    setAnswers(newAnswers);
+  };
+
+  const goToNext = () => {
+    if (currentQuestion < quizQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const goToPrev = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
+  const calculateScore = useCallback(() => {
+    let score = 0;
+    answers.forEach((answer, index) => {
+      if (answer === quizQuestions[index].correctAnswer) {
+        score++;
+      }
+    });
+    return score;
+  }, [answers]);
+
+  const triggerCelebration = () => {
+    // Fire multiple confetti bursts
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      // Fire from left
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#22c55e', '#eab308', '#ef4444', '#3b82f6', '#a855f7']
+      });
+      
+      // Fire from right
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#22c55e', '#eab308', '#ef4444', '#3b82f6', '#a855f7']
+      });
+    }, 250);
+  };
+
+  const handleSubmit = async () => {
+    const score = calculateScore();
+    const answersAsNumbers = answers.map((a) => a ?? -1);
+    
+    triggerCelebration();
+    
+    await onSubmit(answersAsNumbers, score, elapsedTime);
+  };
+
+  const answeredCount = answers.filter((a) => a !== null).length;
+  const progressPercent = (answeredCount / quizQuestions.length) * 100;
+  const remainingTime = Math.max(0, MIN_TIME_SECONDS - elapsedTime);
+  
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const question = quizQuestions[currentQuestion];
+
+  return (
+    <div className="space-y-4">
+      {/* Progress Header */}
+      <div className="space-y-2">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-muted-foreground">
+            प्रश्न {currentQuestion + 1} / {quizQuestions.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className={`font-mono ${!canSubmit ? 'text-warning' : 'text-success'}`}>
+              {formatTime(elapsedTime)}
+            </span>
+          </div>
+        </div>
+        <Progress value={progressPercent} className="h-2" />
+        <p className="text-xs text-muted-foreground text-center">
+          {answeredCount}/{quizQuestions.length} उत्तर दिए गए
+        </p>
+      </div>
+
+      {/* Timer Warning */}
+      {!canSubmit && (
+        <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 text-center">
+          <p className="text-sm text-warning">
+            ⏱️ कम से कम {formatTime(remainingTime)} और प्रतीक्षा करें
+          </p>
+        </div>
+      )}
+
+      {/* Question Card */}
+      <Card>
+        <CardContent className="pt-6 pb-4">
+          <h3 className="text-lg font-semibold mb-4">
+            {question.id}. {question.question}
+          </h3>
+
+          <RadioGroup
+            value={answers[currentQuestion]?.toString() ?? ''}
+            onValueChange={(value) => handleAnswerSelect(parseInt(value))}
+            className="space-y-3"
+          >
+            {question.options.map((option, index) => (
+              <div
+                key={index}
+                className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                  answers[currentQuestion] === index
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => handleAnswerSelect(index)}
+              >
+                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
+                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                  {String.fromCharCode(65 + index)}) {option}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </CardContent>
+      </Card>
+
+      {/* Navigation */}
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={goToPrev}
+          disabled={currentQuestion === 0}
+          className="flex-1"
+        >
+          पिछला
+        </Button>
+        
+        {currentQuestion < quizQuestions.length - 1 ? (
+          <Button onClick={goToNext} className="flex-1">
+            अगला
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting || answeredCount < quizQuestions.length}
+            className="flex-1"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                सबमिट हो रहा है...
+              </>
+            ) : !canSubmit ? (
+              `${formatTime(remainingTime)} बाकी`
+            ) : answeredCount < quizQuestions.length ? (
+              `${quizQuestions.length - answeredCount} शेष`
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                सबमिट करें
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+
+      {/* Question Navigator */}
+      <div className="flex flex-wrap gap-2 justify-center pt-2">
+        {quizQuestions.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentQuestion(index)}
+            className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
+              currentQuestion === index
+                ? 'bg-primary text-primary-foreground'
+                : answers[index] !== null
+                ? 'bg-success text-success-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default DailyQuiz;

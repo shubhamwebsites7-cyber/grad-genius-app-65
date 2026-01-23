@@ -4,12 +4,12 @@ import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, LogIn } from 'lucide-react';
 import FeedbackDayTracker from '@/components/feedback/FeedbackDayTracker';
+import DailyQuiz from '@/components/feedback/DailyQuiz';
 
 // Testing period: 14 days starting from Jan 22, 2026
 const TESTING_START_DATE = new Date('2026-01-22T00:00:00+05:30'); // IST
@@ -18,13 +18,13 @@ const TOTAL_TESTING_DAYS = 14;
 const Feedback = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [review, setReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [completedDays, setCompletedDays] = useState<number[]>([]);
   const [currentDay, setCurrentDay] = useState(1);
   const [todayAlreadySubmitted, setTodayAlreadySubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [quizScore, setQuizScore] = useState<number | null>(null);
 
   // Calculate current testing day
   const calculateCurrentDay = () => {
@@ -71,16 +71,8 @@ const Feedback = () => {
     fetchUserFeedback();
   }, [user]);
 
-  const handleSubmit = async () => {
-    if (!user) {
-      toast({
-        title: 'Login Required',
-        description: 'Please login to submit feedback.',
-        variant: 'destructive',
-      });
-      window.location.href = '/login';
-      return;
-    }
+  const handleQuizSubmit = async (answers: number[], score: number, timeTaken: number) => {
+    if (!user) return;
 
     try {
       setSubmitting(true);
@@ -90,26 +82,30 @@ const Feedback = () => {
         user_email: user.email,
         user_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
         rating: 5,
-        review: review.trim() || null,
+        review: null,
         feedback_day: currentDay,
         feedback_date: new Date().toISOString().split('T')[0],
+        quiz_answers: answers,
+        quiz_score: score,
+        time_taken_seconds: timeTaken,
       } as any);
 
       if (error) throw error;
 
+      setQuizScore(score);
       setSubmitted(true);
       setCompletedDays([...completedDays, currentDay]);
       setTodayAlreadySubmitted(true);
       
       toast({
-        title: 'Thank You!',
-        description: `Day ${currentDay} feedback submitted successfully!`,
+        title: '🎉 बधाई हो!',
+        description: `Day ${currentDay} क्विज़ पूर्ण! स्कोर: ${score}/25`,
       });
     } catch (error: any) {
-      console.error('Error submitting feedback:', error);
+      console.error('Error submitting quiz:', error);
       toast({
-        title: 'Submission Failed',
-        description: error.message || 'Failed to submit feedback. Please try again.',
+        title: 'सबमिशन विफल',
+        description: error.message || 'कृपया पुनः प्रयास करें।',
         variant: 'destructive',
       });
     } finally {
@@ -121,7 +117,7 @@ const Feedback = () => {
     return (
       <>
         <Helmet>
-          <title>Feedback | ExamTrakr</title>
+          <title>Daily Quiz | ExamTrakr</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
@@ -134,23 +130,58 @@ const Feedback = () => {
     );
   }
 
-  // Success screen after submission
-  if (submitted) {
+  // Not logged in
+  if (!user) {
     return (
       <>
         <Helmet>
-          <title>Feedback Submitted | ExamTrakr</title>
+          <title>Daily Quiz | ExamTrakr</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1 flex items-center justify-center py-12 px-4">
             <Card className="max-w-md w-full">
               <CardContent className="pt-8 pb-6 space-y-6">
-              <div className="text-center">
-                  <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">Day {currentDay} Complete!</h2>
+                <div className="text-center">
+                  <LogIn className="h-16 w-16 text-primary mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">लॉगिन आवश्यक</h2>
                   <p className="text-muted-foreground mb-6">
-                    Thank you for your feedback. Come back tomorrow!
+                    क्विज़ में भाग लेने के लिए कृपया लॉगिन करें।
+                  </p>
+                </div>
+
+                <Button asChild variant="hero" className="w-full">
+                  <a href="/login">लॉगिन करें</a>
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  // Success screen after submission
+  if (submitted) {
+    return (
+      <>
+        <Helmet>
+          <title>Quiz Complete | ExamTrakr</title>
+        </Helmet>
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          <main className="flex-1 flex items-center justify-center py-12 px-4">
+            <Card className="max-w-md w-full">
+              <CardContent className="pt-8 pb-6 space-y-6">
+                <div className="text-center">
+                  <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold mb-2">🎉 Day {currentDay} पूर्ण!</h2>
+                  <p className="text-3xl font-bold text-primary mb-2">
+                    {quizScore}/25
+                  </p>
+                  <p className="text-muted-foreground">
+                    कल फिर से आएं!
                   </p>
                 </div>
                 
@@ -177,19 +208,19 @@ const Feedback = () => {
     return (
       <>
         <Helmet>
-          <title>Feedback | ExamTrakr</title>
+          <title>Daily Quiz | ExamTrakr</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1 flex items-center justify-center py-12 px-4">
             <Card className="max-w-md w-full">
               <CardContent className="pt-8 pb-6 space-y-6">
-              <div className="text-center">
+                <div className="text-center">
                   <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">Today's Feedback Done!</h2>
+                  <h2 className="text-2xl font-bold mb-2">आज का क्विज़ पूर्ण!</h2>
                   <p className="text-muted-foreground mb-6">
-                    You've already submitted feedback for Day {currentDay}. 
-                    {currentDay < TOTAL_TESTING_DAYS && " Come back tomorrow!"}
+                    Day {currentDay} के लिए आपने पहले ही क्विज़ दिया है।
+                    {currentDay < TOTAL_TESTING_DAYS && " कल फिर आएं!"}
                   </p>
                 </div>
 
@@ -214,10 +245,10 @@ const Feedback = () => {
   return (
     <>
       <Helmet>
-        <title>Daily Feedback | ExamTrakr - Closed Testing</title>
+        <title>Daily Quiz | ExamTrakr - Closed Testing</title>
         <meta
           name="description"
-          content="Submit your daily feedback during the 14-day closed testing period."
+          content="Take the daily quiz during the 14-day closed testing period."
         />
       </Helmet>
 
@@ -228,9 +259,8 @@ const Feedback = () => {
           <div className="max-w-lg mx-auto">
             {/* Header */}
             <div className="text-center mb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2">Day {currentDay} Feedback</h1>
               <p className="text-muted-foreground">
-                Closed Testing • {TOTAL_TESTING_DAYS - currentDay} days remaining
+                Closed Testing • Day {currentDay}/{TOTAL_TESTING_DAYS}
               </p>
             </div>
 
@@ -245,40 +275,13 @@ const Feedback = () => {
               </CardContent>
             </Card>
 
-            {/* Feedback Card */}
+            {/* Quiz Card */}
             <Card>
-              <CardContent className="pt-6 pb-6 space-y-4">
-                {/* Review Text */}
-                <div>
-                  <Textarea
-                    value={review}
-                    onChange={(e) => setReview(e.target.value)}
-                    placeholder="Any bugs, suggestions, or feedback for today? (optional)"
-                    rows={4}
-                    maxLength={1000}
-                    className="resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1 text-right">
-                    {review.length}/1000
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="w-full"
-                  size="lg"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    `Submit Day ${currentDay} Feedback`
-                  )}
-                </Button>
+              <CardContent className="pt-6 pb-6">
+                <DailyQuiz
+                  onSubmit={handleQuizSubmit}
+                  submitting={submitting}
+                />
               </CardContent>
             </Card>
           </div>
