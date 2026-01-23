@@ -123,7 +123,7 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
   const question = quizQuestions[currentQuestion];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Progress Header */}
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
@@ -133,7 +133,7 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span className={`font-mono ${!canSubmit ? 'text-warning' : 'text-success'}`}>
-              {formatTime(elapsedTime)}
+              {formatTime(elapsedTime)} / {formatTime(MIN_TIME_SECONDS)}
             </span>
           </div>
         </div>
@@ -142,28 +142,28 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
 
       {/* Question Card */}
       <Card>
-        <CardContent className="pt-6 pb-4">
-          <h3 className="text-lg font-semibold mb-4">
+        <CardContent className="p-3">
+          <h3 className="text-base font-semibold mb-3">
             {question.id}. {question.question}
           </h3>
 
           <RadioGroup
             value={answers[currentQuestion]?.toString() ?? ''}
             onValueChange={(value) => handleAnswerSelect(parseInt(value))}
-            className="space-y-3"
+            className="grid grid-cols-2 gap-2"
           >
             {question.options.map((option, index) => (
               <div
                 key={index}
-                className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                className={`flex items-center space-x-2 p-2 rounded-lg border transition-colors cursor-pointer text-sm ${
                   answers[currentQuestion] === index
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
                 onClick={() => handleAnswerSelect(index)}
               >
-                <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                <RadioGroupItem value={index.toString()} id={`option-${index}`} className="h-4 w-4" />
+                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-sm">
                   {String.fromCharCode(65 + index)}) {option}
                 </Label>
               </div>
