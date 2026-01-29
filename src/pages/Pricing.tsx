@@ -442,9 +442,9 @@ const Pricing = () => {
             </div>
           ) : (
             <div className="max-w-6xl mx-auto space-y-12">
-              {/* Native Android Indicator - Hidden on mobile */}
+              {/* Native Android Indicator - Hidden on mobile and tablet */}
               {isNativeAndroid && (
-                <div className="max-w-md mx-auto hidden md:block">
+                <div className="max-w-md mx-auto hidden lg:block">
                   <Alert className="bg-primary/10 border-primary/20">
                     <Smartphone className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-primary font-medium">
