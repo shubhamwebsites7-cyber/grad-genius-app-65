@@ -8,21 +8,31 @@ export const Footer: React.FC = () => {
 
   const footerLinks = [
     {
-      title: 'Company',
+      title: 'Exam Categories',
       links: [
-        { name: 'Home', href: '/' },
-        { name: 'About Us', href: '/about' },
+        { name: 'Banking Exams', href: '/banking-exams' },
+        { name: 'Government Exams', href: '/government-exams' },
+        { name: 'Teaching Exams', href: '/teaching-exams' },
+        { name: 'All Exams', href: '/exams' },
+      ],
+    },
+    {
+      title: 'Features',
+      links: [
+        { name: 'Syllabus Tracker', href: '/syllabus-tracker' },
+        { name: 'Progress Tracker', href: '/progress-tracker' },
         { name: 'Pricing', href: '/pricing' },
-        { name: 'Contact Us', href: '/contact' },
         { name: 'FAQ', href: '/faq' },
       ],
     },
     {
-      title: 'Legal',
+      title: 'Company',
       links: [
+        { name: 'About Us', href: '/about' },
+        { name: 'Contact Us', href: '/contact' },
         { name: 'Terms of Service', href: '/terms' },
         { name: 'Privacy Policy', href: '/privacy' },
-        { name: 'Refund & Cancellation Policy', href: '/refund' },
+        { name: 'Refund Policy', href: '/refund' },
       ],
     },
     {
@@ -39,6 +49,12 @@ export const Footer: React.FC = () => {
   return (
     <footer className={`bg-gradient-to-br from-accent via-background to-accent/50 border-t border-border/50 backdrop-blur-sm mt-16 ${isMobile ? 'mb-16' : ''}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* SEO-friendly footer description */}
+        <div className="mb-8 text-center max-w-3xl mx-auto">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            ExamTrakr is India's #1 exam tracker app for government and competitive exam preparation. Track your syllabus topic-wise, monitor preparation progress, and study smarter for IBPS, SSC, UPSC, JEE, NEET, CTET and 150+ exams.
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
           <div className="md:col-span-1">

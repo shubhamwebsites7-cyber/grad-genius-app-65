@@ -43,6 +43,13 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const DeleteAccount = lazy(() => import("./pages/DeleteAccount"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
+// SEO Pages
+const BankingExams = lazy(() => import("./pages/BankingExams"));
+const GovernmentExams = lazy(() => import("./pages/GovernmentExams"));
+const TeachingExams = lazy(() => import("./pages/TeachingExams"));
+const SyllabusTracker = lazy(() => import("./pages/SyllabusTracker"));
+const ProgressTracker = lazy(() => import("./pages/ProgressTracker"));
+
 
 // Loading component
 const LoadingFallback = () => (
@@ -99,6 +106,14 @@ const App = () => (
                   <Route path="/refund" element={<Refund />} />
                   <Route path="/pricing" element={<Pricing />} />
                   <Route path="/delete-account" element={<DeleteAccount />} />
+                  
+                  {/* SEO Pages */}
+                  <Route path="/banking-exams" element={<BankingExams />} />
+                  <Route path="/government-exams" element={<GovernmentExams />} />
+                  <Route path="/teaching-exams" element={<TeachingExams />} />
+                  <Route path="/syllabus-tracker" element={<SyllabusTracker />} />
+                  <Route path="/progress-tracker" element={<ProgressTracker />} />
+                  
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
