@@ -10,27 +10,27 @@ export const FAQSection: React.FC = () => {
   const faqs = [
     {
       question: 'What is ExamTrakr?',
-      answer: 'ExamTrakr is a smart web app to prepare for exams like IBPS, NEET, JEE, and more — track your learning, access resources, and stay organized.'
+      answer: 'ExamTrakr is India\'s #1 exam tracker app for students preparing for IBPS, SSC, UPSC, JEE, NEET, and 150+ competitive exams. Track your syllabus topic-wise, monitor preparation progress, and study smarter.'
+    },
+    {
+      question: 'How does the syllabus tracker work?',
+      answer: 'Select your exam, browse topic-wise syllabus, and mark topics complete as you study. ExamTrakr shows visual progress bars so you always know how much is complete. Never forget what you studied!'
+    },
+    {
+      question: 'How to complete syllabus on time?',
+      answer: 'ExamTrakr helps you complete syllabus by: showing clear topic-wise breakdown, tracking what\'s complete vs pending, visualizing progress with bars, and helping you identify weak subjects that need more focus.'
     },
     {
       question: 'Is ExamTrakr free to use?',
-      answer: 'Yes! You can start free — explore exams and topics, then upgrade for full access when ready.'
+      answer: 'Yes! Start free to explore exams, view syllabi, and track basic progress. Premium unlocks unlimited exam tracking, detailed analytics, and study resources at affordable prices.'
     },
     {
-      question: 'Do I need to download any app?',
-      answer: 'No need — ExamTrakr works directly on your browser. You can also install it as a PWA on mobile or desktop.'
-    },
-    {
-      question: 'Can I track my study progress?',
-      answer: 'Yes! Every topic you study can be marked complete to visualize your progress.'
-    },
-    {
-      question: 'Is ExamTrakr available for all exams?',
-      answer: 'We\'re adding new exams regularly — from banking and government to engineering and medical entrances.'
+      question: 'Can I prepare without coaching?',
+      answer: 'Absolutely! ExamTrakr is designed for self-study. You get complete topic-wise syllabus, progress tracking, free resources, and a clear roadmap. Many students crack government exams using ExamTrakr without coaching.'
     },
     {
       question: 'Is my data safe?',
-      answer: 'Absolutely. Your data is securely stored and managed through Supabase with encrypted access.'
+      answer: 'Yes! Your data is securely stored with encrypted cloud backup. Auto-save ensures you never lose progress. Access from any device – phone, tablet, or laptop.'
     }
   ];
 
