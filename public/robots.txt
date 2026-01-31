@@ -17,4 +17,4 @@ Disallow: /admin
 Disallow: /profile
 Disallow: /exams/add
 
-Sitemap: https://examtrakr.com/sitemap.xml
+Sitemap: https://www.examtrakr.com/sitemap.xml
