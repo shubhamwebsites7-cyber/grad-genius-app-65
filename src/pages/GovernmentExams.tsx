@@ -5,10 +5,13 @@ import { Footer } from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BookOpen, Target, BarChart3, CheckCircle, ArrowRight, Users, Award } from 'lucide-react';
+import { BookOpen, CheckCircle, ArrowRight, Award } from 'lucide-react';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 
 const GovernmentExams = () => {
-  const govtExams = [
+  const { isIndia } = useCountryDetection();
+
+  const indiaGovtExams = [
     { name: 'SSC CGL', description: 'Staff Selection Commission - Combined Graduate Level' },
     { name: 'SSC CHSL', description: 'Combined Higher Secondary Level' },
     { name: 'SSC MTS', description: 'Multi Tasking Staff' },
@@ -23,7 +26,24 @@ const GovernmentExams = () => {
     { name: 'Police Constable', description: 'State Police Recruitment' },
   ];
 
-  const subjects = [
+  const globalProfessionalExams = [
+    { name: 'PMP', description: 'Project Management Professional Certification' },
+    { name: 'AWS Certified', description: 'Amazon Web Services Cloud Certifications' },
+    { name: 'Google Cloud', description: 'Google Cloud Professional Certifications' },
+    { name: 'Azure', description: 'Microsoft Azure Administrator & Developer' },
+    { name: 'CISSP', description: 'Certified Information Systems Security Professional' },
+    { name: 'CompTIA A+', description: 'IT Operational Roles Certification' },
+    { name: 'CompTIA Security+', description: 'Cybersecurity Certification' },
+    { name: 'CCNA', description: 'Cisco Certified Network Associate' },
+    { name: 'Scrum Master', description: 'Certified ScrumMaster (CSM)' },
+    { name: 'Six Sigma', description: 'Six Sigma Green Belt & Black Belt' },
+    { name: 'ITIL', description: 'IT Service Management Certification' },
+    { name: 'Salesforce', description: 'Salesforce Administrator & Developer' },
+  ];
+
+  const exams = isIndia ? indiaGovtExams : globalProfessionalExams;
+
+  const indiaSubjects = [
     { name: 'General Knowledge', topics: '500+ topics' },
     { name: 'Quantitative Aptitude', topics: '200+ topics' },
     { name: 'Reasoning Ability', topics: '150+ topics' },
@@ -32,29 +52,66 @@ const GovernmentExams = () => {
     { name: 'General Science', topics: '300+ topics' },
   ];
 
+  const globalSubjects = [
+    { name: 'Cloud Architecture', topics: '300+ topics' },
+    { name: 'Networking & Security', topics: '250+ topics' },
+    { name: 'Project Management', topics: '200+ topics' },
+    { name: 'Programming & DevOps', topics: '350+ topics' },
+    { name: 'Data & Analytics', topics: '200+ topics' },
+    { name: 'Leadership & Strategy', topics: '150+ topics' },
+  ];
+
+  const subjects = isIndia ? indiaSubjects : globalSubjects;
+
+  const seoContent = isIndia ? {
+    title: "Government Exam Tracker – SSC, UPSC, Railway Syllabus | ExamTrakr",
+    description: "Track your government exam preparation with ExamTrakr. Topic-wise syllabus tracker for SSC CGL, UPSC, Railway exams. Monitor progress & complete syllabus on time.",
+    keywords: "government exam tracker, SSC CGL syllabus tracker, UPSC preparation app, Railway exam tracker, govt exam syllabus, SSC preparation progress, government exam planner, competitive exam tracker, sarkari exam preparation",
+    h1: "Government Exam Tracker – Complete",
+    h1Highlight: "Syllabus on Time",
+    heroText: "Struggling with vast government exam syllabus? ExamTrakr is your smart exam preparation app to track topic-wise progress for SSC CGL, UPSC, Railway, and State PSC exams. Know exactly where you stand in your preparation!",
+    sectionTitle: "Government Exams on ExamTrakr",
+    sectionSubtitle: "Track syllabus completion for SSC, UPSC, Railway, State PSC and more sarkari exams",
+    subjectsTitle: "Subjects & Topics We Cover",
+    problemTitle: "Government Exam Syllabus is Too Big – How to Manage?",
+    problemText: "We understand the struggle. SSC CGL has 4 tiers, UPSC has lakhs of aspirants, and the syllabus seems endless.",
+    ctaTitle: "Start Tracking Your Government Exam Today",
+    ctaText: "Don't let vast syllabus overwhelm you. Track progress, complete syllabus, crack your sarkari exam!",
+    pageSlug: "Government Exams"
+  } : {
+    title: "Professional Certification Tracker – PMP, AWS, Azure Preparation | ExamTrakr",
+    description: "Track your professional certification preparation with ExamTrakr. Topic-wise syllabus tracker for PMP, AWS, Azure, CISSP exams. Monitor progress & study smarter.",
+    keywords: "PMP exam tracker, AWS certification tracker, professional certification preparation, Azure exam tracker, CISSP syllabus tracker, IT certification progress, cloud certification tracker, project management exam prep",
+    h1: "Professional Certification Tracker – Complete",
+    h1Highlight: "Your Certification Journey",
+    heroText: "Struggling with vast certification syllabi? ExamTrakr is your smart exam preparation app to track topic-wise progress for PMP, AWS, Azure, and other professional certifications. Know exactly where you stand in your preparation!",
+    sectionTitle: "Professional Certifications on ExamTrakr",
+    sectionSubtitle: "Track syllabus completion for PMP, AWS, Azure, Google Cloud and more professional certifications",
+    subjectsTitle: "Domains & Topics We Cover",
+    problemTitle: "Certification Syllabus is Overwhelming – How to Manage?",
+    problemText: "We understand the struggle. PMP has 10 knowledge areas, AWS has multiple domains, and the material seems endless.",
+    ctaTitle: "Start Tracking Your Certification Today",
+    ctaText: "Don't let vast syllabus overwhelm you. Track progress, complete your certification, advance your career!",
+    pageSlug: "Professional Certifications"
+  };
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://examtrakr.com" },
-      { "@type": "ListItem", "position": 2, "name": "Government Exams", "item": "https://examtrakr.com/government-exams" }
+      { "@type": "ListItem", "position": 2, "name": seoContent.pageSlug, "item": "https://examtrakr.com/government-exams" }
     ]
   };
 
   return (
     <>
       <Helmet>
-        <title>Government Exam Tracker – SSC, UPSC, Railway Syllabus | ExamTrakr</title>
-        <meta 
-          name="description" 
-          content="Track your government exam preparation with ExamTrakr. Topic-wise syllabus tracker for SSC CGL, UPSC, Railway exams. Monitor progress & complete syllabus on time." 
-        />
-        <meta 
-          name="keywords" 
-          content="government exam tracker, SSC CGL syllabus tracker, UPSC preparation app, Railway exam tracker, govt exam syllabus, SSC preparation progress, government exam planner, competitive exam tracker, sarkari exam preparation" 
-        />
-        <meta property="og:title" content="Government Exam Tracker – SSC, UPSC, Railway | ExamTrakr" />
-        <meta property="og:description" content="Track SSC, UPSC, Railway exam syllabus topic-wise. Visual progress tracker for government exams." />
+        <title>{seoContent.title}</title>
+        <meta name="description" content={seoContent.description} />
+        <meta name="keywords" content={seoContent.keywords} />
+        <meta property="og:title" content={seoContent.title} />
+        <meta property="og:description" content={seoContent.description} />
         <meta property="og:url" content="https://examtrakr.com/government-exams" />
         <link rel="canonical" href="https://examtrakr.com/government-exams" />
         <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
@@ -70,18 +127,18 @@ const GovernmentExams = () => {
               <nav className="text-sm text-muted-foreground mb-6">
                 <Link to="/" className="hover:text-primary">Home</Link>
                 <span className="mx-2">/</span>
-                <span className="text-foreground">Government Exams</span>
+                <span className="text-foreground">{seoContent.pageSlug}</span>
               </nav>
               
               <div className="text-center max-w-4xl mx-auto">
                 <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-                  Government Exam Tracker – Complete{' '}
+                  {seoContent.h1}{' '}
                   <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    Syllabus on Time
+                    {seoContent.h1Highlight}
                   </span>
                 </h1>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                  Struggling with vast government exam syllabus? ExamTrakr is your smart exam preparation app to track topic-wise progress for SSC CGL, UPSC, Railway, and State PSC exams. Know exactly where you stand in your preparation!
+                  {seoContent.heroText}
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <Button size="lg" asChild>
@@ -90,7 +147,7 @@ const GovernmentExams = () => {
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild>
-                    <Link to="/exams">Browse All Govt Exams</Link>
+                    <Link to="/exams">{isIndia ? "Browse All Govt Exams" : "Browse All Certifications"}</Link>
                   </Button>
                 </div>
               </div>
@@ -103,10 +160,10 @@ const GovernmentExams = () => {
               <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div>
                   <h2 className="text-3xl font-bold text-foreground mb-6">
-                    Government Exam Syllabus is Too Big – How to Manage?
+                    {seoContent.problemTitle}
                   </h2>
                   <p className="text-muted-foreground mb-6">
-                    We understand the struggle. SSC CGL has 4 tiers, UPSC has lakhs of aspirants, and the syllabus seems endless. Most students face these problems:
+                    {seoContent.problemText} Most students face these problems:
                   </p>
                   <ul className="space-y-3 text-muted-foreground">
                     <li className="flex items-start gap-3">
@@ -143,7 +200,7 @@ const GovernmentExams = () => {
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="text-primary">✓</span>
-                      <span>Subject-wise tracking – Quant, Reasoning, GK separately</span>
+                      <span>Subject-wise tracking – track each domain separately</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="text-primary">✓</span>
@@ -155,18 +212,18 @@ const GovernmentExams = () => {
             </div>
           </section>
 
-          {/* Government Exams List */}
+          {/* Exams List */}
           <section className="py-16 bg-accent/30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-4">
-                Government Exams on ExamTrakr
+                {seoContent.sectionTitle}
               </h2>
               <p className="text-center text-muted-foreground mb-12 max-w-3xl mx-auto">
-                Track syllabus completion for SSC, UPSC, Railway, State PSC and more sarkari exams
+                {seoContent.sectionSubtitle}
               </p>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {govtExams.map((exam, index) => (
+                {exams.map((exam, index) => (
                   <Card key={index} className="hover:shadow-lg transition-shadow group">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
@@ -189,7 +246,7 @@ const GovernmentExams = () => {
           <section className="py-16 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl font-bold text-center text-foreground mb-12">
-                Subjects & Topics We Cover
+                {seoContent.subjectsTitle}
               </h2>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -216,7 +273,7 @@ const GovernmentExams = () => {
                 </div>
                 <div>
                   <div className="text-4xl font-bold text-primary mb-2">100+</div>
-                  <div className="text-muted-foreground">Government Exams</div>
+                  <div className="text-muted-foreground">{isIndia ? "Government Exams" : "Professional Certifications"}</div>
                 </div>
                 <div>
                   <div className="text-4xl font-bold text-primary mb-2">5,000+</div>
@@ -234,10 +291,10 @@ const GovernmentExams = () => {
           <section className="py-16 bg-gradient-to-r from-primary to-secondary">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
-                Start Tracking Your Government Exam Today
+                {seoContent.ctaTitle}
               </h2>
               <p className="text-xl text-primary-foreground/90 mb-8">
-                Don't let vast syllabus overwhelm you. Track progress, complete syllabus, crack your sarkari exam!
+                {seoContent.ctaText}
               </p>
               <Button size="lg" variant="secondary" asChild>
                 <Link to="/signup">Create Free Account</Link>

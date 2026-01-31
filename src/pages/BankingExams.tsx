@@ -2,13 +2,16 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { BookOpen, Target, BarChart3, CheckCircle, ArrowRight, TrendingUp } from 'lucide-react';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 
 const BankingExams = () => {
-  const bankingExams = [
+  const { isIndia } = useCountryDetection();
+
+  const indiaBankingExams = [
     { name: 'IBPS PO', description: 'Institute of Banking Personnel Selection - Probationary Officer' },
     { name: 'IBPS Clerk', description: 'Institute of Banking Personnel Selection - Clerk' },
     { name: 'IBPS SO', description: 'Institute of Banking Personnel Selection - Specialist Officer' },
@@ -21,7 +24,22 @@ const BankingExams = () => {
     { name: 'SIDBI', description: 'Small Industries Development Bank of India' },
   ];
 
-  const features = [
+  const globalFinanceExams = [
+    { name: 'CFA', description: 'Chartered Financial Analyst - All 3 Levels' },
+    { name: 'FRM', description: 'Financial Risk Manager Certification' },
+    { name: 'CPA', description: 'Certified Public Accountant Exam' },
+    { name: 'ACCA', description: 'Association of Chartered Certified Accountants' },
+    { name: 'CAIA', description: 'Chartered Alternative Investment Analyst' },
+    { name: 'CFP', description: 'Certified Financial Planner Certification' },
+    { name: 'Series 7', description: 'General Securities Representative Exam' },
+    { name: 'Series 66', description: 'Uniform Combined State Law Examination' },
+    { name: 'CMA', description: 'Certified Management Accountant' },
+    { name: 'CIA', description: 'Certified Internal Auditor' },
+  ];
+
+  const exams = isIndia ? indiaBankingExams : globalFinanceExams;
+
+  const indiaFeatures = [
     {
       icon: Target,
       title: 'Topic-Wise Syllabus Tracking',
@@ -44,21 +62,73 @@ const BankingExams = () => {
     },
   ];
 
-  // Structured data for Banking Exams page
+  const globalFeatures = [
+    {
+      icon: Target,
+      title: 'Topic-Wise Syllabus Tracking',
+      description: 'Track every topic in Ethics, Quantitative Methods, Economics, Financial Reporting, and Portfolio Management.'
+    },
+    {
+      icon: BarChart3,
+      title: 'Visual Progress Tracker',
+      description: 'See your certification exam progress with beautiful progress bars for each subject and reading.'
+    },
+    {
+      icon: CheckCircle,
+      title: 'Syllabus Completion Tracker',
+      description: 'Mark topics as complete and never forget what you studied. Perfect for CFA, FRM, CPA exam preparation.'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Study Plan Roadmap',
+      description: 'Follow a structured roadmap to complete your certification syllabus before the exam window.'
+    },
+  ];
+
+  const features = isIndia ? indiaFeatures : globalFeatures;
+
+  const seoContent = isIndia ? {
+    title: "Banking Exam Tracker – IBPS, SBI, RBI Syllabus & Preparation | ExamTrakr",
+    description: "Track your banking exam preparation with ExamTrakr. Topic-wise syllabus tracker for IBPS PO, IBPS Clerk, SBI PO, SBI Clerk, RBI Grade B. Monitor progress & study smarter.",
+    keywords: "banking exam tracker, IBPS PO syllabus, IBPS Clerk preparation, SBI PO exam tracker, banking exam syllabus, IBPS preparation app, banking exam progress tracker, RBI Grade B syllabus, bank exam study planner",
+    h1: "Banking Exam Tracker – Your Complete",
+    h1Highlight: "Syllabus Tracker",
+    heroText: "Preparing for IBPS, SBI, or RBI exams? ExamTrakr is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering \"what to study next\" – start tracking today!",
+    sectionTitle: "Banking Exams We Support",
+    sectionSubtitle: "Track syllabus and monitor progress for all major banking exams in India",
+    ctaTitle: "Ready to Crack Your Banking Exam?",
+    ctaText: "Join thousands of students using ExamTrakr to track their IBPS, SBI, RBI preparation. Start free today!",
+    pageSlug: "Banking Exams"
+  } : {
+    title: "Finance & Accounting Exam Tracker – CFA, CPA, FRM Preparation | ExamTrakr",
+    description: "Track your finance certification exam preparation with ExamTrakr. Topic-wise syllabus tracker for CFA, FRM, CPA, ACCA exams. Monitor progress & study smarter.",
+    keywords: "CFA exam tracker, finance exam preparation, CPA exam tracker, FRM syllabus tracker, ACCA preparation app, finance certification tracker, CFA Level 1 syllabus, accounting exam tracker, financial analyst exam prep",
+    h1: "Finance & Accounting Exam Tracker – Your Complete",
+    h1Highlight: "Certification Tracker",
+    heroText: "Preparing for CFA, CPA, or FRM exams? ExamTrakr is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering \"what to study next\" – start tracking today!",
+    sectionTitle: "Finance & Accounting Exams We Support",
+    sectionSubtitle: "Track syllabus and monitor progress for all major finance and accounting certifications worldwide",
+    ctaTitle: "Ready to Pass Your Finance Certification?",
+    ctaText: "Join thousands of professionals using ExamTrakr to track their CFA, CPA, FRM preparation. Start free today!",
+    pageSlug: "Finance Exams"
+  };
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://examtrakr.com" },
-      { "@type": "ListItem", "position": 2, "name": "Banking Exams", "item": "https://examtrakr.com/banking-exams" }
+      { "@type": "ListItem", "position": 2, "name": seoContent.pageSlug, "item": "https://examtrakr.com/banking-exams" }
     ]
   };
 
   const courseSchema = {
     "@context": "https://schema.org",
     "@type": "Course",
-    "name": "Banking Exam Preparation with ExamTrakr",
-    "description": "Complete syllabus tracking and progress monitoring for IBPS, SBI, RBI and other banking exams",
+    "name": isIndia ? "Banking Exam Preparation with ExamTrakr" : "Finance Certification Preparation with ExamTrakr",
+    "description": isIndia 
+      ? "Complete syllabus tracking and progress monitoring for IBPS, SBI, RBI and other banking exams"
+      : "Complete syllabus tracking and progress monitoring for CFA, CPA, FRM and other finance certifications",
     "provider": {
       "@type": "Organization",
       "name": "ExamTrakr",
@@ -69,17 +139,11 @@ const BankingExams = () => {
   return (
     <>
       <Helmet>
-        <title>Banking Exam Tracker – IBPS, SBI, RBI Syllabus & Preparation | ExamTrakr</title>
-        <meta 
-          name="description" 
-          content="Track your banking exam preparation with ExamTrakr. Topic-wise syllabus tracker for IBPS PO, IBPS Clerk, SBI PO, SBI Clerk, RBI Grade B. Monitor progress & study smarter." 
-        />
-        <meta 
-          name="keywords" 
-          content="banking exam tracker, IBPS PO syllabus, IBPS Clerk preparation, SBI PO exam tracker, banking exam syllabus, IBPS preparation app, banking exam progress tracker, RBI Grade B syllabus, bank exam study planner" 
-        />
-        <meta property="og:title" content="Banking Exam Tracker – IBPS, SBI, RBI Preparation | ExamTrakr" />
-        <meta property="og:description" content="Track your banking exam syllabus topic-wise. Monitor IBPS, SBI, RBI preparation progress with visual trackers." />
+        <title>{seoContent.title}</title>
+        <meta name="description" content={seoContent.description} />
+        <meta name="keywords" content={seoContent.keywords} />
+        <meta property="og:title" content={seoContent.title} />
+        <meta property="og:description" content={seoContent.description} />
         <meta property="og:url" content="https://examtrakr.com/banking-exams" />
         <link rel="canonical" href="https://examtrakr.com/banking-exams" />
         <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
@@ -96,18 +160,18 @@ const BankingExams = () => {
               <nav className="text-sm text-muted-foreground mb-6">
                 <Link to="/" className="hover:text-primary">Home</Link>
                 <span className="mx-2">/</span>
-                <span className="text-foreground">Banking Exams</span>
+                <span className="text-foreground">{seoContent.pageSlug}</span>
               </nav>
               
               <div className="text-center max-w-4xl mx-auto">
                 <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-                  Banking Exam Tracker – Your Complete{' '}
+                  {seoContent.h1}{' '}
                   <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    Syllabus Tracker
+                    {seoContent.h1Highlight}
                   </span>
                 </h1>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                  Preparing for IBPS, SBI, or RBI exams? ExamTrakr is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering "what to study next" – start tracking today!
+                  {seoContent.heroText}
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <Button size="lg" asChild>
@@ -116,21 +180,24 @@ const BankingExams = () => {
                     </Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild>
-                    <Link to="/exams">Explore Banking Exams</Link>
+                    <Link to="/exams">{isIndia ? "Explore Banking Exams" : "Explore Finance Exams"}</Link>
                   </Button>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Why Use ExamTrakr for Banking Exams */}
+          {/* Why Use ExamTrakr Section */}
           <section className="py-16 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-4">
-                Why Use ExamTrakr for Banking Exam Preparation?
+                {isIndia ? "Why Use ExamTrakr for Banking Exam Preparation?" : "Why Use ExamTrakr for Finance Exam Preparation?"}
               </h2>
               <p className="text-center text-muted-foreground mb-12 max-w-3xl mx-auto">
-                Banking exams like IBPS PO, SBI Clerk have vast syllabi. Our syllabus tracker helps you complete every topic without missing anything.
+                {isIndia 
+                  ? "Banking exams like IBPS PO, SBI Clerk have vast syllabi. Our syllabus tracker helps you complete every topic without missing anything."
+                  : "Finance certifications like CFA, FRM have extensive curricula. Our syllabus tracker helps you complete every reading without missing anything."
+                }
               </p>
               
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -149,18 +216,18 @@ const BankingExams = () => {
             </div>
           </section>
 
-          {/* Supported Banking Exams */}
+          {/* Supported Exams */}
           <section className="py-16 bg-accent/30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-4">
-                Banking Exams We Support
+                {seoContent.sectionTitle}
               </h2>
               <p className="text-center text-muted-foreground mb-12 max-w-3xl mx-auto">
-                Track syllabus and monitor progress for all major banking exams in India
+                {seoContent.sectionSubtitle}
               </p>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {bankingExams.map((exam, index) => (
+                {exams.map((exam, index) => (
                   <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer group">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
@@ -179,26 +246,38 @@ const BankingExams = () => {
             </div>
           </section>
 
-          {/* How to Track Banking Exam Syllabus */}
+          {/* How to Track Section */}
           <section className="py-16 bg-background">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-12">
-                How to Track Your Banking Exam Syllabus
+                {isIndia ? "How to Track Your Banking Exam Syllabus" : "How to Track Your Finance Exam Syllabus"}
               </h2>
               
               <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">1</div>
                   <div>
-                    <h3 className="text-xl font-semibold text-foreground mb-2">Select Your Banking Exam</h3>
-                    <p className="text-muted-foreground">Choose IBPS PO, SBI Clerk, RBI Grade B or any banking exam you're preparing for. ExamTrakr has complete topic-wise syllabus ready.</p>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">
+                      {isIndia ? "Select Your Banking Exam" : "Select Your Finance Certification"}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {isIndia 
+                        ? "Choose IBPS PO, SBI Clerk, RBI Grade B or any banking exam you're preparing for. ExamTrakr has complete topic-wise syllabus ready."
+                        : "Choose CFA Level 1, FRM Part 1, CPA or any certification you're preparing for. ExamTrakr has complete topic-wise syllabus ready."
+                      }
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">2</div>
                   <div>
                     <h3 className="text-xl font-semibold text-foreground mb-2">Start Marking Topics Complete</h3>
-                    <p className="text-muted-foreground">As you study each topic in Quant, Reasoning, English, GA – mark it complete. See your progress bar fill up!</p>
+                    <p className="text-muted-foreground">
+                      {isIndia 
+                        ? "As you study each topic in Quant, Reasoning, English, GA – mark it complete. See your progress bar fill up!"
+                        : "As you study each reading in Ethics, Quant, Economics, Financial Reporting – mark it complete. See your progress bar fill up!"
+                      }
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -212,7 +291,9 @@ const BankingExams = () => {
               
               <div className="text-center mt-12">
                 <Button size="lg" asChild>
-                  <Link to="/signup">Start Tracking Your Banking Exam <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                  <Link to="/signup">
+                    {isIndia ? "Start Tracking Your Banking Exam" : "Start Tracking Your Finance Exam"} <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -222,10 +303,10 @@ const BankingExams = () => {
           <section className="py-16 bg-gradient-to-r from-primary to-secondary">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
-                Ready to Crack Your Banking Exam?
+                {seoContent.ctaTitle}
               </h2>
               <p className="text-xl text-primary-foreground/90 mb-8">
-                Join thousands of students using ExamTrakr to track their IBPS, SBI, RBI preparation. Start free today!
+                {seoContent.ctaText}
               </p>
               <Button size="lg" variant="secondary" asChild>
                 <Link to="/signup">Create Free Account</Link>
