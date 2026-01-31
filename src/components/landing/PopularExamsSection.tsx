@@ -141,7 +141,10 @@ export const PopularExamsSection: React.FC = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Start tracking your preparation for India's most sought-after competitive exams
+            {isIndia 
+              ? "Start tracking your preparation for India's most sought-after competitive exams"
+              : "Start tracking your preparation for the world's most popular standardized tests and certifications"
+            }
           </p>
         </div>
 
@@ -205,7 +208,7 @@ export const PopularExamsSection: React.FC = () => {
         <div className="text-center mt-12 animate-fade-in" style={{ animationDelay: '0.6s' }}>
           <Button variant="outline" size="lg" asChild>
             <Link to="/exams">
-              View All 150+ Exams
+              {isIndia ? "View All 150+ Exams" : "View All 100+ Exams"}
               <ArrowRight className="h-5 w-5 ml-2" />
             </Link>
           </Button>
