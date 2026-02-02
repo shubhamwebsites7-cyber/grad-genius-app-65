@@ -35,6 +35,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
+import { LockedResourceOverlay, FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -882,14 +883,18 @@ const SectionResources = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {filteredAndSortedResources.map((resource, index) => {
                 const IconComponent = getResourceIcon(resource.type);
+                const isLocked = !subscription.isPremium && index >= FREE_RESOURCE_LIMIT;
                 
                 return (
                   <Card 
                     key={resource.id} 
-                    className={`hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative ${
-                      resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-                    }`}
+                    className={`transition-all duration-200 group relative ${
+                      isLocked 
+                        ? 'opacity-70 cursor-not-allowed' 
+                        : 'hover:shadow-lg hover:scale-[1.02]'
+                    } ${resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
                   >
+                    {isLocked && <LockedResourceOverlay />}
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg ${
@@ -974,21 +979,33 @@ const SectionResources = () => {
                       </div>
 
                       {/* Action Button */}
-                      <Button 
-                        asChild 
-                        variant="hero" 
-                        className="w-full"
-                      >
-                        <a 
-                          href={resource.url} 
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2"
+                      {!isLocked && (
+                        <Button 
+                          asChild 
+                          variant="hero" 
+                          className="w-full"
                         >
-                          <IconComponent className="h-4 w-4" />
+                          <a 
+                            href={resource.url} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2"
+                          >
+                            <IconComponent className="h-4 w-4" />
+                            {getResourceButtonText(resource.type)}
+                          </a>
+                        </Button>
+                      )}
+                      {isLocked && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full pointer-events-none"
+                          disabled
+                        >
+                          <IconComponent className="h-4 w-4 mr-2" />
                           {getResourceButtonText(resource.type)}
-                        </a>
-                      </Button>
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 );
