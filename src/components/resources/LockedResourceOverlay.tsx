@@ -9,7 +9,7 @@ interface LockedResourceOverlayProps {
 
 export const LockedResourceOverlay: React.FC<LockedResourceOverlayProps> = ({ onUpgradeClick }) => {
   return (
-    <div className="absolute inset-0 backdrop-blur-sm bg-background/60 z-10 flex flex-col items-center justify-center rounded-lg">
+    <div className="absolute inset-0 backdrop-blur-[2px] bg-background/40 z-10 flex flex-col items-center justify-center rounded-lg">
       <div className="bg-card p-4 rounded-lg shadow-lg text-center max-w-xs">
         <Lock className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
         <p className="text-sm font-medium text-foreground mb-1">Premium Content</p>
