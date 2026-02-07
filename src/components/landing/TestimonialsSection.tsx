@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Star } from 'lucide-react';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
+import studentsProfile from '@/assets/students-profile.png';
 
 export const TestimonialsSection: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -13,7 +14,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'NEET 2024',
       rating: 5,
       comment: 'Examtrakr helped me track my entire NEET preparation systematically. The topic-wise analytics were incredibly helpful in identifying my weak areas. I scored 680/720 and got into my dream medical college!',
-      avatar: '👩‍🎓',
+      avatarPos: '35% center',
       location: 'Mumbai',
       result: 'AIR 247'
     },
@@ -22,7 +23,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'IBPS PO 2024',
       rating: 5,
       comment: 'The progress tracking feature kept me motivated throughout my preparation. I could see my improvement day by day. The AI insights helped me focus on weak areas. Finally cleared IBPS PO in my second attempt!',
-      avatar: '👨‍🎓',
+      avatarPos: '5% center',
       location: 'Delhi',
       result: 'Selected'
     },
@@ -31,7 +32,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'JEE Advanced 2024',
       rating: 5,
       comment: 'Outstanding platform! The exam-wise analytics and subject breakdown made my preparation so much more organized and efficient. The daily progress tracking kept me disciplined. Got into IIT Bombay!',
-      avatar: '👩‍⚕️',
+      avatarPos: '95% center',
       location: 'Ahmedabad',
       result: 'AIR 156'
     },
@@ -40,7 +41,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'SSC CGL 2023',
       rating: 5,
       comment: 'Examtrakr made my SSC preparation so much easier. The mobile app helped me track progress anywhere. AI insights helped me focus on weak topics. Highly recommend for all SSC aspirants!',
-      avatar: '👨‍💼',
+      avatarPos: '65% center',
       location: 'Lucknow',
       result: 'Selected'
     },
@@ -49,7 +50,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'CAT 2023',
       rating: 5,
       comment: 'The detailed analytics and progress reports helped me identify weak areas quickly. Examtrakr\'s structured approach helped me cover the entire syllabus systematically. Got into IIM Bangalore with 99.2 percentile!',
-      avatar: '👩‍💻',
+      avatarPos: '35% center',
       location: 'Bangalore',
       result: '99.2%ile'
     },
@@ -58,7 +59,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'UPSC CSE 2023',
       rating: 5,
       comment: 'Perfect tool for UPSC preparation with 800+ topics to track. The progress tracking kept me disciplined and focused throughout the 18-month journey. Cleared Prelims in first attempt!',
-      avatar: '🧑‍🔬',
+      avatarPos: '65% center',
       location: 'Chennai',
       result: 'Prelims Cleared'
     },
@@ -70,7 +71,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'GRE 2024',
       rating: 5,
       comment: 'Examtrakr helped me track my GRE prep efficiently. I could monitor weak areas and improve day by day. Highly recommend for international exams!',
-      avatar: '👩‍🎓',
+      avatarPos: '95% center',
       location: 'New York, USA',
       result: '330/340'
     },
@@ -79,7 +80,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'SAT 2023',
       rating: 5,
       comment: 'The platform made SAT preparation so simple and organized. Tracking topics and practicing regularly really boosted my confidence.',
-      avatar: '👨‍🎓',
+      avatarPos: '5% center',
       location: 'London, UK',
       result: '1550/1600'
     },
@@ -88,7 +89,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'IELTS 2024',
       rating: 5,
       comment: 'With Examtrakr, I could track IELTS practice and focus on my weak sections. Finally got the band I needed for my university application.',
-      avatar: '🧑‍💼',
+      avatarPos: '35% center',
       location: 'Sydney, Australia',
       result: 'Band 8.5'
     },
@@ -97,7 +98,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'CFA Level 1',
       rating: 5,
       comment: 'Using Examtrakr for CFA Level 1 prep was amazing. The progress tracking and resource access helped me pass on my first attempt!',
-      avatar: '👨‍💻',
+      avatarPos: '65% center',
       location: 'Toronto, Canada',
       result: 'Pass'
     },
@@ -106,7 +107,7 @@ export const TestimonialsSection: React.FC = () => {
       exam: 'GMAT 2023',
       rating: 5,
       comment: 'Tracking my GMAT prep with Examtrakr kept me disciplined and focused. Highly recommend for all MBA aspirants!',
-      avatar: '👩‍💼',
+      avatarPos: '95% center',
       location: 'Singapore',
       result: '740'
     },
@@ -219,8 +220,14 @@ export const TestimonialsSection: React.FC = () => {
 
                 {/* Author info */}
                 <div className="flex items-center space-x-3 sm:space-x-4 pt-4 sm:pt-5 border-t border-border">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
-                    {testimonial.avatar}
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-primary/20">
+                    <img
+                      src={studentsProfile}
+                      alt={testimonial.name}
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: testimonial.avatarPos }}
+                      loading="lazy"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-foreground text-base sm:text-lg truncate">
