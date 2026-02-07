@@ -2,49 +2,81 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Youtube, Send, Instagram, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCountryDetection } from '@/hooks/useCountryDetection';
 
 export const Footer: React.FC = () => {
   const isMobile = useIsMobile();
+  const { isIndia } = useCountryDetection();
 
-  const footerLinks = [
-    {
-      title: 'Exam Categories',
-      links: [
-        { name: 'Banking Exams', href: '/banking-exams' },
-        { name: 'Government Exams', href: '/government-exams' },
-        { name: 'Teaching Exams', href: '/teaching-exams' },
-        { name: 'All Exams', href: '/exams' },
-      ],
-    },
-    {
-      title: 'Features',
-      links: [
-        { name: 'Syllabus Tracker', href: '/syllabus-tracker' },
-        { name: 'Progress Tracker', href: '/progress-tracker' },
-        { name: 'Pricing', href: '/pricing' },
-        { name: 'FAQ', href: '/faq' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { name: 'About Us', href: '/about' },
-        { name: 'Contact Us', href: '/contact' },
-        { name: 'Terms of Service', href: '/terms' },
-        { name: 'Privacy Policy', href: '/privacy' },
-        { name: 'Refund Policy', href: '/refund' },
-      ],
-    },
-    {
-      title: 'Social Media',
-      links: [
-        { name: 'YouTube', href: 'https://www.youtube.com/@ExamTrakr', icon: Youtube },
-        { name: 'Telegram', href: 'https://t.me/Examtrakr', icon: Send },
-        { name: 'Instagram', href: 'https://www.instagram.com/examtrakr/', icon: Instagram },
-        { name: 'WhatsApp', href: 'https://wa.me/919302418061', icon: MessageCircle },
-      ],
-    },
-  ];
+  const footerLinks = isIndia
+    ? [
+        {
+          title: 'Exam Categories',
+          links: [
+            { name: 'Banking Exams', href: '/banking-exams' },
+            { name: 'Government Exams', href: '/government-exams' },
+            { name: 'Teaching Exams', href: '/teaching-exams' },
+            { name: 'All Exams', href: '/exams' },
+          ],
+        },
+        {
+          title: 'Company',
+          links: [
+            { name: 'About Us', href: '/about' },
+            { name: 'Contact Us', href: '/contact' },
+            { name: 'Pricing', href: '/pricing' },
+            { name: 'FAQ', href: '/faq' },
+            { name: 'Terms of Service', href: '/terms' },
+            { name: 'Privacy Policy', href: '/privacy' },
+            { name: 'Refund Policy', href: '/refund' },
+          ],
+        },
+        {
+          title: 'Social Media',
+          links: [
+            { name: 'YouTube', href: 'https://www.youtube.com/@ExamTrakr', icon: Youtube },
+            { name: 'Telegram', href: 'https://t.me/Examtrakr', icon: Send },
+            { name: 'Instagram', href: 'https://www.instagram.com/examtrakr/', icon: Instagram },
+            { name: 'WhatsApp', href: 'https://wa.me/919302418061', icon: MessageCircle },
+          ],
+        },
+      ]
+    : [
+        {
+          title: 'Exam Categories',
+          links: [
+            { name: 'Academic Exams', href: '/exams' },
+            { name: 'Professional Certifications', href: '/exams' },
+            { name: 'Language Tests', href: '/exams' },
+            { name: 'All Exams', href: '/exams' },
+          ],
+        },
+        {
+          title: 'Company',
+          links: [
+            { name: 'About Us', href: '/about' },
+            { name: 'Contact Us', href: '/contact' },
+            { name: 'Pricing', href: '/pricing' },
+            { name: 'FAQ', href: '/faq' },
+            { name: 'Terms of Service', href: '/terms' },
+            { name: 'Privacy Policy', href: '/privacy' },
+            { name: 'Refund Policy', href: '/refund' },
+          ],
+        },
+        {
+          title: 'Social Media',
+          links: [
+            { name: 'YouTube', href: 'https://www.youtube.com/@ExamTrakr', icon: Youtube },
+            { name: 'Telegram', href: 'https://t.me/Examtrakr', icon: Send },
+            { name: 'Instagram', href: 'https://www.instagram.com/examtrakr/', icon: Instagram },
+            { name: 'WhatsApp', href: 'https://wa.me/919302418061', icon: MessageCircle },
+          ],
+        },
+      ];
+
+  const footerDescription = isIndia
+    ? "ExamTrakr is India's #1 exam tracker app for government and competitive exam preparation. Track your syllabus topic-wise, monitor preparation progress, and study smarter for IBPS, SSC, UPSC, JEE, NEET, CTET and 150+ exams."
+    : "ExamTrakr is the #1 exam tracker app worldwide. Track your syllabus topic-wise, monitor preparation progress, and study smarter for SAT, GRE, GMAT, IELTS, TOEFL, CFA, PMP, and 100+ global exams and certifications.";
 
   return (
     <footer className={`bg-gradient-to-br from-accent via-background to-accent/50 border-t border-border/50 backdrop-blur-sm mt-16 ${isMobile ? 'mb-16' : ''}`}>
@@ -52,7 +84,7 @@ export const Footer: React.FC = () => {
         {/* SEO-friendly footer description */}
         <div className="mb-8 text-center max-w-3xl mx-auto">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            ExamTrakr is India's #1 exam tracker app for government and competitive exam preparation. Track your syllabus topic-wise, monitor preparation progress, and study smarter for IBPS, SSC, UPSC, JEE, NEET, CTET and 150+ exams.
+            {footerDescription}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
