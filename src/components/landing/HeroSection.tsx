@@ -5,7 +5,10 @@ import { ArrowRight, Play, TrendingUp, Target, Zap } from 'lucide-react';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
 import heroImage from '@/assets/hero-image.jpg';
-import studentsProfile from '@/assets/students-profile.png';
+import student1 from '@/assets/student-1.png';
+import student2 from '@/assets/student-2.png';
+import student3 from '@/assets/student-3.png';
+import student4 from '@/assets/student-4.png';
 
 export const HeroSection: React.FC = () => {
   const { isIndia } = useCountryDetection();
@@ -71,21 +74,15 @@ export const HeroSection: React.FC = () => {
             <div className="flex flex-wrap items-center gap-6 text-sm">
               <div className="flex items-center space-x-3">
                 <div className="flex -space-x-2">
-                  {[
-                    { pos: '5% center' },
-                    { pos: '35% center' },
-                    { pos: '65% center' },
-                    { pos: '95% center' }
-                  ].map((student, i) => (
+                  {[student1, student2, student3, student4].map((src, i) => (
                     <div 
                       key={i} 
                       className="w-10 h-10 rounded-full border-2 border-background overflow-hidden"
                     >
                       <img
-                        src={studentsProfile}
+                        src={src}
                         alt="Student"
                         className="w-full h-full object-cover"
-                        style={{ objectPosition: student.pos }}
                       />
                     </div>
                   ))}

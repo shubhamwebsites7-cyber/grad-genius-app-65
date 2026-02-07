@@ -22,10 +22,7 @@ export const Footer: React.FC = () => {
         {
           title: 'Company',
           links: [
-            { name: 'About Us', href: '/about' },
             { name: 'Contact Us', href: '/contact' },
-            { name: 'Pricing', href: '/pricing' },
-            { name: 'FAQ', href: '/faq' },
             { name: 'Terms of Service', href: '/terms' },
             { name: 'Privacy Policy', href: '/privacy' },
             { name: 'Refund Policy', href: '/refund' },
@@ -54,10 +51,7 @@ export const Footer: React.FC = () => {
         {
           title: 'Company',
           links: [
-            { name: 'About Us', href: '/about' },
             { name: 'Contact Us', href: '/contact' },
-            { name: 'Pricing', href: '/pricing' },
-            { name: 'FAQ', href: '/faq' },
             { name: 'Terms of Service', href: '/terms' },
             { name: 'Privacy Policy', href: '/privacy' },
             { name: 'Refund Policy', href: '/refund' },
