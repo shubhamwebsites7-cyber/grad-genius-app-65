@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Youtube, Send, Instagram, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
-import examtrackerIcon from '@/assets/examtracker-icon.png';
+import examtrackerIcon from '@/assets/srcassetsexamtracker-icon.jpeg';
 
 export const Footer: React.FC = () => {
   const isMobile = useIsMobile();

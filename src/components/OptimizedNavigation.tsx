@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquarePlus, BookOpen } from 'lucide-react';
-import examtrackerIcon from '@/assets/examtracker-icon.png';
+import examtrackerIcon from '@/assets/srcassetsexamtracker-icon.jpeg';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
