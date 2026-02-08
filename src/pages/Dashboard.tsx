@@ -261,10 +261,10 @@ const Dashboard = () => {
   return (
     <>
       <Helmet>
-        <title>Dashboard - Examtrakr | Track Your Study Progress</title>
+        <title>Dashboard - ExamTracker | Track Your Study Progress</title>
         <meta 
           name="description" 
-          content="View your personalized exam preparation dashboard with progress tracking and analytics on Examtrakr." 
+          content="View your personalized exam preparation dashboard with progress tracking and analytics on ExamTracker." 
         />
         <link rel="canonical" href="/dashboard" />
         <meta name="robots" content="noindex, nofollow" />

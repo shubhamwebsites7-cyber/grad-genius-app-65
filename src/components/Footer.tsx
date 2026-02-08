@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Youtube, Send, Instagram, MessageCircle } from 'lucide-react';
+import { Youtube, Send, Instagram, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
+import examtrackerIcon from '@/assets/examtracker-icon.png';
 
 export const Footer: React.FC = () => {
   const isMobile = useIsMobile();
@@ -69,8 +70,8 @@ export const Footer: React.FC = () => {
       ];
 
   const footerDescription = isIndia
-    ? "ExamTrakr is India's #1 exam tracker app for government and competitive exam preparation. Track your syllabus topic-wise, monitor preparation progress, and study smarter for IBPS, SSC, UPSC, JEE, NEET, CTET and 150+ exams."
-    : "ExamTrakr is the #1 exam tracker app worldwide. Track your syllabus topic-wise, monitor preparation progress, and study smarter for SAT, GRE, GMAT, IELTS, TOEFL, CFA, PMP, and 100+ global exams and certifications.";
+    ? "ExamTracker is India's #1 exam tracker app for government and competitive exam preparation. Track your syllabus topic-wise, monitor preparation progress, and study smarter for IBPS, SSC, UPSC, JEE, NEET, CTET and 150+ exams."
+    : "ExamTracker is the #1 exam tracker app worldwide. Track your syllabus topic-wise, monitor preparation progress, and study smarter for SAT, GRE, GMAT, IELTS, TOEFL, CFA, PMP, and 100+ global exams and certifications.";
 
   return (
     <footer className={`bg-gradient-to-br from-accent via-background to-accent/50 border-t border-border/50 backdrop-blur-sm mt-16 ${isMobile ? 'mb-16' : ''}`}>
@@ -85,13 +86,11 @@ export const Footer: React.FC = () => {
           {/* Logo and Description */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-4 group">
-              <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Examtrakr</span>
+              <img src={examtrackerIcon} alt="ExamTracker" className="h-10 w-10 rounded-lg group-hover:scale-105 transition-transform" />
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">ExamTracker</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-            ExamTrakr – Track Your Exam Progress & Study Smarter
+            ExamTracker – Track Your Exam Progress & Study Smarter
             </p>
           </div>
 
@@ -135,7 +134,7 @@ export const Footer: React.FC = () => {
         <div className="mt-8 pt-8 border-t border-border/50">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2025 Examtrakr. All rights reserved.
+              © 2025 ExamTracker. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">

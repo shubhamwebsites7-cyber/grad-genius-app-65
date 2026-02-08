@@ -8,8 +8,8 @@ const Terms = () => {
   return (
     <>
       <Helmet>
-        <title>Terms of Service - ExamTrakr</title>
-        <meta name="description" content="Read the Terms of Service for ExamTrakr. Understand your rights and responsibilities when using our platform." />
+        <title>Terms of Service - ExamTracker</title>
+        <meta name="description" content="Read the Terms of Service for ExamTracker. Understand your rights and responsibilities when using our platform." />
       </Helmet>
       
       <div className="min-h-screen flex flex-col bg-background">

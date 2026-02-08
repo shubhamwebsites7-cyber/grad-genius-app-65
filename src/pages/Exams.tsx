@@ -367,13 +367,13 @@ const Exams = () => {
   return (
     <>
       <Helmet>
-        <title>Exams - Examtrakr | Comprehensive Exam Preparation Tracker</title>
+        <title>Exams - ExamTracker | Comprehensive Exam Preparation Tracker</title>
         <meta 
           name="description" 
-          content="Browse and track preparation for IBPS PO, NEET, JEE, SSC, UPSC, CAT, GATE and other competitive exams on Examtrakr." 
+          content="Browse and track preparation for IBPS PO, NEET, JEE, SSC, UPSC, CAT, GATE and other competitive exams on ExamTracker." 
         />
         <link rel="canonical" href="/exams" />
-        <meta property="og:title" content="Exams - Examtrakr" />
+        <meta property="og:title" content="Exams - ExamTracker" />
         <meta property="og:description" content="Track your competitive exam preparation" />
         <meta 
           name="description" 

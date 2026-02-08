@@ -127,7 +127,7 @@ export const HeroSection: React.FC = () => {
             <div className="relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500 w-full">
               <img
                 src={heroImage}
-                alt="Students tracking exam preparation progress with Examtrakr dashboard"
+                alt="Students tracking exam preparation progress with ExamTracker dashboard"
                 className="w-full h-auto object-cover"
                 loading="lazy"
                 width="600"

@@ -88,28 +88,28 @@ const BankingExams = () => {
   const features = isIndia ? indiaFeatures : globalFeatures;
 
   const seoContent = isIndia ? {
-    title: "Banking Exam Tracker – IBPS, SBI, RBI Syllabus & Preparation | ExamTrakr",
-    description: "Track your banking exam preparation with ExamTrakr. Topic-wise syllabus tracker for IBPS PO, IBPS Clerk, SBI PO, SBI Clerk, RBI Grade B. Monitor progress & study smarter.",
+    title: "Banking Exam Tracker – IBPS, SBI, RBI Syllabus & Preparation | ExamTracker",
+    description: "Track your banking exam preparation with ExamTracker. Topic-wise syllabus tracker for IBPS PO, IBPS Clerk, SBI PO, SBI Clerk, RBI Grade B. Monitor progress & study smarter.",
     keywords: "banking exam tracker, IBPS PO syllabus, IBPS Clerk preparation, SBI PO exam tracker, banking exam syllabus, IBPS preparation app, banking exam progress tracker, RBI Grade B syllabus, bank exam study planner",
     h1: "Banking Exam Tracker – Your Complete",
     h1Highlight: "Syllabus Tracker",
-    heroText: "Preparing for IBPS, SBI, or RBI exams? ExamTrakr is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering \"what to study next\" – start tracking today!",
+    heroText: "Preparing for IBPS, SBI, or RBI exams? ExamTracker is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering \"what to study next\" – start tracking today!",
     sectionTitle: "Banking Exams We Support",
     sectionSubtitle: "Track syllabus and monitor progress for all major banking exams in India",
     ctaTitle: "Ready to Crack Your Banking Exam?",
-    ctaText: "Join thousands of students using ExamTrakr to track their IBPS, SBI, RBI preparation. Start free today!",
+    ctaText: "Join thousands of students using ExamTracker to track their IBPS, SBI, RBI preparation. Start free today!",
     pageSlug: "Banking Exams"
   } : {
-    title: "Finance & Accounting Exam Tracker – CFA, CPA, FRM Preparation | ExamTrakr",
-    description: "Track your finance certification exam preparation with ExamTrakr. Topic-wise syllabus tracker for CFA, FRM, CPA, ACCA exams. Monitor progress & study smarter.",
+    title: "Finance & Accounting Exam Tracker – CFA, CPA, FRM Preparation | ExamTracker",
+    description: "Track your finance certification exam preparation with ExamTracker. Topic-wise syllabus tracker for CFA, FRM, CPA, ACCA exams. Monitor progress & study smarter.",
     keywords: "CFA exam tracker, finance exam preparation, CPA exam tracker, FRM syllabus tracker, ACCA preparation app, finance certification tracker, CFA Level 1 syllabus, accounting exam tracker, financial analyst exam prep",
     h1: "Finance & Accounting Exam Tracker – Your Complete",
     h1Highlight: "Certification Tracker",
-    heroText: "Preparing for CFA, CPA, or FRM exams? ExamTrakr is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering \"what to study next\" – start tracking today!",
+    heroText: "Preparing for CFA, CPA, or FRM exams? ExamTracker is your smart exam tracker app to track topic-wise syllabus, monitor your preparation progress, and stay organized. Stop wondering \"what to study next\" – start tracking today!",
     sectionTitle: "Finance & Accounting Exams We Support",
     sectionSubtitle: "Track syllabus and monitor progress for all major finance and accounting certifications worldwide",
     ctaTitle: "Ready to Pass Your Finance Certification?",
-    ctaText: "Join thousands of professionals using ExamTrakr to track their CFA, CPA, FRM preparation. Start free today!",
+    ctaText: "Join thousands of professionals using ExamTracker to track their CFA, CPA, FRM preparation. Start free today!",
     pageSlug: "Finance Exams"
   };
 
@@ -125,13 +125,13 @@ const BankingExams = () => {
   const courseSchema = {
     "@context": "https://schema.org",
     "@type": "Course",
-    "name": isIndia ? "Banking Exam Preparation with ExamTrakr" : "Finance Certification Preparation with ExamTrakr",
+    "name": isIndia ? "Banking Exam Preparation with ExamTracker" : "Finance Certification Preparation with ExamTracker",
     "description": isIndia 
       ? "Complete syllabus tracking and progress monitoring for IBPS, SBI, RBI and other banking exams"
       : "Complete syllabus tracking and progress monitoring for CFA, CPA, FRM and other finance certifications",
     "provider": {
       "@type": "Organization",
-      "name": "ExamTrakr",
+      "name": "ExamTracker",
       "sameAs": "https://examtrakr.com"
     }
   };
@@ -191,7 +191,7 @@ const BankingExams = () => {
           <section className="py-16 bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-4">
-                {isIndia ? "Why Use ExamTrakr for Banking Exam Preparation?" : "Why Use ExamTrakr for Finance Exam Preparation?"}
+                {isIndia ? "Why Use ExamTracker for Banking Exam Preparation?" : "Why Use ExamTracker for Finance Exam Preparation?"}
               </h2>
               <p className="text-center text-muted-foreground mb-12 max-w-3xl mx-auto">
                 {isIndia 
@@ -262,8 +262,8 @@ const BankingExams = () => {
                     </h3>
                     <p className="text-muted-foreground">
                       {isIndia 
-                        ? "Choose IBPS PO, SBI Clerk, RBI Grade B or any banking exam you're preparing for. ExamTrakr has complete topic-wise syllabus ready."
-                        : "Choose CFA Level 1, FRM Part 1, CPA or any certification you're preparing for. ExamTrakr has complete topic-wise syllabus ready."
+                        ? "Choose IBPS PO, SBI Clerk, RBI Grade B or any banking exam you're preparing for. ExamTracker has complete topic-wise syllabus ready."
+                        : "Choose CFA Level 1, FRM Part 1, CPA or any certification you're preparing for. ExamTracker has complete topic-wise syllabus ready."
                       }
                     </p>
                   </div>

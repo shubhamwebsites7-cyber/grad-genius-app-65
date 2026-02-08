@@ -80,22 +80,22 @@ const ProgressTracker = () => {
   const benefits = isIndia ? indiaBenefits : globalBenefits;
 
   const seoContent = isIndia ? {
-    title: "Progress Tracker – Monitor Exam Preparation Progress | ExamTrakr",
-    description: "ExamTrakr Progress Tracker shows your exam preparation progress visually. Track subject-wise completion, see progress bars, monitor daily study. Best exam progress tracker app.",
+    title: "Progress Tracker – Monitor Exam Preparation Progress | ExamTracker",
+    description: "ExamTracker Progress Tracker shows your exam preparation progress visually. Track subject-wise completion, see progress bars, monitor daily study. Best exam progress tracker app.",
     keywords: "progress tracker, exam progress tracker, study progress tracker, exam preparation progress app, preparation tracker for government exams, app to track exam preparation progress, exam preparation with visual progress, exam preparation with progress bar",
     h1: "Progress Tracker – See Your",
     h1Highlight: "Exam Preparation Grow",
-    heroText: "Ever wondered \"how much syllabus is complete\"? ExamTrakr's progress tracker shows your exam preparation progress with beautiful visual bars. Track subject-wise, see daily progress, and stay motivated until you crack your exam!",
+    heroText: "Ever wondered \"how much syllabus is complete\"? ExamTracker's progress tracker shows your exam preparation progress with beautiful visual bars. Track subject-wise, see daily progress, and stay motivated until you crack your exam!",
     problemTitle: "\"How Much Did I Study?\" – Stop Guessing!",
     problemText: "Most students have no idea how much syllabus they've actually covered. They study daily but can't measure progress.",
     currency: "INR"
   } : {
-    title: "Progress Tracker – Monitor Exam Preparation Progress | ExamTrakr",
-    description: "ExamTrakr Progress Tracker shows your exam preparation progress visually. Track section-wise completion, see progress bars, monitor daily study. Best exam progress tracker app.",
+    title: "Progress Tracker – Monitor Exam Preparation Progress | ExamTracker",
+    description: "ExamTracker Progress Tracker shows your exam preparation progress visually. Track section-wise completion, see progress bars, monitor daily study. Best exam progress tracker app.",
     keywords: "progress tracker, exam progress tracker, study progress tracker, SAT progress tracker, GRE preparation tracker, GMAT study progress, test preparation progress app, visual study tracker, exam preparation analytics",
     h1: "Progress Tracker – See Your",
     h1Highlight: "Test Preparation Grow",
-    heroText: "Ever wondered \"how much material is complete\"? ExamTrakr's progress tracker shows your exam preparation progress with beautiful visual bars. Track section-wise, see daily progress, and stay motivated until you ace your test!",
+    heroText: "Ever wondered \"how much material is complete\"? ExamTracker's progress tracker shows your exam preparation progress with beautiful visual bars. Track section-wise, see daily progress, and stay motivated until you ace your test!",
     problemTitle: "\"How Much Did I Study?\" – Stop Guessing!",
     problemText: "Most test-takers have no idea how much material they've actually covered. They study daily but can't measure progress.",
     currency: "USD"
@@ -113,7 +113,7 @@ const ProgressTracker = () => {
   const softwareSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "ExamTrakr Progress Tracker",
+    "name": "ExamTracker Progress Tracker",
     "applicationCategory": "EducationalApplication",
     "operatingSystem": "Web, Android, iOS",
     "description": isIndia 

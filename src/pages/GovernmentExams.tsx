@@ -64,13 +64,13 @@ const GovernmentExams = () => {
   const subjects = isIndia ? indiaSubjects : globalSubjects;
 
   const seoContent = isIndia ? {
-    title: "Government Exam Tracker – SSC, UPSC, Railway Syllabus | ExamTrakr",
-    description: "Track your government exam preparation with ExamTrakr. Topic-wise syllabus tracker for SSC CGL, UPSC, Railway exams. Monitor progress & complete syllabus on time.",
+    title: "Government Exam Tracker – SSC, UPSC, Railway Syllabus | ExamTracker",
+    description: "Track your government exam preparation with ExamTracker. Topic-wise syllabus tracker for SSC CGL, UPSC, Railway exams. Monitor progress & complete syllabus on time.",
     keywords: "government exam tracker, SSC CGL syllabus tracker, UPSC preparation app, Railway exam tracker, govt exam syllabus, SSC preparation progress, government exam planner, competitive exam tracker, sarkari exam preparation",
     h1: "Government Exam Tracker – Complete",
     h1Highlight: "Syllabus on Time",
-    heroText: "Struggling with vast government exam syllabus? ExamTrakr is your smart exam preparation app to track topic-wise progress for SSC CGL, UPSC, Railway, and State PSC exams. Know exactly where you stand in your preparation!",
-    sectionTitle: "Government Exams on ExamTrakr",
+    heroText: "Struggling with vast government exam syllabus? ExamTracker is your smart exam preparation app to track topic-wise progress for SSC CGL, UPSC, Railway, and State PSC exams. Know exactly where you stand in your preparation!",
+    sectionTitle: "Government Exams on ExamTracker",
     sectionSubtitle: "Track syllabus completion for SSC, UPSC, Railway, State PSC and more sarkari exams",
     subjectsTitle: "Subjects & Topics We Cover",
     problemTitle: "Government Exam Syllabus is Too Big – How to Manage?",
@@ -79,13 +79,13 @@ const GovernmentExams = () => {
     ctaText: "Don't let vast syllabus overwhelm you. Track progress, complete syllabus, crack your sarkari exam!",
     pageSlug: "Government Exams"
   } : {
-    title: "Professional Certification Tracker – PMP, AWS, Azure Preparation | ExamTrakr",
-    description: "Track your professional certification preparation with ExamTrakr. Topic-wise syllabus tracker for PMP, AWS, Azure, CISSP exams. Monitor progress & study smarter.",
+    title: "Professional Certification Tracker – PMP, AWS, Azure Preparation | ExamTracker",
+    description: "Track your professional certification preparation with ExamTracker. Topic-wise syllabus tracker for PMP, AWS, Azure, CISSP exams. Monitor progress & study smarter.",
     keywords: "PMP exam tracker, AWS certification tracker, professional certification preparation, Azure exam tracker, CISSP syllabus tracker, IT certification progress, cloud certification tracker, project management exam prep",
     h1: "Professional Certification Tracker – Complete",
     h1Highlight: "Your Certification Journey",
-    heroText: "Struggling with vast certification syllabi? ExamTrakr is your smart exam preparation app to track topic-wise progress for PMP, AWS, Azure, and other professional certifications. Know exactly where you stand in your preparation!",
-    sectionTitle: "Professional Certifications on ExamTrakr",
+    heroText: "Struggling with vast certification syllabi? ExamTracker is your smart exam preparation app to track topic-wise progress for PMP, AWS, Azure, and other professional certifications. Know exactly where you stand in your preparation!",
+    sectionTitle: "Professional Certifications on ExamTracker",
     sectionSubtitle: "Track syllabus completion for PMP, AWS, Azure, Google Cloud and more professional certifications",
     subjectsTitle: "Domains & Topics We Cover",
     problemTitle: "Certification Syllabus is Overwhelming – How to Manage?",
@@ -187,7 +187,7 @@ const GovernmentExams = () => {
                 <div className="bg-primary/5 p-8 rounded-2xl">
                   <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <CheckCircle className="h-6 w-6 text-primary" />
-                    ExamTrakr Solves This
+                    ExamTracker Solves This
                   </h3>
                   <ul className="space-y-3 text-muted-foreground">
                     <li className="flex items-start gap-3">

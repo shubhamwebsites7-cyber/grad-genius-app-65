@@ -50,7 +50,7 @@ export const HowItWorksSection: React.FC = () => {
             </span>
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-            How Examtrakr{' '}
+            How ExamTracker{' '}
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Works
             </span>
