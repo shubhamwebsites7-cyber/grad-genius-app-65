@@ -43,7 +43,7 @@ const About = () => {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "ExamTrakr",
+    "name": "ExamTracker",
     "url": "https://examtrakr.com",
     "logo": "https://examtrakr.com/examtrakr.png",
     "description": "India's #1 exam tracker app for government and competitive exam preparation. Track syllabus, monitor progress, study smarter.",
@@ -54,11 +54,11 @@ const About = () => {
   return (
     <>
       <Helmet>
-        <title>About ExamTrakr – India's Best Exam Tracker App</title>
-        <meta name="description" content="ExamTrakr is India's #1 exam tracker app built for students preparing for IBPS, SSC, UPSC, JEE, NEET. Track syllabus topic-wise, monitor progress, and study smarter." />
-        <meta name="keywords" content="about ExamTrakr, exam tracker app, Indian exam preparation, study tracker, syllabus tracking app, government exam preparation app" />
-        <meta property="og:title" content="About ExamTrakr – India's Best Exam Tracker App" />
-        <meta property="og:description" content="Learn about ExamTrakr - the exam tracker app helping 50,000+ Indian students prepare smarter." />
+        <title>About ExamTracker – India's Best Exam Tracker App</title>
+        <meta name="description" content="ExamTracker is India's #1 exam tracker app built for students preparing for IBPS, SSC, UPSC, JEE, NEET. Track syllabus topic-wise, monitor progress, and study smarter." />
+        <meta name="keywords" content="about ExamTracker, exam tracker app, Indian exam preparation, study tracker, syllabus tracking app, government exam preparation app" />
+        <meta property="og:title" content="About ExamTracker – India's Best Exam Tracker App" />
+        <meta property="og:description" content="Learn about ExamTracker - the exam tracker app helping 50,000+ Indian students prepare smarter." />
         <meta property="og:url" content="https://examtrakr.com/about" />
         <link rel="canonical" href="https://examtrakr.com/about" />
         <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
@@ -83,7 +83,7 @@ const About = () => {
                 <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
                   About{' '}
                   <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    ExamTrakr
+                    ExamTracker
                   </span>
                 </h1>
                 <p className="text-xl text-muted-foreground leading-relaxed">
@@ -101,10 +101,10 @@ const About = () => {
                   <h2 className="text-3xl font-bold text-foreground mb-6 text-center">Our Mission</h2>
                   <div className="prose prose-lg max-w-none text-center">
                     <p className="text-muted-foreground leading-relaxed mb-4">
-                      We believe every student deserves smart tools to prepare effectively for competitive exams. ExamTrakr was born from a simple question: "How much syllabus have I actually covered?"
+                      We believe every student deserves smart tools to prepare effectively for competitive exams. ExamTracker was born from a simple question: "How much syllabus have I actually covered?"
                     </p>
                     <p className="text-muted-foreground leading-relaxed mb-4">
-                      Too many students study hard but can't measure their progress. They forget what they studied, miss important topics, and feel overwhelmed by vast syllabi. ExamTrakr solves this with a simple yet powerful exam tracker that shows exactly where you stand.
+                      Too many students study hard but can't measure their progress. They forget what they studied, miss important topics, and feel overwhelmed by vast syllabi. ExamTracker solves this with a simple yet powerful exam tracker that shows exactly where you stand.
                     </p>
                     <p className="text-xl font-semibold text-primary">
                       Our mission: Help every Indian student complete their exam syllabus on time and crack their dream exam!
@@ -164,7 +164,7 @@ const About = () => {
           <section className="py-16 bg-gradient-to-r from-primary to-secondary">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
-                Join 50,000+ Students Using ExamTrakr
+                Join 50,000+ Students Using ExamTracker
               </h2>
               <p className="text-xl text-primary-foreground/90 mb-8">
                 Start tracking your exam preparation today – it's free!

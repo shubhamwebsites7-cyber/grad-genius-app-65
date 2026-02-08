@@ -406,7 +406,7 @@ const Pricing = () => {
   return (
     <>
       <Helmet>
-        <title>Pricing Plans - ExamTrakr</title>
+        <title>Pricing Plans - ExamTracker</title>
         <meta name="description" content="Choose the perfect plan for your exam preparation journey. Affordable pricing with premium features." />
         <meta name="keywords" content="exam preparation pricing, study plans, premium features" />
       </Helmet>

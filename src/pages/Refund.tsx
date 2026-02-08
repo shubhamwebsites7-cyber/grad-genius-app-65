@@ -8,8 +8,8 @@ const Refund = () => {
   return (
     <>
       <Helmet>
-        <title>Refund & Cancellation Policy - ExamTrakr</title>
-        <meta name="description" content="Read the Refund & Cancellation Policy for ExamTrakr. Understand our refund and cancellation terms." />
+        <title>Refund & Cancellation Policy - ExamTracker</title>
+        <meta name="description" content="Read the Refund & Cancellation Policy for ExamTracker. Understand our refund and cancellation terms." />
       </Helmet>
       
       <div className="min-h-screen flex flex-col bg-background">

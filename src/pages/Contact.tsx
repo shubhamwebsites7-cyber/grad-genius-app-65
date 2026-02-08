@@ -31,8 +31,8 @@ const Contact = () => {
   return (
     <>
       <Helmet>
-        <title>Contact Us - ExamTrakr</title>
-        <meta name="description" content="Get in touch with ExamTrakr. We're here to help with any questions, feedback, or support you need." />
+        <title>Contact Us - ExamTracker</title>
+        <meta name="description" content="Get in touch with ExamTracker. We're here to help with any questions, feedback, or support you need." />
       </Helmet>
       
       <div className="min-h-screen flex flex-col bg-background">

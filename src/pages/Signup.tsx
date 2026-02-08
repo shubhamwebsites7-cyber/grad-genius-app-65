@@ -150,13 +150,13 @@ const Signup = () => {
   return (
     <>
       <Helmet>
-        <title>Sign Up - Examtrakr | Create Your Free Account</title>
+        <title>Sign Up - ExamTracker | Create Your Free Account</title>
         <meta 
           name="description" 
-          content="Create your free Examtrakr account to start tracking your exam preparation progress for IBPS, NEET, JEE and other competitive exams." 
+          content="Create your free ExamTracker account to start tracking your exam preparation progress for IBPS, NEET, JEE and other competitive exams." 
         />
         <link rel="canonical" href="/signup" />
-        <meta property="og:title" content="Sign Up - Examtrakr" />
+        <meta property="og:title" content="Sign Up - ExamTracker" />
         <meta property="og:description" content="Create your free exam tracking account" />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="/signup" />

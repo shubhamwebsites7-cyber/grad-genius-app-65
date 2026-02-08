@@ -12,24 +12,24 @@ export const FAQSection: React.FC = () => {
 
   const indiaFaqs = [
     {
-      question: 'What is ExamTrakr?',
-      answer: 'ExamTrakr is India\'s #1 exam tracker app for students preparing for IBPS, SSC, UPSC, JEE, NEET, and 150+ competitive exams. Track your syllabus topic-wise, monitor preparation progress, and study smarter.'
+      question: 'What is ExamTracker?',
+      answer: 'ExamTracker is India\'s #1 exam tracker app for students preparing for IBPS, SSC, UPSC, JEE, NEET, and 150+ competitive exams. Track your syllabus topic-wise, monitor preparation progress, and study smarter.'
     },
     {
       question: 'How does the syllabus tracker work?',
-      answer: 'Select your exam, browse topic-wise syllabus, and mark topics complete as you study. ExamTrakr shows visual progress bars so you always know how much is complete. Never forget what you studied!'
+      answer: 'Select your exam, browse topic-wise syllabus, and mark topics complete as you study. ExamTracker shows visual progress bars so you always know how much is complete. Never forget what you studied!'
     },
     {
       question: 'How to complete syllabus on time?',
-      answer: 'ExamTrakr helps you complete syllabus by: showing clear topic-wise breakdown, tracking what\'s complete vs pending, visualizing progress with bars, and helping you identify weak subjects that need more focus.'
+      answer: 'ExamTracker helps you complete syllabus by: showing clear topic-wise breakdown, tracking what\'s complete vs pending, visualizing progress with bars, and helping you identify weak subjects that need more focus.'
     },
     {
-      question: 'Is ExamTrakr free to use?',
+      question: 'Is ExamTracker free to use?',
       answer: 'Yes! Start free to explore exams, view syllabi, and track basic progress. Premium unlocks unlimited exam tracking, detailed analytics, and study resources at affordable prices.'
     },
     {
       question: 'Can I prepare without coaching?',
-      answer: 'Absolutely! ExamTrakr is designed for self-study. You get complete topic-wise syllabus, progress tracking, free resources, and a clear roadmap. Many students crack government exams using ExamTrakr without coaching.'
+      answer: 'Absolutely! ExamTracker is designed for self-study. You get complete topic-wise syllabus, progress tracking, free resources, and a clear roadmap. Many students crack government exams using ExamTracker without coaching.'
     },
     {
       question: 'Is my data safe?',
@@ -39,24 +39,24 @@ export const FAQSection: React.FC = () => {
 
   const globalFaqs = [
     {
-      question: 'What is ExamTrakr?',
-      answer: 'ExamTrakr is the #1 exam tracker app worldwide for students preparing for SAT, GRE, GMAT, IELTS, TOEFL, and 100+ global exams. Track your syllabus topic-wise, monitor preparation progress, and study smarter.'
+      question: 'What is ExamTracker?',
+      answer: 'ExamTracker is the #1 exam tracker app worldwide for students preparing for SAT, GRE, GMAT, IELTS, TOEFL, and 100+ global exams. Track your syllabus topic-wise, monitor preparation progress, and study smarter.'
     },
     {
       question: 'How does the syllabus tracker work?',
-      answer: 'Select your exam, browse topic-wise syllabus, and mark topics complete as you study. ExamTrakr shows visual progress bars so you always know how much is complete. Never forget what you studied!'
+      answer: 'Select your exam, browse topic-wise syllabus, and mark topics complete as you study. ExamTracker shows visual progress bars so you always know how much is complete. Never forget what you studied!'
     },
     {
-      question: 'Which exams does ExamTrakr support?',
-      answer: 'ExamTrakr supports 100+ global exams including SAT, ACT, GRE, GMAT, IELTS, TOEFL, CFA, PMP, AWS certifications, CPA, LSAT, MCAT, and many more standardized tests and professional certifications.'
+      question: 'Which exams does ExamTracker support?',
+      answer: 'ExamTracker supports 100+ global exams including SAT, ACT, GRE, GMAT, IELTS, TOEFL, CFA, PMP, AWS certifications, CPA, LSAT, MCAT, and many more standardized tests and professional certifications.'
     },
     {
-      question: 'Is ExamTrakr free to use?',
+      question: 'Is ExamTracker free to use?',
       answer: 'Yes! Start free to explore exams, view syllabi, and track basic progress. Premium unlocks unlimited exam tracking, detailed analytics, and study resources at affordable prices.'
     },
     {
-      question: 'Can I use ExamTrakr for professional certifications?',
-      answer: 'Absolutely! ExamTrakr supports professional certifications like CFA, PMP, AWS, Google Cloud, Microsoft Azure, CPA, and more. Track your certification prep just like any academic exam.'
+      question: 'Can I use ExamTracker for professional certifications?',
+      answer: 'Absolutely! ExamTracker supports professional certifications like CFA, PMP, AWS, Google Cloud, Microsoft Azure, CPA, and more. Track your certification prep just like any academic exam.'
     },
     {
       question: 'Is my data safe and accessible anywhere?',
@@ -82,7 +82,7 @@ export const FAQSection: React.FC = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground">
-            Everything you need to know about ExamTrakr
+            Everything you need to know about ExamTracker
           </p>
         </div>
 

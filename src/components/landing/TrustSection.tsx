@@ -32,7 +32,7 @@ export const TrustSection: React.FC = () => {
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
             Why Students Trust{' '}
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Examtrakr
+              ExamTracker
             </span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">

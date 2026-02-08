@@ -8,8 +8,8 @@ const Privacy = () => {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy - ExamTrakr</title>
-        <meta name="description" content="Read the Privacy Policy for ExamTrakr. Learn how we collect, use, and protect your personal information." />
+        <title>Privacy Policy - ExamTracker</title>
+        <meta name="description" content="Read the Privacy Policy for ExamTracker. Learn how we collect, use, and protect your personal information." />
       </Helmet>
       
       <div className="min-h-screen flex flex-col bg-background">

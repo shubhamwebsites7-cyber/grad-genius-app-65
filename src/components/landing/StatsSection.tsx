@@ -33,7 +33,7 @@ export const StatsSection: React.FC = () => {
             Trusted by Students Worldwide
           </h2>
           <p className="text-xl text-muted-foreground">
-            Join thousands of successful students who have achieved their goals with Examtrakr
+            Join thousands of successful students who have achieved their goals with ExamTracker
           </p>
         </div>
 

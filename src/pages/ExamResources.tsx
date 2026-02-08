@@ -458,7 +458,7 @@ const ExamResources = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Helmet>
-        <title>{exam.name} - Exam Resources | ExamTrakr</title>
+        <title>{exam.name} - Exam Resources | ExamTracker</title>
         <meta name="description" content={`Browse and contribute exam-level resources for ${exam.name}`} />
       </Helmet>
 

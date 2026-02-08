@@ -615,7 +615,7 @@ const ExamDetail = () => {
     return (
       <>
         <Helmet>
-          <title>Loading... | Examtrakr</title>
+          <title>Loading... | ExamTracker</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
@@ -717,14 +717,14 @@ const ExamDetail = () => {
   return (
     <>
       <Helmet>
-        <title>{exam.name} - Exam Details | Examtrakr</title>
+        <title>{exam.name} - Exam Details | ExamTracker</title>
         <meta 
           name="description" 
-          content={`Track your ${exam.name} preparation progress with detailed section and topic-wise analytics on Examtrakr.`} 
+          content={`Track your ${exam.name} preparation progress with detailed section and topic-wise analytics on ExamTracker.`} 
         />
         <link rel="canonical" href={`/exam/${examId}`} />
         <meta name="robots" content="noindex, nofollow" />
-        <meta property="og:title" content={`${exam.name} - Examtrakr`} />
+        <meta property="og:title" content={`${exam.name} - ExamTracker`} />
         <meta property="og:description" content={`Track your ${exam.name} preparation progress`} />
         <meta 
           name="description" 

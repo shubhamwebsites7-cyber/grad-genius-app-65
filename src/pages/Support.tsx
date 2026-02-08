@@ -11,10 +11,10 @@ const Support = () => {
   return (
     <>
       <Helmet>
-        <title>Support - Examtrakr | Get Help</title>
+        <title>Support - ExamTracker | Get Help</title>
         <meta 
           name="description" 
-          content="Get help and support for your Examtrakr account. Contact us for technical support, billing questions, or general inquiries." 
+          content="Get help and support for your ExamTracker account. Contact us for technical support, billing questions, or general inquiries." 
         />
         <link rel="canonical" href="/support" />
         <meta name="robots" content="noindex, nofollow" />

@@ -10,7 +10,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, BookOpen, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquarePlus } from 'lucide-react';
+import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquarePlus, BookOpen } from 'lucide-react';
+import examtrackerIcon from '@/assets/examtracker-icon.png';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
@@ -28,16 +29,16 @@ const navItems = [
 // Memoized components for better performance
 const Logo = memo(() => (
   <Link to="/" className="flex items-center space-x-2">
-    <BookOpen className="h-8 w-8 text-primary" />
-    <span className="text-xl font-bold text-foreground">Examtrakr</span>
+    <img src={examtrackerIcon} alt="ExamTracker" className="h-8 w-8 rounded-lg" />
+    <span className="text-xl font-bold text-foreground">ExamTracker</span>
   </Link>
 ));
 Logo.displayName = 'Logo';
 
 const MobileLogo = memo(() => (
   <Link to="/" className="flex items-center space-x-2">
-    <BookOpen className="h-6 w-6 text-primary" />
-    <span className="text-lg font-bold text-foreground">Examtrakr</span>
+    <img src={examtrackerIcon} alt="ExamTracker" className="h-6 w-6 rounded-lg" />
+    <span className="text-lg font-bold text-foreground">ExamTracker</span>
   </Link>
 ));
 MobileLogo.displayName = 'MobileLogo';

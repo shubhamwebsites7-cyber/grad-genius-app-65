@@ -20,7 +20,7 @@ const SyllabusTracker = () => {
     {
       icon: CheckCircle,
       title: 'Mark Topics Complete',
-      description: 'As you study each topic, mark it complete with one click. ExamTrakr remembers your progress automatically.'
+      description: 'As you study each topic, mark it complete with one click. ExamTracker remembers your progress automatically.'
     },
     {
       icon: BarChart3,
@@ -43,7 +43,7 @@ const SyllabusTracker = () => {
     {
       icon: CheckCircle,
       title: 'Mark Topics Complete',
-      description: 'As you study each topic, mark it complete with one click. ExamTrakr remembers your progress automatically.'
+      description: 'As you study each topic, mark it complete with one click. ExamTracker remembers your progress automatically.'
     },
     {
       icon: BarChart3,
@@ -112,12 +112,12 @@ const SyllabusTracker = () => {
   const examTags = isIndia ? indiaExamTags : globalExamTags;
 
   const seoContent = isIndia ? {
-    title: "Syllabus Tracker – Track Exam Syllabus Topic-Wise | ExamTrakr",
-    description: "ExamTrakr Syllabus Tracker helps you track exam syllabus topic-wise. Mark topics complete, see visual progress, never miss any topic. Best syllabus tracker app for competitive exams.",
+    title: "Syllabus Tracker – Track Exam Syllabus Topic-Wise | ExamTracker",
+    description: "ExamTracker Syllabus Tracker helps you track exam syllabus topic-wise. Mark topics complete, see visual progress, never miss any topic. Best syllabus tracker app for competitive exams.",
     keywords: "syllabus tracker, syllabus tracker app, topic wise syllabus tracker, exam syllabus tracker, syllabus tracking app, how to track exam syllabus, syllabus completion tracker, exam wise syllabus tracker app, best way to complete exam syllabus",
     h1: "Syllabus Tracker – Track Every",
     h1Highlight: "Topic You Study",
-    heroText: "Wondering \"how to track exam syllabus\"? ExamTrakr's syllabus tracker lets you mark topics complete, see visual progress bars, and never forget what you studied. The best way to complete exam syllabus on time!",
+    heroText: "Wondering \"how to track exam syllabus\"? ExamTracker's syllabus tracker lets you mark topics complete, see visual progress bars, and never forget what you studied. The best way to complete exam syllabus on time!",
     problemTitle: "Syllabus is Too Big – How to Manage?",
     problemText: "Every student preparing for competitive exams faces this problem. The syllabus seems endless, you study but forget, and exam day comes with incomplete preparation. Sound familiar?",
     examsSupported: "Syllabus Tracker for All Major Exams",

@@ -70,7 +70,7 @@ const Login = () => {
       if (data.user) {
         toast({
           title: "Login successful!",
-          description: "Welcome back to Examtrakr.",
+          description: "Welcome back to ExamTracker.",
         });
         navigate('/dashboard');
       }
@@ -175,14 +175,14 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>Login - Examtrakr | Access Your Study Dashboard</title>
+        <title>Login - ExamTracker | Access Your Study Dashboard</title>
         <meta 
           name="description" 
-          content="Login to Examtrakr to access your personalized study dashboard, track exam preparation progress, and continue your learning journey." 
+          content="Login to ExamTracker to access your personalized study dashboard, track exam preparation progress, and continue your learning journey." 
         />
         <link rel="canonical" href="/login" />
         <meta name="robots" content="noindex, nofollow" />
-        <meta property="og:title" content="Login - Examtrakr" />
+        <meta property="og:title" content="Login - ExamTracker" />
         <meta property="og:description" content="Access your personalized exam preparation dashboard" />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="/login" />

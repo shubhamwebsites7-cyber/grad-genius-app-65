@@ -16,7 +16,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Priya Sharma',
       exam: 'NEET 2024',
       rating: 5,
-      comment: 'Examtrakr helped me track my entire NEET preparation systematically. The topic-wise analytics were incredibly helpful in identifying my weak areas. I scored 680/720 and got into my dream medical college!',
+      comment: 'ExamTracker helped me track my entire NEET preparation systematically. The topic-wise analytics were incredibly helpful in identifying my weak areas. I scored 680/720 and got into my dream medical college!',
       avatar: student1,
       location: 'Mumbai',
       result: 'AIR 247'
@@ -43,7 +43,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Vikram Singh',
       exam: 'SSC CGL 2023',
       rating: 5,
-      comment: 'Examtrakr made my SSC preparation so much easier. The mobile app helped me track progress anywhere. AI insights helped me focus on weak topics. Highly recommend for all SSC aspirants!',
+      comment: 'ExamTracker made my SSC preparation so much easier. The mobile app helped me track progress anywhere. AI insights helped me focus on weak topics. Highly recommend for all SSC aspirants!',
       avatar: student3,
       location: 'Lucknow',
       result: 'Selected'
@@ -52,7 +52,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Sneha Reddy',
       exam: 'CAT 2023',
       rating: 5,
-      comment: 'The detailed analytics and progress reports helped me identify weak areas quickly. Examtrakr\'s structured approach helped me cover the entire syllabus systematically. Got into IIM Bangalore with 99.2 percentile!',
+      comment: 'The detailed analytics and progress reports helped me identify weak areas quickly. ExamTracker\'s structured approach helped me cover the entire syllabus systematically. Got into IIM Bangalore with 99.2 percentile!',
       avatar: student1,
       location: 'Bangalore',
       result: '99.2%ile'
@@ -73,7 +73,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Emily Carter',
       exam: 'GRE 2024',
       rating: 5,
-      comment: 'Examtrakr helped me track my GRE prep efficiently. I could monitor weak areas and improve day by day. Highly recommend for international exams!',
+      comment: 'ExamTracker helped me track my GRE prep efficiently. I could monitor weak areas and improve day by day. Highly recommend for international exams!',
       avatar: student4,
       location: 'New York, USA',
       result: '330/340'
@@ -91,7 +91,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Sophia Lee',
       exam: 'IELTS 2024',
       rating: 5,
-      comment: 'With Examtrakr, I could track IELTS practice and focus on my weak sections. Finally got the band I needed for my university application.',
+      comment: 'With ExamTracker, I could track IELTS practice and focus on my weak sections. Finally got the band I needed for my university application.',
       avatar: student1,
       location: 'Sydney, Australia',
       result: 'Band 8.5'
@@ -100,7 +100,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Raj Patel',
       exam: 'CFA Level 1',
       rating: 5,
-      comment: 'Using Examtrakr for CFA Level 1 prep was amazing. The progress tracking and resource access helped me pass on my first attempt!',
+      comment: 'Using ExamTracker for CFA Level 1 prep was amazing. The progress tracking and resource access helped me pass on my first attempt!',
       avatar: student3,
       location: 'Toronto, Canada',
       result: 'Pass'
@@ -109,7 +109,7 @@ export const TestimonialsSection: React.FC = () => {
       name: 'Olivia Smith',
       exam: 'GMAT 2023',
       rating: 5,
-      comment: 'Tracking my GMAT prep with Examtrakr kept me disciplined and focused. Highly recommend for all MBA aspirants!',
+      comment: 'Tracking my GMAT prep with ExamTracker kept me disciplined and focused. Highly recommend for all MBA aspirants!',
       avatar: student4,
       location: 'Singapore',
       result: '740'
