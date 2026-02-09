@@ -12,7 +12,7 @@ import FeedbackDayTracker from '@/components/feedback/FeedbackDayTracker';
 import DailyQuiz from '@/components/feedback/DailyQuiz';
 
 // Testing period: 10 days from Feb 8 to Feb 18, 2026
-const TESTING_START_DATE = new Date('2026-02-08T00:00:00+05:30'); // IST
+const TESTING_START_DATE = new Date('2026-02-09T00:00:00+05:30'); // IST
 const TOTAL_TESTING_DAYS = 10;
 
 const Feedback = () => {
@@ -48,7 +48,7 @@ const Feedback = () => {
           .from('user_feedback')
           .select('feedback_day, feedback_date')
           .eq('user_id', user.id)
-          .gte('feedback_date', '2026-02-08');
+          .gte('feedback_date', '2026-02-09');
 
         if (error) throw error;
 
