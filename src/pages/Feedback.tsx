@@ -78,7 +78,7 @@ const Feedback = () => {
     try {
       setSubmitting(true);
 
-      const { error } = await supabase.from('user_feedback').insert({
+      const { error } = await supabase.from('user_feedback').upsert({
         user_id: user.id,
         user_email: user.email,
         user_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Anonymous',
@@ -87,7 +87,7 @@ const Feedback = () => {
         quiz_answers: answers,
         quiz_score: score,
         time_taken_seconds: timeTaken,
-      } as any);
+      } as any, { onConflict: 'user_id,feedback_day' });
 
       if (error) throw error;
 
