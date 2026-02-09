@@ -11,9 +11,9 @@ import { CheckCircle2, Loader2, LogIn } from 'lucide-react';
 import FeedbackDayTracker from '@/components/feedback/FeedbackDayTracker';
 import DailyQuiz from '@/components/feedback/DailyQuiz';
 
-// Testing period: 14 days starting from Jan 22, 2026
+// Testing period: extended to 28 days starting from Jan 22, 2026 (active until Feb 19, 2026)
 const TESTING_START_DATE = new Date('2026-01-22T00:00:00+05:30'); // IST
-const TOTAL_TESTING_DAYS = 14;
+const TOTAL_TESTING_DAYS = 28;
 
 const Feedback = () => {
   const { user } = useAuth();
@@ -115,7 +115,7 @@ const Feedback = () => {
     return (
       <>
         <Helmet>
-          <title>Daily Quiz | ExamTrakr</title>
+          <title>Daily Quiz | ExamTracker</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
@@ -133,7 +133,7 @@ const Feedback = () => {
     return (
       <>
         <Helmet>
-          <title>Daily Quiz | ExamTrakr</title>
+          <title>Daily Quiz | ExamTracker</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
@@ -165,7 +165,7 @@ const Feedback = () => {
     return (
       <>
         <Helmet>
-          <title>Quiz Complete | ExamTrakr</title>
+          <title>Quiz Complete | ExamTracker</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
@@ -206,7 +206,7 @@ const Feedback = () => {
     return (
       <>
         <Helmet>
-          <title>Daily Quiz | ExamTrakr</title>
+          <title>Daily Quiz | ExamTracker</title>
         </Helmet>
         <div className="min-h-screen flex flex-col">
           <Navigation />
@@ -243,7 +243,7 @@ const Feedback = () => {
   return (
     <>
       <Helmet>
-        <title>Daily Quiz | ExamTrakr - Closed Testing</title>
+        <title>Daily Quiz | ExamTracker - Closed Testing</title>
         <meta
           name="description"
           content="Take the daily quiz during the 14-day closed testing period."

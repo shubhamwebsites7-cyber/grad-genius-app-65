@@ -37,7 +37,7 @@ Logo.displayName = 'Logo';
 
 const MobileLogo = memo(() => (
   <Link to="/" className="flex items-center space-x-2">
-    <img src={examtrackerIcon} alt="ExamTracker" className="h-6 w-6 rounded-lg" />
+    <img src={examtrackerIcon} alt="ExamTracker" className="h-8 w-8 rounded-lg" />
     <span className="text-lg font-bold text-foreground">ExamTracker</span>
   </Link>
 ));
