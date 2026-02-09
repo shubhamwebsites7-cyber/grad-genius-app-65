@@ -33,31 +33,29 @@ const FeedbackDayTracker: React.FC<FeedbackDayTrackerProps> = ({
           const isFuture = day > currentDay;
           
           return (
-            <button
+            <div
               key={day}
-              onClick={() => onDayClick?.(day)}
-              disabled={isFuture || isCompleted}
-            className={cn(
-              "aspect-square rounded-sm flex items-center justify-center text-xs font-medium transition-all relative",
-              "border-2",
-              isCompleted && "bg-success border-success text-success-foreground hover:bg-success/90",
-              isCurrent && !isCompleted && "bg-primary/20 border-primary text-primary animate-pulse",
-              !isCompleted && !isCurrent && !isFuture && "bg-muted border-muted-foreground/20 text-muted-foreground hover:bg-muted/80",
-              isFuture && "bg-muted/50 border-muted-foreground/10 text-muted-foreground/50 cursor-not-allowed"
-            )}
-            title={
-              isCompleted ? `Day ${day} - Completed ✓` :
-              isCurrent ? `Day ${day} - Today (Submit now!)` :
-              isFuture ? `Day ${day} - Coming soon` :
-              `Day ${day} - Missed`
-            }
+              className={cn(
+                "aspect-square rounded-sm flex items-center justify-center text-xs font-medium transition-all relative",
+                "border-2",
+                isCompleted && "bg-success border-success text-success-foreground",
+                isCurrent && !isCompleted && "bg-primary/20 border-primary text-primary animate-pulse",
+                !isCompleted && !isCurrent && !isFuture && "bg-muted border-muted-foreground/20 text-muted-foreground",
+                isFuture && "bg-muted/50 border-muted-foreground/10 text-muted-foreground/50"
+              )}
+              title={
+                isCompleted ? `Day ${day} - Completed ✓` :
+                isCurrent ? `Day ${day} - Today (Submit now!)` :
+                isFuture ? `Day ${day} - Coming soon` :
+                `Day ${day} - Missed`
+              }
             >
               {isCompleted ? (
                 <Check className="h-3 w-3 sm:h-4 sm:w-4" />
               ) : (
                 <span className="text-[10px] sm:text-xs">{day}</span>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
