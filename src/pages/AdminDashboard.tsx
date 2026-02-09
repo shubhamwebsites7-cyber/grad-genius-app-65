@@ -33,7 +33,8 @@ import {
   ClipboardList,
   MessageSquare,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Trophy
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -45,6 +46,7 @@ import { EnhancedResourcesSection } from "@/components/admin/EnhancedResourcesSe
 import { PricingManagementSection } from "@/components/admin/PricingManagementSection";
 import { SubscriptionsManagementSection } from "@/components/admin/SubscriptionsManagementSection";
 import { UsersManagementSection } from "@/components/admin/UsersManagementSection";
+import { LeaderboardSection } from "@/components/admin/LeaderboardSection";
 
 interface Stats {
   totalUsers: number;
@@ -334,6 +336,7 @@ const AdminDashboard = () => {
     { id: 'feedback', label: 'Feedback', icon: MessageSquare },
     { id: 'pricing', label: 'Pricing Management', icon: DollarSign },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -534,6 +537,9 @@ const AdminDashboard = () => {
 
       case 'subscriptions':
         return <SubscriptionsManagementSection />;
+
+      case 'leaderboard':
+        return <LeaderboardSection />;
 
       case 'settings':
         return (
