@@ -46,8 +46,9 @@ const Feedback = () => {
       try {
         const { data, error } = await supabase
           .from('user_feedback')
-          .select('feedback_day')
-          .eq('user_id', user.id);
+          .select('feedback_day, feedback_date')
+          .eq('user_id', user.id)
+          .gte('feedback_date', '2026-02-08');
 
         if (error) throw error;
 
