@@ -24,7 +24,7 @@ interface DailyQuizProps {
   submitting: boolean;
 }
 
-const MIN_TIME_SECONDS = 90;
+const MIN_TIME_SECONDS = 60;
 
 const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
