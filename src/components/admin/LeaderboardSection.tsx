@@ -24,18 +24,33 @@ export const LeaderboardSection: React.FC = () => {
     fetchLeaderboard();
   }, []);
 
+  const fetchAllProgress = async () => {
+    const allData: any[] = [];
+    const batchSize = 1000;
+    let offset = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('user_exam_progress')
+        .select('user_id, completed_topics, total_topics, progress_percentage, exam_id')
+        .range(offset, offset + batchSize - 1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData.push(...data);
+      if (data.length < batchSize) break;
+      offset += batchSize;
+    }
+    return allData;
+  };
+
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
 
-      // Fetch all user_exam_progress with user info
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_exam_progress')
-        .select('user_id, completed_topics, total_topics, progress_percentage, exam_id');
+      const progressData = await fetchAllProgress();
 
-      if (progressError) throw progressError;
-
-      if (!progressData || progressData.length === 0) {
+      if (progressData.length === 0) {
         setLeaderboard([]);
         setLoading(false);
         return;

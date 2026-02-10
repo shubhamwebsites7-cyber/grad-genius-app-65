@@ -309,27 +309,35 @@ serve(async (req) => {
       // For renewals, extend from current expiry if still active, otherwise from now
       const currentExpiry = new Date(existingSub.expires_at);
       const now = new Date();
-      const effectiveStart = currentExpiry > now ? currentExpiry : start;
-      const effectiveEnd = currentExpiry > now 
+      const isStillActive = currentExpiry > now;
+      
+      // Keep original starts_at when extending active sub so total_days calculation stays correct
+      const effectiveEnd = isStillActive 
         ? new Date(currentExpiry.getTime() + (paidEnd.getTime() - start.getTime()))
         : paidEnd;
       
       const newAccumulatedDays = (existingSub.accumulated_days || 0) + paidDays;
 
+      const updateFields: any = {
+        plan_id: plan.id,
+        status: "active",
+        expires_at: effectiveEnd.toISOString(),
+        payment_method: "google_play",
+        external_subscription_id: purchase.latestOrderId || purchaseToken,
+        last_payment_id: payment.id,
+        purchase_platform: "google_play",
+        accumulated_days: newAccumulatedDays,
+        auto_renew: lineItem?.autoRenewingPlan ? true : false,
+      };
+
+      // Only set starts_at for expired/new subs, not active ones
+      if (!isStillActive) {
+        updateFields.starts_at = start.toISOString();
+      }
+
       const { data: updatedSub, error: updateError } = await supabase
         .from("user_subscriptions")
-        .update({
-          plan_id: plan.id,
-          status: "active",
-          starts_at: effectiveStart.toISOString(),
-          expires_at: effectiveEnd.toISOString(),
-          payment_method: "google_play",
-          external_subscription_id: purchase.latestOrderId || purchaseToken,
-          last_payment_id: payment.id,
-          purchase_platform: "google_play",
-          accumulated_days: newAccumulatedDays,
-          auto_renew: lineItem?.autoRenewingPlan ? true : false,
-        })
+        .update(updateFields)
         .eq("id", existingSub.id)
         .select()
         .single();
@@ -338,7 +346,7 @@ serve(async (req) => {
       subError = updateError;
       
       if (!updateError) {
-        console.log("✅ Subscription updated:", subscription.id, "expires:", effectiveEnd.toISOString());
+        console.log("✅ Subscription updated:", subscription.id, "expires:", effectiveEnd.toISOString(), "accumulated_days:", newAccumulatedDays);
       }
     } else {
       // CREATE new subscription
@@ -387,9 +395,10 @@ serve(async (req) => {
         subscription: {
           id: subscription.id,
           status: "active",
-          startsAt: start.toISOString(),
-          expiresAt: paidEnd.toISOString(),
+          startsAt: subscription.starts_at,
+          expiresAt: subscription.expires_at,
           planName: plan.name,
+          accumulatedDays: subscription.accumulated_days,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
