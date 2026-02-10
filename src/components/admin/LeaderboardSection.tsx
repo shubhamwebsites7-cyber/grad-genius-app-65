@@ -24,98 +24,30 @@ export const LeaderboardSection: React.FC = () => {
     fetchLeaderboard();
   }, []);
 
-  const fetchAllProgress = async () => {
-    const allData: any[] = [];
-    const batchSize = 1000;
-    let offset = 0;
-
-    while (true) {
-      const { data, error } = await supabase
-        .from('user_exam_progress')
-        .select('user_id, completed_topics, total_topics, progress_percentage, exam_id')
-        .range(offset, offset + batchSize - 1);
-
-      if (error) throw error;
-      if (!data || data.length === 0) break;
-      allData.push(...data);
-      if (data.length < batchSize) break;
-      offset += batchSize;
-    }
-    return allData;
-  };
-
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
 
-      const progressData = await fetchAllProgress();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
 
-      if (progressData.length === 0) {
-        setLeaderboard([]);
-        setLoading(false);
-        return;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-leaderboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch leaderboard: ${response.status}`);
       }
 
-      // Aggregate per user
-      const userMap = new Map<string, {
-        total_completed: number;
-        total_topics: number;
-        progress_sum: number;
-        exam_count: number;
-      }>();
-
-      progressData.forEach((row: any) => {
-        const existing = userMap.get(row.user_id) || {
-          total_completed: 0,
-          total_topics: 0,
-          progress_sum: 0,
-          exam_count: 0,
-        };
-        existing.total_completed += row.completed_topics || 0;
-        existing.total_topics += row.total_topics || 0;
-        existing.progress_sum += Number(row.progress_percentage) || 0;
-        existing.exam_count += 1;
-        userMap.set(row.user_id, existing);
-      });
-
-      // Fetch user names
-      const userIds = Array.from(userMap.keys());
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, full_name, email')
-        .in('id', userIds);
-
-      if (usersError) throw usersError;
-
-      const usersMap = new Map<string, { full_name: string; email: string }>();
-      (usersData || []).forEach((u: any) => {
-        usersMap.set(u.id, { full_name: u.full_name, email: u.email });
-      });
-
-      // Build leaderboard
-      const entries: LeaderboardEntry[] = [];
-      userMap.forEach((stats, userId) => {
-        const userInfo = usersMap.get(userId);
-        entries.push({
-          user_id: userId,
-          full_name: userInfo?.full_name || 'Unknown',
-          email: userInfo?.email || '',
-          total_completed_topics: stats.total_completed,
-          total_topics: stats.total_topics,
-          avg_progress: stats.exam_count > 0 ? stats.progress_sum / stats.exam_count : 0,
-          exams_enrolled: stats.exam_count,
-        });
-      });
-
-      // Sort by completed topics descending, then avg progress
-      entries.sort((a, b) => {
-        if (b.total_completed_topics !== a.total_completed_topics) {
-          return b.total_completed_topics - a.total_completed_topics;
-        }
-        return b.avg_progress - a.avg_progress;
-      });
-
-      setLeaderboard(entries);
+      const result = await response.json();
+      setLeaderboard(result.leaderboard || []);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {
