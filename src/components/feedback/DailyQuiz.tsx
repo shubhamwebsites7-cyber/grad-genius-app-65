@@ -24,7 +24,7 @@ interface DailyQuizProps {
   submitting: boolean;
 }
 
-const MIN_TIME_SECONDS = 60;
+const MIN_TIME_SECONDS = 50;
 
 const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -46,7 +46,8 @@ const DailyQuiz: React.FC<DailyQuizProps> = ({ onSubmit, submitting }) => {
           .from('quiz_questions')
           .select('*')
           .eq('is_active', true)
-          .order('question_number', { ascending: true });
+          .order('question_number', { ascending: true })
+          .limit(15);
 
         if (fetchError) throw fetchError;
 
