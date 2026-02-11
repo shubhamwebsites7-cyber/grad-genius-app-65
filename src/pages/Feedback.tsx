@@ -11,9 +11,9 @@ import { CheckCircle2, Loader2, LogIn } from 'lucide-react';
 import FeedbackDayTracker from '@/components/feedback/FeedbackDayTracker';
 import DailyQuiz from '@/components/feedback/DailyQuiz';
 
-// Testing period: 10 days from Feb 8 to Feb 18, 2026
-const TESTING_START_DATE = new Date('2026-02-09T00:00:00+05:30'); // IST
-const TOTAL_TESTING_DAYS = 10;
+// Testing period: 7 days from Feb 11 to Feb 17, 2026
+const TESTING_START_DATE = new Date('2026-02-11T00:00:00+05:30'); // IST
+const TOTAL_TESTING_DAYS = 7;
 
 const Feedback = () => {
   const { user } = useAuth();
@@ -48,7 +48,7 @@ const Feedback = () => {
           .from('user_feedback')
           .select('feedback_day, feedback_date')
           .eq('user_id', user.id)
-          .gte('feedback_date', '2026-02-09');
+          .gte('feedback_date', '2026-02-11');
 
         if (error) throw error;
 
@@ -98,7 +98,7 @@ const Feedback = () => {
       
       toast({
         title: '🎉 बधाई हो!',
-        description: `Day ${currentDay} क्विज़ पूर्ण! स्कोर: ${score}/25`,
+        description: `Day ${currentDay} क्विज़ पूर्ण! स्कोर: ${score}/15`,
       });
     } catch (error: any) {
       console.error('Error submitting quiz:', error);
@@ -177,7 +177,7 @@ const Feedback = () => {
                   <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
                   <h2 className="text-2xl font-bold mb-2">🎉 Day {currentDay} पूर्ण!</h2>
                   <p className="text-3xl font-bold text-primary mb-2">
-                    {quizScore}/25
+                    {quizScore}/15
                   </p>
                   <p className="text-muted-foreground">
                     कल फिर से आएं!
