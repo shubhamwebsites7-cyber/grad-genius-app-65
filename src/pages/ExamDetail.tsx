@@ -87,7 +87,7 @@ const ExamDetail = () => {
 
   // Use React Query for caching exam data
   const { data: examData, isLoading: loading, refetch: refetchExamData } = useQuery({
-    queryKey: ['exam-detail', examId, user?.id],
+    queryKey: ['exam-detail', examId, user?.id, subscription.isPremium],
     queryFn: async () => {
       // Fetch exam details with category
       const { data: examDataResult, error: examError } = await supabase
