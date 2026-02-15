@@ -11,9 +11,9 @@ import { CheckCircle2, Loader2, LogIn } from 'lucide-react';
 import FeedbackDayTracker from '@/components/feedback/FeedbackDayTracker';
 import DailyQuiz from '@/components/feedback/DailyQuiz';
 
-// Testing period: 7 days from Feb 11 to Feb 17, 2026
+// Testing period: 9 days from Feb 11 to Feb 19, 2026
 const TESTING_START_DATE = new Date('2026-02-11T00:00:00+05:30'); // IST
-const TOTAL_TESTING_DAYS = 7;
+const TOTAL_TESTING_DAYS = 9;
 
 const Feedback = () => {
   const { user } = useAuth();
