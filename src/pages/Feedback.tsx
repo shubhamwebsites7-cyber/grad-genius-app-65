@@ -176,7 +176,7 @@ const Feedback = () => {
 
                 {/* Star Rating */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Rate Us *</label>
+                  
                   <div className="flex gap-1 justify-center">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
