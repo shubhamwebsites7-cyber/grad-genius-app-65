@@ -84,17 +84,13 @@
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    // New service worker is available, refresh the page
-                    window.location.reload();
+                    // New service worker available - do NOT auto-reload
+                    // User will get the update on their next manual refresh
+                    console.log('New version available. It will be used on next page refresh.');
                   }
                 });
               }
             });
-
-            // Check for updates periodically
-            setInterval(() => {
-              registration.update();
-            }, 60000); // Check every minute
 
           } catch (error) {
             // Silently fail if service worker registration fails
