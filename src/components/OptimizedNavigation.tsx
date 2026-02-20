@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, MessageSquarePlus, BookOpen } from 'lucide-react';
+import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen } from 'lucide-react';
 import examtrackerIcon from '@/assets/srcassetsexamtracker-icon.jpeg';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,7 +22,6 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Exams', href: '/exams', icon: BookOpen },
   { name: 'Pricing', href: '/pricing', icon: CreditCard },
-  { name: 'Feedback', href: '/feedback', icon: MessageSquarePlus, mobileOnly: true },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 
