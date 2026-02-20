@@ -67,14 +67,14 @@ const Feedback = () => {
 
       setSubmitted(true);
       toast({
-        title: '🎉 धन्यवाद!',
-        description: 'आपका फीडबैक सफलतापूर्वक सबमिट हो गया।',
+        title: '🎉 Thank You!',
+        description: 'Your feedback has been submitted successfully.',
       });
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
       toast({
-        title: 'सबमिशन विफल',
-        description: error.message || 'कृपया पुनः प्रयास करें।',
+        title: 'Submission Failed',
+        description: error.message || 'Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -108,13 +108,13 @@ const Feedback = () => {
               <CardContent className="pt-8 pb-6 space-y-6">
                 <div className="text-center">
                   <LogIn className="h-16 w-16 text-primary mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">लॉगिन आवश्यक</h2>
+                  <h2 className="text-2xl font-bold mb-2">Login Required</h2>
                   <p className="text-muted-foreground mb-6">
-                    फीडबैक देने के लिए कृपया लॉगिन करें।
+                    Please login to submit your feedback.
                   </p>
                 </div>
                 <Button asChild variant="hero" className="w-full">
-                  <a href="/login">लॉगिन करें</a>
+                  <a href="/login">Login</a>
                 </Button>
               </CardContent>
             </Card>
@@ -136,9 +136,9 @@ const Feedback = () => {
               <CardContent className="pt-8 pb-6 space-y-6">
                 <div className="text-center">
                   <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold mb-2">🎉 धन्यवाद!</h2>
+                  <h2 className="text-2xl font-bold mb-2">🎉 Thank You!</h2>
                   <p className="text-muted-foreground">
-                    आपका फीडबैक सफलतापूर्वक सबमिट हो चुका है।
+                    Your feedback has been submitted successfully.
                   </p>
                 </div>
                 <Button asChild variant="hero" className="w-full">
@@ -168,15 +168,15 @@ const Feedback = () => {
             <Card>
               <CardContent className="pt-6 pb-6 space-y-6">
                 <div className="text-center">
-                  <h1 className="text-2xl font-bold mb-2">आपका फीडबैक</h1>
+                  <h1 className="text-2xl font-bold mb-2">Your Feedback</h1>
                   <p className="text-muted-foreground text-sm">
-                    ExamTracker को बेहतर बनाने में हमारी मदद करें
+                    Help us improve ExamTracker
                   </p>
                 </div>
 
                 {/* Star Rating */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">रेटिंग दें *</label>
+                  <label className="text-sm font-medium">Rate Us *</label>
                   <div className="flex gap-1 justify-center">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -201,9 +201,9 @@ const Feedback = () => {
 
                 {/* Review */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">आपकी राय (वैकल्पिक)</label>
+                  <label className="text-sm font-medium">Your Review (Optional)</label>
                   <Textarea
-                    placeholder="अपना अनुभव बताएं..."
+                    placeholder="Share your experience..."
                     value={review}
                     onChange={(e) => setReview(e.target.value)}
                     rows={4}
@@ -220,10 +220,10 @@ const Feedback = () => {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      सबमिट हो रहा है...
+                      Submitting...
                     </>
                   ) : (
-                    'फीडबैक सबमिट करें'
+                    'Submit Feedback'
                   )}
                 </Button>
               </CardContent>
