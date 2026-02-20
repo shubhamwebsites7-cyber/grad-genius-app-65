@@ -85,7 +85,7 @@ const ExamResources = () => {
     if (examId) {
       fetchExamAndResources();
     }
-  }, [examId, user]);
+  }, [examId, user?.id]);
 
   const fetchExamAndResources = async () => {
     try {

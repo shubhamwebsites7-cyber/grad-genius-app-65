@@ -80,7 +80,7 @@ const Pricing = () => {
     }
     
     console.log('🔍 Platform detected:', platform, { isNativeAndroid, isBillingAvailable });
-  }, [user, platform, isNativeAndroid, isBillingAvailable]);
+  }, [user?.id]);
   
   useEffect(() => {
     // Download banner disabled - using Cashfree for all payments

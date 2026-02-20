@@ -44,7 +44,7 @@ const Profile = () => {
       fetchProfileData();
       fetchSubscriptionData();
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     const paymentStatus = searchParams.get('payment_status');
