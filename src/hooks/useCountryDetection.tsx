@@ -35,35 +35,17 @@ export const useCountryDetection = () => {
           // Continue to next method
         }
 
-        // Method 2: Use ipapi.co (reliable, works with most VPNs)
+        // Method 2: Use ipapi.is (HTTPS, no CORS issues, generous limits)
         try {
-          const response = await fetch('https://ipapi.co/json/', { 
-            signal: AbortSignal.timeout(4000),
+          const response = await fetch('https://api.ipapi.is/', { 
+            signal: AbortSignal.timeout(3000),
             headers: { 'Accept': 'application/json' }
           });
           
           if (response.ok) {
             const data = await response.json();
-            if (data.country_code && data.country_name) {
-              updateCountryData(data.country_code, data.country_name);
-              setLoading(false);
-              return;
-            }
-          }
-        } catch {
-          // Continue to next method
-        }
-
-        // Method 3: Use ip-api.com as backup (free, no rate limits)
-        try {
-          const response = await fetch('http://ip-api.com/json/', { 
-            signal: AbortSignal.timeout(4000) 
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.countryCode && data.country) {
-              updateCountryData(data.countryCode, data.country);
+            if (data.location?.country_code && data.location?.country) {
+              updateCountryData(data.location.country_code, data.location.country);
               setLoading(false);
               return;
             }
