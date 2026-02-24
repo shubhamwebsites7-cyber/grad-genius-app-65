@@ -71,9 +71,9 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Skip caching for non-GET requests (POST, PUT, DELETE, etc.)
+  // Skip non-GET requests entirely — let the browser handle them natively
+  // CRITICAL: Supabase auth uses POST, wrapping in respondWith() can break login
   if (request.method !== 'GET') {
-    event.respondWith(fetch(request));
     return;
   }
   
