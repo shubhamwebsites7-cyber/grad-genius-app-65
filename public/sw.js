@@ -77,12 +77,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Skip caching for external resources (but allow same-origin requests)
+  // Let ALL external requests (including Supabase) pass through to browser default fetch
+  // CRITICAL: Do NOT call event.respondWith() for Supabase — it causes auth failures
   if (url.origin !== self.location.origin) {
-    // Allow Supabase requests to pass through without caching
-    if (url.hostname.includes('supabase')) {
-      event.respondWith(fetch(request));
-    }
     return;
   }
 
