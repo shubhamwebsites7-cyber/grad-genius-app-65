@@ -117,8 +117,13 @@ const AdminDashboard = () => {
   const [exams, setExams] = useState<ExamData[]>([]);
   const [pendingResources, setPendingResources] = useState<ResourceData[]>([]);
 
+  // Track if initial load is done to prevent re-fetching on tab switch
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
   useEffect(() => {
-    checkAdminAccess();
+    if (!initialLoadDone) {
+      checkAdminAccess();
+    }
   }, [user]);
 
   const checkAdminAccess = async () => {
