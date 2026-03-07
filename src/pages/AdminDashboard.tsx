@@ -161,6 +161,7 @@ const AdminDashboard = () => {
       }
 
       setIsAdmin(true);
+      setInitialLoadDone(true);
       await fetchDashboardData();
     } catch (error) {
       console.error('Error in admin check:', error);
