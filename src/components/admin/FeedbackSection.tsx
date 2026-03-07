@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, ThumbsUp, ThumbsDown, DollarSign, MessageSquare } from "lucide-react";
+import { Star, MessageSquare } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -11,24 +11,15 @@ interface Feedback {
   user_id: string;
   user_name: string | null;
   user_email: string | null;
-  helpfulness: string;
-  ease_of_use: string;
-  design_speed: string;
-  recommendation: string;
-  pricing_preference: string;
-  improvement_suggestion: string | null;
+  rating: number;
+  review: string | null;
   created_at: string;
 }
 
 export const FeedbackSection = () => {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    avgHelpful: 0,
-    avgEasyToUse: 0,
-    avgDesignSpeed: 0,
-    wouldRecommend: 0,
-  });
+  const [avgRating, setAvgRating] = useState(0);
 
   useEffect(() => {
     fetchFeedback();
@@ -44,8 +35,11 @@ export const FeedbackSection = () => {
       if (error) throw error;
 
       if (data) {
-        setFeedback(data);
-        calculateStats(data);
+        setFeedback(data as unknown as Feedback[]);
+        if (data.length > 0) {
+          const avg = (data as any[]).reduce((sum: number, item: any) => sum + (item.rating || 0), 0) / data.length;
+          setAvgRating(avg);
+        }
       }
     } catch (error) {
       console.error('Error fetching feedback:', error);
@@ -57,44 +51,6 @@ export const FeedbackSection = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateStats = (data: Feedback[]) => {
-    if (data.length === 0) return;
-
-    const helpfulMap: { [key: string]: number } = {
-      'very_helpful': 5,
-      'somewhat_helpful': 4,
-      'neutral': 3,
-      'not_helpful': 1
-    };
-
-    const easeMap: { [key: string]: number } = {
-      'very_easy': 5,
-      'easy': 4,
-      'average': 3,
-      'difficult': 1
-    };
-
-    const designMap: { [key: string]: number } = {
-      'yes_great': 5,
-      'okay': 3,
-      'needs_improvement': 1
-    };
-
-    const sum = data.reduce((acc, item) => ({
-      helpful: acc.helpful + (helpfulMap[item.helpfulness] || 3),
-      easyToUse: acc.easyToUse + (easeMap[item.ease_of_use] || 3),
-      designSpeed: acc.designSpeed + (designMap[item.design_speed] || 3),
-      recommend: acc.recommend + (item.recommendation === 'definitely' ? 1 : item.recommendation === 'maybe' ? 0.5 : 0),
-    }), { helpful: 0, easyToUse: 0, designSpeed: 0, recommend: 0 });
-
-    setStats({
-      avgHelpful: sum.helpful / data.length,
-      avgEasyToUse: sum.easyToUse / data.length,
-      avgDesignSpeed: sum.designSpeed / data.length,
-      wouldRecommend: (sum.recommend / data.length) * 100,
-    });
   };
 
   const renderStars = (rating: number) => {
@@ -110,53 +66,12 @@ export const FeedbackSection = () => {
     );
   };
 
-  const getPricingBadge = (preference: string) => {
-    const badges: { [key: string]: { label: string; variant: "default" | "secondary" | "destructive" | "outline" } } = {
-      '0': { label: '₹0 (Free)', variant: 'default' },
-      '79': { label: '₹79', variant: 'secondary' },
-      '89': { label: '₹89', variant: 'secondary' },
-      '99+': { label: '₹99+', variant: 'outline' },
-    };
-    const badge = badges[preference] || { label: preference, variant: 'outline' as const };
-    return <Badge variant={badge.variant}>{badge.label}</Badge>;
-  };
-
-  const getHelpfulnessLabel = (value: string) => {
-    const labels: { [key: string]: string } = {
-      'very_helpful': 'Very Helpful',
-      'somewhat_helpful': 'Somewhat Helpful',
-      'neutral': 'Neutral',
-      'not_helpful': 'Not Helpful'
-    };
-    return labels[value] || value;
-  };
-
-  const getEaseLabel = (value: string) => {
-    const labels: { [key: string]: string } = {
-      'very_easy': 'Very Easy',
-      'easy': 'Easy',
-      'average': 'Average',
-      'difficult': 'Difficult'
-    };
-    return labels[value] || value;
-  };
-
-  const getDesignSpeedLabel = (value: string) => {
-    const labels: { [key: string]: string } = {
-      'yes_great': 'Yes, Great!',
-      'okay': 'Okay',
-      'needs_improvement': 'Needs Improvement'
-    };
-    return labels[value] || value;
-  };
-
-  const getRecommendationLabel = (value: string) => {
-    const labels: { [key: string]: string } = {
-      'definitely': 'Definitely',
-      'maybe': 'Maybe',
-      'no': 'No'
-    };
-    return labels[value] || value;
+  const getRatingDistribution = () => {
+    const dist = [0, 0, 0, 0, 0];
+    feedback.forEach((f) => {
+      if (f.rating >= 1 && f.rating <= 5) dist[f.rating - 1]++;
+    });
+    return dist;
   };
 
   if (loading) {
@@ -173,57 +88,58 @@ export const FeedbackSection = () => {
     );
   }
 
+  const distribution = getRatingDistribution();
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">User Feedback</h2>
-        <p className="text-muted-foreground">Review user feedback and satisfaction metrics</p>
+        <p className="text-muted-foreground">Review user ratings and reviews ({feedback.length} total)</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Helpfulness</CardTitle>
+            <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
           </CardHeader>
           <CardContent>
-            {renderStars(stats.avgHelpful)}
-            <p className="text-2xl font-bold mt-2">{stats.avgHelpful.toFixed(1)}/5</p>
+            {renderStars(Math.round(avgRating))}
+            <p className="text-2xl font-bold mt-2">{avgRating.toFixed(1)}/5</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Ease of Use</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
           </CardHeader>
           <CardContent>
-            {renderStars(stats.avgEasyToUse)}
-            <p className="text-2xl font-bold mt-2">{stats.avgEasyToUse.toFixed(1)}/5</p>
+            <p className="text-2xl font-bold">{feedback.length}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Design & Speed</CardTitle>
+            <CardTitle className="text-sm font-medium">Rating Distribution</CardTitle>
           </CardHeader>
-          <CardContent>
-            {renderStars(stats.avgDesignSpeed)}
-            <p className="text-2xl font-bold mt-2">{stats.avgDesignSpeed.toFixed(1)}/5</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Would Recommend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <ThumbsUp className="h-5 w-5 text-green-600" />
-              <p className="text-2xl font-bold">{stats.wouldRecommend.toFixed(0)}%</p>
-            </div>
+          <CardContent className="space-y-1">
+            {[5, 4, 3, 2, 1].map((star) => (
+              <div key={star} className="flex items-center gap-2 text-sm">
+                <span className="w-4">{star}★</span>
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-yellow-400 rounded-full"
+                    style={{ width: feedback.length ? `${(distribution[star - 1] / feedback.length) * 100}%` : '0%' }}
+                  />
+                </div>
+                <span className="w-6 text-right text-muted-foreground">{distribution[star - 1]}</span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
+      {/* Feedback List */}
       <div className="space-y-4">
         {feedback.length === 0 ? (
           <Card>
@@ -235,57 +151,24 @@ export const FeedbackSection = () => {
         ) : (
           feedback.map((item) => (
             <Card key={item.id}>
-              <CardHeader>
+              <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="space-y-2">
-                    {(item.user_name || item.user_email) && (
-                      <div className="mb-2">
-                        <p className="font-semibold">{item.user_name || 'Anonymous'}</p>
-                        {item.user_email && (
-                          <p className="text-sm text-muted-foreground">{item.user_email}</p>
-                        )}
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Helpfulness</p>
-                        <Badge variant="outline">{getHelpfulnessLabel(item.helpfulness)}</Badge>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Ease of Use</p>
-                        <Badge variant="outline">{getEaseLabel(item.ease_of_use)}</Badge>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Design & Speed</p>
-                        <Badge variant="outline">{getDesignSpeedLabel(item.design_speed)}</Badge>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Would Recommend</p>
-                        <Badge variant={item.recommendation === 'definitely' ? 'default' : item.recommendation === 'maybe' ? 'secondary' : 'destructive'}>
-                          {getRecommendationLabel(item.recommendation)}
-                        </Badge>
-                      </div>
+                    <div>
+                      <p className="font-semibold">{item.user_name || 'Anonymous'}</p>
+                      {item.user_email && (
+                        <p className="text-sm text-muted-foreground">{item.user_email}</p>
+                      )}
                     </div>
+                    {renderStars(item.rating)}
                   </div>
+                  <Badge variant="outline">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </Badge>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Pricing Preference:</span>
-                  {getPricingBadge(item.pricing_preference)}
-                </div>
-
-                {item.improvement_suggestion && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Suggested Improvements:</h4>
-                    <p className="text-muted-foreground">{item.improvement_suggestion}</p>
-                  </div>
+                {item.review && (
+                  <p className="mt-3 text-muted-foreground">{item.review}</p>
                 )}
-
-                <p className="text-xs text-muted-foreground">
-                  Submitted on {new Date(item.created_at).toLocaleDateString()}
-                </p>
               </CardContent>
             </Card>
           ))
