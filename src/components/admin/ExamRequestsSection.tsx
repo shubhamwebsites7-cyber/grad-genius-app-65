@@ -17,6 +17,7 @@ interface ExamRequest {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  user_full_name?: string;
 }
 
 export const ExamRequestsSection = () => {
