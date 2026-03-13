@@ -166,7 +166,8 @@ export const UsersManagementSection = () => {
       let usersWithSubs: UserWithSubscription[] = (usersData as any[]).map((user: any) => ({
         ...user,
         subscription: subscriptionMap.get(user.id) || null,
-        enrollment_count: enrollmentMap[user.id] || 0
+        enrollment_count: enrollmentMap[user.id] || 0,
+        enrolled_exams: enrolledExamsMap[user.id] || []
       }));
 
       // Filter by subscription status client-side
