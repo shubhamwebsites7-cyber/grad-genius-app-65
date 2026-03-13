@@ -428,7 +428,16 @@ export const UsersManagementSection = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{user.enrollment_count || 0} exams</Badge>
+                        <div className="space-y-1">
+                          <Badge variant="outline">{user.enrollment_count || 0} exams</Badge>
+                          {user.enrolled_exams && user.enrolled_exams.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {user.enrolled_exams.map((exam, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">{exam}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.is_active ? 'default' : 'secondary'}>

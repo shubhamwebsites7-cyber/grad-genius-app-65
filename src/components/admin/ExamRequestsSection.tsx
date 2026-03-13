@@ -141,6 +141,9 @@ export const ExamRequestsSection = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-xl">{request.exam_name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Requested by: <span className="font-medium text-foreground">{request.user_full_name}</span>
+                    </p>
                     {request.exam_type && (
                       <Badge variant="secondary" className="mt-2">{request.exam_type}</Badge>
                     )}
