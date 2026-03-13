@@ -37,7 +37,21 @@ export const ExamRequestsSection = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+
+      // Fetch user names for all requests
+      const userIds = [...new Set((data || []).map((r: any) => r.user_id))];
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      const userMap: Record<string, string> = {};
+      (usersData || []).forEach((u: any) => { userMap[u.id] = u.full_name; });
+
+      setRequests((data || []).map((r: any) => ({
+        ...r,
+        user_full_name: userMap[r.user_id] || 'Unknown User'
+      })));
     } catch (error) {
       console.error('Error fetching exam requests:', error);
       toast({
