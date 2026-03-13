@@ -45,6 +45,7 @@ interface UserWithSubscription {
     auto_renew: boolean;
   } | null;
   enrollment_count?: number;
+  enrolled_exams?: string[];
 }
 
 const ITEMS_PER_PAGE = 20;
