@@ -134,20 +134,20 @@ export const UsersManagementSection = () => {
         `)
         .in('user_id', userIds);
 
-      // Fetch enrollment counts
-      const enrollmentPromises = userIds.map(async (userId: string) => {
-        const { count } = await supabase
-          .from('user_exam_enrollments')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .eq('is_active', true);
-        return { userId, count: count || 0 };
-      });
+      // Fetch enrollments with exam names
+      const { data: enrollmentsData } = await supabase
+        .from('user_exam_enrollments')
+        .select('user_id, exam_id, exams(name)')
+        .in('user_id', userIds)
+        .eq('is_active', true);
 
-      const enrollmentCounts = await Promise.all(enrollmentPromises);
-      const enrollmentMap: Record<string, number> = Object.fromEntries(
-        enrollmentCounts.map(e => [e.userId, e.count])
-      );
+      const enrollmentMap: Record<string, number> = {};
+      const enrolledExamsMap: Record<string, string[]> = {};
+      (enrollmentsData || []).forEach((e: any) => {
+        enrollmentMap[e.user_id] = (enrollmentMap[e.user_id] || 0) + 1;
+        if (!enrolledExamsMap[e.user_id]) enrolledExamsMap[e.user_id] = [];
+        enrolledExamsMap[e.user_id].push(e.exams?.name || e.exam_id);
+      });
 
       // Map subscriptions to users
       const subscriptionMap = new Map<string, any>();
