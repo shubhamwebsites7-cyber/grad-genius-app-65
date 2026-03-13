@@ -17,6 +17,7 @@ interface ExamRequest {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  user_full_name?: string;
 }
 
 export const ExamRequestsSection = () => {
@@ -36,7 +37,21 @@ export const ExamRequestsSection = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+
+      // Fetch user names for all requests
+      const userIds = [...new Set((data || []).map((r: any) => r.user_id))];
+      const { data: usersData } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      const userMap: Record<string, string> = {};
+      (usersData || []).forEach((u: any) => { userMap[u.id] = u.full_name; });
+
+      setRequests((data || []).map((r: any) => ({
+        ...r,
+        user_full_name: userMap[r.user_id] || 'Unknown User'
+      })));
     } catch (error) {
       console.error('Error fetching exam requests:', error);
       toast({
@@ -126,6 +141,9 @@ export const ExamRequestsSection = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-xl">{request.exam_name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Requested by: <span className="font-medium text-foreground">{request.user_full_name}</span>
+                    </p>
                     {request.exam_type && (
                       <Badge variant="secondary" className="mt-2">{request.exam_type}</Badge>
                     )}

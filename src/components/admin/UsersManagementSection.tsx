@@ -45,6 +45,7 @@ interface UserWithSubscription {
     auto_renew: boolean;
   } | null;
   enrollment_count?: number;
+  enrolled_exams?: string[];
 }
 
 const ITEMS_PER_PAGE = 20;
@@ -133,20 +134,20 @@ export const UsersManagementSection = () => {
         `)
         .in('user_id', userIds);
 
-      // Fetch enrollment counts
-      const enrollmentPromises = userIds.map(async (userId: string) => {
-        const { count } = await supabase
-          .from('user_exam_enrollments')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .eq('is_active', true);
-        return { userId, count: count || 0 };
-      });
+      // Fetch enrollments with exam names
+      const { data: enrollmentsData } = await supabase
+        .from('user_exam_enrollments')
+        .select('user_id, exam_id, exams(name)')
+        .in('user_id', userIds)
+        .eq('is_active', true);
 
-      const enrollmentCounts = await Promise.all(enrollmentPromises);
-      const enrollmentMap: Record<string, number> = Object.fromEntries(
-        enrollmentCounts.map(e => [e.userId, e.count])
-      );
+      const enrollmentMap: Record<string, number> = {};
+      const enrolledExamsMap: Record<string, string[]> = {};
+      (enrollmentsData || []).forEach((e: any) => {
+        enrollmentMap[e.user_id] = (enrollmentMap[e.user_id] || 0) + 1;
+        if (!enrolledExamsMap[e.user_id]) enrolledExamsMap[e.user_id] = [];
+        enrolledExamsMap[e.user_id].push(e.exams?.name || e.exam_id);
+      });
 
       // Map subscriptions to users
       const subscriptionMap = new Map<string, any>();
@@ -165,7 +166,8 @@ export const UsersManagementSection = () => {
       let usersWithSubs: UserWithSubscription[] = (usersData as any[]).map((user: any) => ({
         ...user,
         subscription: subscriptionMap.get(user.id) || null,
-        enrollment_count: enrollmentMap[user.id] || 0
+        enrollment_count: enrollmentMap[user.id] || 0,
+        enrolled_exams: enrolledExamsMap[user.id] || []
       }));
 
       // Filter by subscription status client-side
@@ -426,7 +428,16 @@ export const UsersManagementSection = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{user.enrollment_count || 0} exams</Badge>
+                        <div className="space-y-1">
+                          <Badge variant="outline">{user.enrollment_count || 0} exams</Badge>
+                          {user.enrolled_exams && user.enrolled_exams.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {user.enrolled_exams.map((exam, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">{exam}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.is_active ? 'default' : 'secondary'}>
