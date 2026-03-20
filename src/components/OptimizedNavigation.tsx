@@ -10,8 +10,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen } from 'lucide-react';
+import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen, Smartphone } from 'lucide-react';
 import examtrackerIcon from '@/assets/srcassetsexamtracker-icon.jpeg';
+
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.examtrakr.android';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
@@ -134,6 +136,15 @@ export const Navigation = memo(() => {
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
+              <a
+                href={PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-green-600 hover:via-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] animate-pulse hover:animate-none"
+              >
+                <Smartphone className="h-4 w-4" />
+                Download App
+              </a>
               <ThemeToggle />
               {showInstallButton && (
                 <InstallButton onClick={handleInstallClick} isMobile={false} />
@@ -256,6 +267,15 @@ export const Navigation = memo(() => {
           <MobileLogo />
           
           <div className="flex items-center space-x-2">
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 shadow-sm"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              App
+            </a>
             <ThemeToggle />
             {showInstallButton && (
               <InstallButton onClick={handleInstallClick} isMobile={true} />
