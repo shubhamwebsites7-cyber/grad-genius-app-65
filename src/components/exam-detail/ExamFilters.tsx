@@ -95,12 +95,12 @@ export const ExamFilters = ({
           </div>
         </div>
 
-        {/* Desktop Layout */}
+        {/* Tablet & Desktop Layout */}
         <div className="hidden sm:block">
           <div className="text-sm font-semibold text-foreground mb-4">Filters & Sorting</div>
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-6 flex-1">
-              {/* Status Filter */}
+          <div className="space-y-4">
+            {/* Row 1: Status + Expand/Collapse */}
+            <div className="flex items-center justify-between gap-6">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Status</label>
                 <div className="flex gap-2">
@@ -127,8 +127,29 @@ export const ExamFilters = ({
                   </Badge>
                 </div>
               </div>
-              
-              {/* Difficulty Filter */}
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onToggleAllSections}
+                className="flex items-center gap-2 shrink-0"
+              >
+                {allExpanded ? (
+                  <>
+                    <ShrinkIcon className="h-4 w-4" />
+                    Collapse All
+                  </>
+                ) : (
+                  <>
+                    <ExpandIcon className="h-4 w-4" />
+                    Expand All
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Row 2: Difficulty + Sort (separate row on tablet, inline on desktop) */}
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[70px]">Difficulty</label>
                 <Select value={difficultyFilter} onValueChange={onDifficultyFilterChange}>
@@ -144,7 +165,6 @@ export const ExamFilters = ({
                 </Select>
               </div>
               
-              {/* Sort By */}
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Sort by</label>
                 <Select value={sortBy} onValueChange={onSortByChange}>
@@ -161,25 +181,6 @@ export const ExamFilters = ({
                 </Select>
               </div>
             </div>
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onToggleAllSections}
-              className="flex items-center gap-2 shrink-0"
-            >
-              {allExpanded ? (
-                <>
-                  <ShrinkIcon className="h-4 w-4" />
-                  Collapse All
-                </>
-              ) : (
-                <>
-                  <ExpandIcon className="h-4 w-4" />
-                  Expand All
-                </>
-              )}
-            </Button>
           </div>
         </div>
       </CardContent>
