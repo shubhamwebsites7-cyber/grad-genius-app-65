@@ -135,7 +135,7 @@ export const Navigation = memo(() => {
               ))}
             </div>
 
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden lg:flex items-center space-x-4">
               <a
                 href={PLAY_STORE_URL}
                 target="_blank"
