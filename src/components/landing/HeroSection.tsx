@@ -1,14 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play, TrendingUp, Target, Zap } from 'lucide-react';
+import { ArrowRight, Play, TrendingUp, Target, Zap, Smartphone } from 'lucide-react';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
-import heroImage from '@/assets/hero-image.jpg';
+import appMockup from '@/assets/app-mockup.png';
 import student1 from '@/assets/student-1.png';
 import student2 from '@/assets/student-2.png';
 import student3 from '@/assets/student-3.png';
 import student4 from '@/assets/student-4.png';
+
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.examtrakr.android';
 
 export const HeroSection: React.FC = () => {
   const { isIndia } = useCountryDetection();
