@@ -126,34 +126,16 @@ export const HeroSection: React.FC = () => {
           </div>
 
           {/* Hero Image */}
-          <div className="relative animate-fade-in w-full max-w-full" style={{ animationDelay: '0.2s' }}>
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500 w-full">
+          <div className="relative animate-fade-in w-full max-w-full flex justify-center" style={{ animationDelay: '0.2s' }}>
+            <div className="relative w-full max-w-lg">
               <img
-                src={heroImage}
-                alt="Students tracking exam preparation progress with ExamTracker dashboard"
-                className="w-full h-auto object-cover"
-                loading="lazy"
+                src={appMockup}
+                alt="ExamTracker mobile app screenshots showing dashboard, exam progress, and syllabus tracking"
+                className="w-full h-auto object-contain drop-shadow-2xl"
+                loading="eager"
                 width="600"
-                height="400"
+                height="700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent"></div>
-            </div>
-            
-            {/* Floating Cards */}
-            <div className="absolute -top-4 -right-4 sm:-top-6 sm:-right-6 bg-card p-3 sm:p-5 rounded-2xl shadow-xl border border-border backdrop-blur-sm">
-              <div className="text-xs sm:text-sm font-semibold text-muted-foreground mb-1">Your Progress</div>
-              <div className="flex items-center space-x-2">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">89%</div>
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
-              </div>
-            </div>
-            
-            <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-card p-3 sm:p-5 rounded-2xl shadow-xl border border-border backdrop-blur-sm">
-              <div className="text-base sm:text-lg font-bold text-foreground">Track & Succeed</div>
-              <div className="text-xs text-success flex items-center mt-1">
-                <Target className="h-3 w-3 mr-1" />
-                Stay Focused
-              </div>
             </div>
           </div>
         </div>
