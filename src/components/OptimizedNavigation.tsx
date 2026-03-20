@@ -140,7 +140,7 @@ export const Navigation = memo(() => {
                 href={PLAY_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-green-600 hover:via-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] animate-pulse hover:animate-none"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 hover:from-green-600 hover:via-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
               >
                 <Smartphone className="h-4 w-4" />
                 Download App
@@ -267,15 +267,6 @@ export const Navigation = memo(() => {
           <MobileLogo />
           
           <div className="flex items-center space-x-2">
-            <a
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 shadow-sm"
-            >
-              <Smartphone className="h-3.5 w-3.5" />
-              App
-            </a>
             <ThemeToggle />
             {showInstallButton && (
               <InstallButton onClick={handleInstallClick} isMobile={true} />
