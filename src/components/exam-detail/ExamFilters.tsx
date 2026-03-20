@@ -95,11 +95,11 @@ export const ExamFilters = ({
           </div>
         </div>
 
-        {/* Desktop Layout */}
+        {/* Desktop/Tablet Layout */}
         <div className="hidden sm:block">
           <div className="text-sm font-semibold text-foreground mb-4">Filters & Sorting</div>
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-6 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-4 lg:gap-6">
+            <div className="flex flex-wrap items-center gap-4 lg:gap-6 flex-1">
               {/* Status Filter */}
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Status</label>
