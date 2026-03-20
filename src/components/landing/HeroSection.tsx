@@ -14,7 +14,7 @@ const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.examtr
 
 export const HeroSection: React.FC = () => {
   const { isIndia } = useCountryDetection();
-  useImageOptimization([heroImage]);
+  useImageOptimization([appMockup]);
 
   const heroSubtitle = isIndia 
     ? "Track your progress subject-wise and overall performance for all competitive, job, and entrance exams."
