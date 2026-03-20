@@ -267,15 +267,6 @@ export const Navigation = memo(() => {
           <MobileLogo />
           
           <div className="flex items-center space-x-2">
-            <a
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 shadow-sm"
-            >
-              <Smartphone className="h-3.5 w-3.5" />
-              App
-            </a>
             <ThemeToggle />
             {showInstallButton && (
               <InstallButton onClick={handleInstallClick} isMobile={true} />
