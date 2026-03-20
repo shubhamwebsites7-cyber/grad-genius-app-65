@@ -10,8 +10,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen } from 'lucide-react';
+import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen, Smartphone } from 'lucide-react';
 import examtrackerIcon from '@/assets/srcassetsexamtracker-icon.jpeg';
+
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.examtrakr.android';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
 import { useCountryDetection } from '@/hooks/useCountryDetection';
