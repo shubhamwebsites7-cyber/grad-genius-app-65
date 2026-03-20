@@ -59,10 +59,11 @@ export const HeroSection: React.FC = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="cta" size="xl" className="group" asChild>
-                <Link to="/signup">
-                  Start Tracking Free
+                <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
+                  <Smartphone className="mr-2 h-5 w-5" />
+                  Download App Free
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </a>
               </Button>
               <Button variant="outline" size="xl" className="hover-scale" asChild>
                 <Link to="/exams">
