@@ -64,9 +64,15 @@ const Dashboard = () => {
   }, [user?.id]);
 
   const fetchDashboardData = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
+
+      const userId = user.id;
 
       // Fetch user's enrolled exams with progress
       const { data: enrollments, error: enrollmentError } = await supabase
@@ -82,7 +88,7 @@ const Dashboard = () => {
             )
           )
         `)
-        .eq('user_id', user!.id)
+        .eq('user_id', userId)
         .eq('is_active', true);
 
       if (enrollmentError) throw enrollmentError;
@@ -99,7 +105,7 @@ const Dashboard = () => {
       const { data: progressData, error: progressError } = await supabase
         .from('user_exam_progress')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', userId)
         .in('exam_id', examIds);
 
       if (progressError) throw progressError;
@@ -204,6 +210,7 @@ const Dashboard = () => {
 
   // Handle exam deletion
   const handleDeleteExam = async (examId: string, examName: string) => {
+    if (!user?.id) return;
     try {
       setDeletingExamId(examId);
       
@@ -211,7 +218,7 @@ const Dashboard = () => {
       const { error: deleteError } = await supabase
         .from('user_exam_enrollments')
         .delete()
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .eq('exam_id', examId);
 
       if (deleteError) throw deleteError;
@@ -220,7 +227,7 @@ const Dashboard = () => {
       await supabase
         .from('user_exam_progress')
         .delete()
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .eq('exam_id', examId);
 
       toast({
