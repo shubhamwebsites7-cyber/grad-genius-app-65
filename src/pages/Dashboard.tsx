@@ -105,7 +105,7 @@ const Dashboard = () => {
       const { data: progressData, error: progressError } = await supabase
         .from('user_exam_progress')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', userId)
         .in('exam_id', examIds);
 
       if (progressError) throw progressError;

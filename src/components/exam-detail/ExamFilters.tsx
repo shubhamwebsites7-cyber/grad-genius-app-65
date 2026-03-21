@@ -148,8 +148,8 @@ export const ExamFilters = ({
               </Button>
             </div>
 
-            {/* Row 2: Difficulty + Sort (separate row on tablet, inline on desktop) */}
-            <div className="flex items-center gap-6">
+            {/* Row 2: Difficulty + Sort - always on separate line for tablet */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[70px]">Difficulty</label>
                 <Select value={difficultyFilter} onValueChange={onDifficultyFilterChange}>
