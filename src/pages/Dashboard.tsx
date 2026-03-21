@@ -64,9 +64,15 @@ const Dashboard = () => {
   }, [user?.id]);
 
   const fetchDashboardData = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
+
+      const userId = user.id;
 
       // Fetch user's enrolled exams with progress
       const { data: enrollments, error: enrollmentError } = await supabase
@@ -82,7 +88,7 @@ const Dashboard = () => {
             )
           )
         `)
-        .eq('user_id', user!.id)
+        .eq('user_id', userId)
         .eq('is_active', true);
 
       if (enrollmentError) throw enrollmentError;
