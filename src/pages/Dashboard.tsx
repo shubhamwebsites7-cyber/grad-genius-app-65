@@ -99,7 +99,19 @@ const Dashboard = () => {
         return;
       }
 
-      const examIds = enrollments.map((e: any) => e.exam_id);
+      const validEnrollments = enrollments.filter((enrollment: any) => enrollment?.exams?.id);
+      const examIds = validEnrollments.map((e: any) => e.exam_id);
+
+      if (examIds.length === 0) {
+        setEnrolledExams([]);
+        setOverallProgress({
+          percentage: 0,
+          completedTopics: 0,
+          totalTopics: 0
+        });
+        setLoading(false);
+        return;
+      }
 
       // Fetch progress for each enrolled exam
       const { data: progressData, error: progressError } = await supabase
@@ -135,8 +147,11 @@ const Dashboard = () => {
       if (topicsError) throw topicsError;
 
       // Build enrolled exams with complete data
-      const examsWithProgress: EnrolledExam[] = enrollments.map((enrollment: any) => {
+      const examsWithProgress: EnrolledExam[] = validEnrollments.map((enrollment: any) => {
         const exam = enrollment.exams;
+        const examCategory = Array.isArray(exam.exam_categories)
+          ? exam.exam_categories[0]
+          : exam.exam_categories;
         const progress: any = progressData?.find((p: any) => p.exam_id === enrollment.exam_id);
         const examSubjects = subjectsData?.filter((s: any) => s.exam_id === enrollment.exam_id) || [];
 
@@ -144,7 +159,7 @@ const Dashboard = () => {
         const subjects: Subject[] = examSubjects.map((subject: any) => {
           const subjectTopics = topicsData?.filter((t: any) => t.subject_id === subject.id) || [];
           const totalTopics = subjectTopics.length;
-          const completedTopics = subjectTopics.filter((t: any) => 
+          const completedTopics = subjectTopics.filter((t: any) =>
             progress?.completed_topics_ids?.includes(t.id)
           ).length;
           const subjectProgress = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
@@ -157,14 +172,14 @@ const Dashboard = () => {
           };
         });
 
-        const examProgress = progress?.progress_percentage || 0;
-        const completedTopics = progress?.completed_topics || 0;
-        const totalTopics = progress?.total_topics || 0;
+        const examProgress = Number(progress?.progress_percentage ?? 0);
+        const completedTopics = Number(progress?.completed_topics ?? 0);
+        const totalTopics = Number(progress?.total_topics ?? 0);
 
         return {
           id: exam.id,
           name: exam.name,
-          type: exam.exam_categories?.name || 'General',
+          type: examCategory?.name || 'General',
           progress: examProgress,
           completedTopics,
           totalTopics,
