@@ -210,6 +210,7 @@ const Dashboard = () => {
 
   // Handle exam deletion
   const handleDeleteExam = async (examId: string, examName: string) => {
+    if (!user?.id) return;
     try {
       setDeletingExamId(examId);
       
@@ -217,7 +218,7 @@ const Dashboard = () => {
       const { error: deleteError } = await supabase
         .from('user_exam_enrollments')
         .delete()
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .eq('exam_id', examId);
 
       if (deleteError) throw deleteError;
@@ -226,7 +227,7 @@ const Dashboard = () => {
       await supabase
         .from('user_exam_progress')
         .delete()
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .eq('exam_id', examId);
 
       toast({
