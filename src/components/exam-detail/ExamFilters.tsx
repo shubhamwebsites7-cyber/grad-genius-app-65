@@ -99,27 +99,27 @@ export const ExamFilters = ({
         <div className="hidden sm:block">
           <div className="text-sm font-semibold text-foreground mb-4">Filters & Sorting</div>
           <div className="space-y-4">
-            {/* Row 1: Status + Expand/Collapse */}
+            {/* Row 1: Status */}
             <div className="flex items-center justify-between gap-6">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Status</label>
                 <div className="flex gap-2">
-                  <Badge 
-                    variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                  <Badge
+                    variant={statusFilter === 'all' ? 'default' : 'outline'}
                     className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
                     onClick={() => onStatusFilterChange('all')}
                   >
                     All
                   </Badge>
-                  <Badge 
-                    variant={statusFilter === 'completed' ? 'default' : 'outline'} 
+                  <Badge
+                    variant={statusFilter === 'completed' ? 'default' : 'outline'}
                     className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
                     onClick={() => onStatusFilterChange('completed')}
                   >
                     Completed
                   </Badge>
-                  <Badge 
-                    variant={statusFilter === 'pending' ? 'default' : 'outline'} 
+                  <Badge
+                    variant={statusFilter === 'pending' ? 'default' : 'outline'}
                     className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
                     onClick={() => onStatusFilterChange('pending')}
                   >
@@ -128,11 +128,12 @@ export const ExamFilters = ({
                 </div>
               </div>
 
-              <Button 
-                variant="outline" 
-                size="sm" 
+              {/* Desktop only */}
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={onToggleAllSections}
-                className="flex items-center gap-2 shrink-0"
+                className="hidden lg:flex items-center gap-2 shrink-0"
               >
                 {allExpanded ? (
                   <>
@@ -148,8 +149,8 @@ export const ExamFilters = ({
               </Button>
             </div>
 
-            {/* Row 2: Difficulty + Sort - always on separate line for tablet */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            {/* Row 2: Difficulty + Sort (tablet specific row) */}
+            <div className="grid grid-cols-2 gap-4 lg:flex lg:items-center lg:gap-6">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[70px]">Difficulty</label>
                 <Select value={difficultyFilter} onValueChange={onDifficultyFilterChange}>
@@ -164,7 +165,7 @@ export const ExamFilters = ({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Sort by</label>
                 <Select value={sortBy} onValueChange={onSortByChange}>
@@ -180,6 +181,28 @@ export const ExamFilters = ({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Tablet only */}
+            <div className="lg:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onToggleAllSections}
+                className="flex items-center gap-2"
+              >
+                {allExpanded ? (
+                  <>
+                    <ShrinkIcon className="h-4 w-4" />
+                    Collapse All
+                  </>
+                ) : (
+                  <>
+                    <ExpandIcon className="h-4 w-4" />
+                    Expand All
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
