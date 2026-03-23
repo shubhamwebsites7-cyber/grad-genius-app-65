@@ -1163,9 +1163,9 @@ const ExamDetail = () => {
                                            <span className="text-sm font-medium text-muted-foreground mt-0.5">
                                              {index + 1}.
                                            </span>
-                                          <h4 className="font-medium text-foreground flex-1">
-                                            {topic.name}
-                                          </h4>
+                                          <h4 className={`font-medium flex-1 ${topic.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                             {topic.name}
+                                           </h4>
                                            <Checkbox
                                              checked={topic.isCompleted}
                                              onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
@@ -1266,7 +1266,7 @@ const ExamDetail = () => {
                                           
                                           {/* Topic content */}
                                           <div className={`flex-1 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
-                                            <h4 className="font-medium text-foreground flex items-center gap-2">
+                                            <h4 className={`font-medium flex items-center gap-2 ${topic.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                                               {topic.name}
                                              {topic.marks && (
                                                <span className="text-sm text-muted-foreground">
