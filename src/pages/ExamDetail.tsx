@@ -1266,7 +1266,7 @@ const ExamDetail = () => {
                                           
                                           {/* Topic content */}
                                           <div className={`flex-1 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
-                                            <h4 className="font-medium text-foreground flex items-center gap-2">
+                                            <h4 className={`font-medium flex items-center gap-2 ${topic.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                                               {topic.name}
                                              {topic.marks && (
                                                <span className="text-sm text-muted-foreground">
