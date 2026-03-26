@@ -96,7 +96,8 @@ const SectionResources = () => {
     if (sectionId) {
       fetchSectionAndResources();
     }
-  }, [sectionId, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionId]);
 
   const fetchSectionAndResources = async () => {
     try {
