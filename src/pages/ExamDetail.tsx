@@ -117,26 +117,44 @@ const ExamDetail = () => {
         isEnrolled = !!enrollmentData;
       }
 
-      // Fetch subjects for this exam
-      const { data: subjectsData, error: subjectsError } = await supabase
-        .from('subjects')
-        .select('*')
+      // Fetch subjects for this exam via junction table
+      const { data: examSubjectsData, error: examSubjectsError } = await (supabase as any)
+        .from('exam_subjects')
+        .select('subject_id, marks, display_order, subjects(*)')
         .eq('exam_id', examId)
         .eq('is_active', true)
         .order('display_order');
 
-      if (subjectsError) throw subjectsError;
+      if (examSubjectsError) throw examSubjectsError;
 
-      // Fetch topics for all subjects
-      const subjectIds = subjectsData?.map((s: any) => s.id) || [];
-      const { data: topicsData, error: topicsError } = await supabase
-        .from('topics')
-        .select('*')
-        .in('subject_id', subjectIds)
+      // Transform junction data to flat subjects array
+      const subjectsData = (examSubjectsData || [])
+        .filter((es: any) => es.subjects?.is_active !== false)
+        .map((es: any) => ({
+          ...es.subjects,
+          total_marks: es.marks ?? es.subjects?.total_marks,
+          display_order: es.display_order ?? es.subjects?.display_order,
+        }));
+
+      // Fetch topics for this exam via junction table
+      const { data: examTopicsData, error: examTopicsError } = await (supabase as any)
+        .from('exam_topics')
+        .select('topic_id, subject_id, marks, display_order, topics(*)')
+        .eq('exam_id', examId)
         .eq('is_active', true)
         .order('display_order');
 
-      if (topicsError) throw topicsError;
+      if (examTopicsError) throw examTopicsError;
+
+      // Transform junction data to flat topics array
+      const topicsData = (examTopicsData || [])
+        .filter((et: any) => et.topics?.is_active !== false)
+        .map((et: any) => ({
+          ...et.topics,
+          marks: et.marks ?? et.topics?.marks,
+          display_order: et.display_order ?? et.topics?.display_order,
+          subject_id: et.subject_id,
+        }));
 
       // Check user's subscription status - premium users get all topics
       const hasActiveSubscription = subscription.isPremium;
