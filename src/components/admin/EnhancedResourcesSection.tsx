@@ -125,7 +125,7 @@ export const EnhancedResourcesSection = () => {
               scope_name: subjectInfo.name,
               scope_type: 'subject' as const,
               subject_name: subjectInfo.name,
-              exam_name: subjectInfo.exams?.name || '',
+              exam_name: subjectExamName,
             };
           }
 
