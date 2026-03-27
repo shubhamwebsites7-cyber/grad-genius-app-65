@@ -119,12 +119,7 @@ const SectionResources = () => {
           subject_id,
           subjects (
             id,
-            name,
-            exam_id,
-            exams (
-              id,
-              name
-            )
+            name
           )
         `)
         .eq('id', sectionId)
@@ -137,12 +132,7 @@ const SectionResources = () => {
           .from('subjects')
           .select(`
             id,
-            name,
-            exam_id,
-            exams (
-              id,
-              name
-            )
+            name
           `)
           .eq('id', sectionId)
           .eq('is_active', true)
@@ -153,12 +143,23 @@ const SectionResources = () => {
 
         const subject = subjectData as any;
         isSubject = true;
+
+        // Get exam info via junction table
+        const { data: examSubjectData } = await (supabase as any)
+          .from('exam_subjects')
+          .select('exam_id, exams(id, name)')
+          .eq('subject_id', subject.id)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle();
+
+        const examInfo = examSubjectData?.exams || { id: '', name: '' };
         
         setSection({
           id: subject.id,
           name: subject.name,
-          examId: subject.exams.id,
-          examName: subject.exams.name,
+          examId: examInfo.id,
+          examName: examInfo.name,
           subjectId: subject.id,
           subjectName: subject.name,
           difficulty: 'Medium',
@@ -210,11 +211,22 @@ const SectionResources = () => {
           }
         }
         
+        // Get exam info via junction table
+        const { data: examTopicData } = await (supabase as any)
+          .from('exam_topics')
+          .select('exam_id, exams(id, name)')
+          .eq('topic_id', topic.id)
+          .eq('is_active', true)
+          .limit(1)
+          .maybeSingle();
+
+        const topicExamInfo = examTopicData?.exams || { id: '', name: '' };
+
         setSection({
           id: topic.id,
           name: topic.name,
-          examId: topic.subjects.exams.id,
-          examName: topic.subjects.exams.name,
+          examId: topicExamInfo.id,
+          examName: topicExamInfo.name,
           subjectId: topic.subjects.id,
           subjectName: topic.subjects.name,
           difficulty: topic.difficulty,

@@ -97,12 +97,24 @@ export const EnhancedResourcesSection = () => {
             };
           }
 
-          // Try to fetch as subject
+          // Try to fetch as subject via junction table
           const { data: subjectData } = await supabase
             .from('subjects')
-            .select('name, exams(name)')
+            .select('name')
             .eq('id', resource.topic_id)
             .maybeSingle();
+          
+          let subjectExamName = '';
+          if (subjectData) {
+            const { data: esData } = await (supabase as any)
+              .from('exam_subjects')
+              .select('exams(name)')
+              .eq('subject_id', resource.topic_id)
+              .eq('is_active', true)
+              .limit(1)
+              .maybeSingle();
+            subjectExamName = esData?.exams?.name || '';
+          }
 
           if (subjectData) {
             // It's a subject-level resource
@@ -113,7 +125,7 @@ export const EnhancedResourcesSection = () => {
               scope_name: subjectInfo.name,
               scope_type: 'subject' as const,
               subject_name: subjectInfo.name,
-              exam_name: subjectInfo.exams?.name || '',
+              exam_name: subjectExamName,
             };
           }
 
