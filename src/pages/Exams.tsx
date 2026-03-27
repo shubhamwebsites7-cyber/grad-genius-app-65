@@ -182,7 +182,7 @@ const Exams = () => {
           const topics: Topic[] = subjectTopicEntries.map((et: any) => ({
             id: et.topics?.id || et.topic_id,
             name: et.topics?.name || '',
-            marks: et.marks ?? et.topics?.marks || undefined,
+            marks: (et.marks ?? et.topics?.marks) || undefined,
             difficulty: (et.topics?.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard'
           }));
 
