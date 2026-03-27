@@ -269,6 +269,67 @@ export interface Database {
           updated_at?: string
         }
       }
+      exam_subjects: {
+        Row: {
+          id: string
+          exam_id: string
+          subject_id: string
+          marks: number | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          exam_id: string
+          subject_id: string
+          marks?: number | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          exam_id?: string
+          subject_id?: string
+          marks?: number | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+      }
+      exam_topics: {
+        Row: {
+          id: string
+          exam_id: string
+          subject_id: string
+          topic_id: string
+          marks: number | null
+          display_order: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          exam_id: string
+          subject_id: string
+          topic_id: string
+          marks?: number | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          exam_id?: string
+          subject_id?: string
+          topic_id?: string
+          marks?: number | null
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+        }
+      }
       subjects: {
         Row: {
           id: string
