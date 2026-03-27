@@ -116,23 +116,23 @@ const Exams = () => {
         return;
       }
 
-      // Fetch all subjects
-      const { data: subjectsData, error: subjectsError } = await supabase
-        .from('subjects')
-        .select('*')
+      // Fetch all exam-subject mappings via junction table
+      const { data: examSubjectsData, error: examSubjectsError } = await (supabase as any)
+        .from('exam_subjects')
+        .select('exam_id, subject_id, marks, display_order, subjects(id, name)')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (subjectsError) throw subjectsError;
+      if (examSubjectsError) throw examSubjectsError;
 
-      // Fetch all topics
-      const { data: topicsData, error: topicsError } = await supabase
-        .from('topics')
-        .select('*')
+      // Fetch all exam-topic mappings via junction table
+      const { data: examTopicsData, error: examTopicsError } = await (supabase as any)
+        .from('exam_topics')
+        .select('exam_id, subject_id, topic_id, marks, display_order, topics(id, name, difficulty)')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (topicsError) throw topicsError;
+      if (examTopicsError) throw examTopicsError;
 
       // Fetch user enrollments if logged in
       let enrollmentsMap = new Map<string, boolean>();

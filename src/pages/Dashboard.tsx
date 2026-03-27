@@ -122,29 +122,37 @@ const Dashboard = () => {
 
       if (progressError) throw progressError;
 
-      // Fetch subjects for each exam
-      const { data: subjectsData, error: subjectsError } = await supabase
-        .from('subjects')
-        .select(`
-          id,
-          exam_id,
-          name
-        `)
+      // Fetch subjects for each exam via junction table
+      const { data: examSubjectsData, error: examSubjectsError } = await (supabase as any)
+        .from('exam_subjects')
+        .select('exam_id, subject_id, marks, display_order, subjects(id, name)')
         .in('exam_id', examIds)
         .eq('is_active', true)
         .order('display_order');
 
-      if (subjectsError) throw subjectsError;
+      if (examSubjectsError) throw examSubjectsError;
 
-      // Fetch topics for each subject to calculate subject-level progress
-      const subjectIds = subjectsData?.map((s: any) => s.id) || [];
-      const { data: topicsData, error: topicsError } = await supabase
-        .from('topics')
-        .select('id, subject_id')
-        .in('subject_id', subjectIds)
+      // Transform to flat subjects with exam_id
+      const subjectsData = (examSubjectsData || []).map((es: any) => ({
+        id: es.subjects?.id || es.subject_id,
+        exam_id: es.exam_id,
+        name: es.subjects?.name || '',
+      }));
+
+      // Fetch topics for each exam via junction table
+      const { data: examTopicsData, error: examTopicsError } = await (supabase as any)
+        .from('exam_topics')
+        .select('exam_id, subject_id, topic_id')
+        .in('exam_id', examIds)
         .eq('is_active', true);
 
-      if (topicsError) throw topicsError;
+      if (examTopicsError) throw examTopicsError;
+
+      // Transform to flat topics with subject_id
+      const topicsData = (examTopicsData || []).map((et: any) => ({
+        id: et.topic_id,
+        subject_id: et.subject_id,
+      }));
 
       // Build enrolled exams with complete data
       const examsWithProgress: EnrolledExam[] = validEnrollments.map((enrollment: any) => {
