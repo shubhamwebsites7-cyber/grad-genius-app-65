@@ -170,21 +170,25 @@ const Exams = () => {
 
       // Transform the data to match the Exam interface
       const transformedExams: Exam[] = (examsData || []).map((exam: any) => {
-        const examSubjects = (subjectsData || []).filter((s: any) => s.exam_id === exam.id);
+        // Get subjects for this exam from junction data
+        const examSubjectEntries = (examSubjectsData || []).filter((es: any) => es.exam_id === exam.id);
         
-        const subjects: Subject[] = examSubjects.map((subject: any) => {
-          const subjectTopics = (topicsData || []).filter((t: any) => t.subject_id === subject.id);
+        const subjects: Subject[] = examSubjectEntries.map((es: any) => {
+          // Get topics for this subject in this exam from junction data
+          const subjectTopicEntries = (examTopicsData || []).filter(
+            (et: any) => et.exam_id === exam.id && et.subject_id === (es.subjects?.id || es.subject_id)
+          );
           
-          const topics: Topic[] = subjectTopics.map((topic: any) => ({
-            id: topic.id,
-            name: topic.name,
-            marks: topic.marks || undefined,
-            difficulty: (topic.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard'
+          const topics: Topic[] = subjectTopicEntries.map((et: any) => ({
+            id: et.topics?.id || et.topic_id,
+            name: et.topics?.name || '',
+            marks: et.marks ?? et.topics?.marks || undefined,
+            difficulty: (et.topics?.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard'
           }));
 
           return {
-            id: subject.id,
-            name: subject.name,
+            id: es.subjects?.id || es.subject_id,
+            name: es.subjects?.name || '',
             topics
           };
         });
