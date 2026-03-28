@@ -1068,7 +1068,7 @@ const ExamDetail = () => {
                                  className="h-7 px-2 text-xs"
                                  onClick={(e) => e.stopPropagation()}
                                >
-                                 <Link to={`/resources/${subject.id}`}>
+                                 <Link to={`/resources/${examId}/${subject.id}`}>
                                    <FolderOpen className="h-3 w-3 mr-1" />
                                    Resources
                                  </Link>
