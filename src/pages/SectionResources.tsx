@@ -221,16 +221,26 @@ const SectionResources = () => {
           }
         }
         
-        // Get exam info via junction table
-        const { data: examTopicData } = await (supabase as any)
-          .from('exam_topics')
-          .select('exam_id, exams(id, name)')
-          .eq('topic_id', topic.id)
-          .eq('is_active', true)
-          .limit(1)
-          .maybeSingle();
-
-        const topicExamInfo = examTopicData?.exams || { id: '', name: '' };
+        // Get exam info - use routeExamId if available, otherwise fallback to junction table
+        let topicExamInfo = { id: '', name: '' };
+        if (routeExamId) {
+          const { data: examData } = await supabase
+            .from('exams')
+            .select('id, name')
+            .eq('id', routeExamId)
+            .maybeSingle();
+          if (examData) topicExamInfo = examData;
+        }
+        if (!topicExamInfo.id) {
+          const { data: examTopicData } = await (supabase as any)
+            .from('exam_topics')
+            .select('exam_id, exams(id, name)')
+            .eq('topic_id', topic.id)
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+          topicExamInfo = examTopicData?.exams || { id: '', name: '' };
+        }
 
         setSection({
           id: topic.id,
