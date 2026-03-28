@@ -81,7 +81,12 @@ const Exams = () => {
   
   const EXAMS_PER_PAGE = 9;
 
+  const userIdRef = React.useRef<string | null>(null);
+
   useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    if (currentUserId === userIdRef.current && exams.length > 0) return;
+    userIdRef.current = currentUserId;
     fetchExams();
   }, [user]);
 
