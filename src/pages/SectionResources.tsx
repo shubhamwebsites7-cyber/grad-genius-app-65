@@ -716,7 +716,7 @@ const SectionResources = () => {
           name="description" 
           content={`Explore curated resources for ${section.name} in ${section.examName}. Find videos, PDFs, and websites to enhance your preparation.`} 
         />
-        <link rel="canonical" href={`/resources/${section.id}`} />
+        <link rel="canonical" href={`/resources/${section.examId}/${section.id}`} />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
