@@ -710,7 +710,7 @@ const SectionResources = () => {
           name="description" 
           content={`Study resources and materials for ${section.name} section of ${section.examName} exam on Examtrakr.`} 
         />
-        <link rel="canonical" href={`/resources/${sectionId}`} />
+        <link rel="canonical" href={`/resources/${section.examId}/${sectionId}`} />
         <meta name="robots" content="noindex, nofollow" />
         <meta 
           name="description" 
