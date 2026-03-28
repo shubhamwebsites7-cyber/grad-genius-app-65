@@ -72,7 +72,7 @@ interface TopicData {
 }
 
 const SectionResources = () => {
-  const { sectionId } = useParams<{ sectionId: string }>();
+  const { sectionId, examId: routeExamId } = useParams<{ sectionId: string; examId?: string }>();
   const { user, subscription } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,16 +144,26 @@ const SectionResources = () => {
         const subject = subjectData as any;
         isSubject = true;
 
-        // Get exam info via junction table
-        const { data: examSubjectData } = await (supabase as any)
-          .from('exam_subjects')
-          .select('exam_id, exams(id, name)')
-          .eq('subject_id', subject.id)
-          .eq('is_active', true)
-          .limit(1)
-          .maybeSingle();
-
-        const examInfo = examSubjectData?.exams || { id: '', name: '' };
+        // Get exam info - use routeExamId if available, otherwise fallback to junction table
+        let examInfo = { id: '', name: '' };
+        if (routeExamId) {
+          const { data: examData } = await supabase
+            .from('exams')
+            .select('id, name')
+            .eq('id', routeExamId)
+            .maybeSingle();
+          if (examData) examInfo = examData;
+        }
+        if (!examInfo.id) {
+          const { data: examSubjectData } = await (supabase as any)
+            .from('exam_subjects')
+            .select('exam_id, exams(id, name)')
+            .eq('subject_id', subject.id)
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+          examInfo = examSubjectData?.exams || { id: '', name: '' };
+        }
         
         setSection({
           id: subject.id,
@@ -211,16 +221,26 @@ const SectionResources = () => {
           }
         }
         
-        // Get exam info via junction table
-        const { data: examTopicData } = await (supabase as any)
-          .from('exam_topics')
-          .select('exam_id, exams(id, name)')
-          .eq('topic_id', topic.id)
-          .eq('is_active', true)
-          .limit(1)
-          .maybeSingle();
-
-        const topicExamInfo = examTopicData?.exams || { id: '', name: '' };
+        // Get exam info - use routeExamId if available, otherwise fallback to junction table
+        let topicExamInfo = { id: '', name: '' };
+        if (routeExamId) {
+          const { data: examData } = await supabase
+            .from('exams')
+            .select('id, name')
+            .eq('id', routeExamId)
+            .maybeSingle();
+          if (examData) topicExamInfo = examData;
+        }
+        if (!topicExamInfo.id) {
+          const { data: examTopicData } = await (supabase as any)
+            .from('exam_topics')
+            .select('exam_id, exams(id, name)')
+            .eq('topic_id', topic.id)
+            .eq('is_active', true)
+            .limit(1)
+            .maybeSingle();
+          topicExamInfo = examTopicData?.exams || { id: '', name: '' };
+        }
 
         setSection({
           id: topic.id,
@@ -690,13 +710,13 @@ const SectionResources = () => {
           name="description" 
           content={`Study resources and materials for ${section.name} section of ${section.examName} exam on Examtrakr.`} 
         />
-        <link rel="canonical" href={`/resources/${sectionId}`} />
+        <link rel="canonical" href={`/resources/${section.examId}/${sectionId}`} />
         <meta name="robots" content="noindex, nofollow" />
         <meta 
           name="description" 
           content={`Explore curated resources for ${section.name} in ${section.examName}. Find videos, PDFs, and websites to enhance your preparation.`} 
         />
-        <link rel="canonical" href={`/resources/${section.id}`} />
+        <link rel="canonical" href={`/resources/${section.examId}/${section.id}`} />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
