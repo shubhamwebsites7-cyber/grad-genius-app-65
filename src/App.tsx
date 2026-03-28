@@ -95,6 +95,7 @@ const App = () => (
                   <Route path="/exam/:examId" element={<ProtectedRoute><ExamDetail /></ProtectedRoute>} />
                   <Route path="/exams/add" element={<ProtectedRoute><AddExam /></ProtectedRoute>} />
                   <Route path="/exams/:examId/resources" element={<ExamResources />} />
+                  <Route path="/resources/:examId/:sectionId" element={<SectionResources />} />
                   <Route path="/resources/:sectionId" element={<SectionResources />} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/support" element={<Support />} />

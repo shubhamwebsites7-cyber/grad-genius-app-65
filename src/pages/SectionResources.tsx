@@ -72,7 +72,7 @@ interface TopicData {
 }
 
 const SectionResources = () => {
-  const { sectionId } = useParams<{ sectionId: string }>();
+  const { sectionId, examId: routeExamId } = useParams<{ sectionId: string; examId?: string }>();
   const { user, subscription } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
