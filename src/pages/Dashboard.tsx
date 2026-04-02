@@ -196,7 +196,9 @@ const Dashboard = () => {
           completedTopics,
           totalTopics,
           enrolledStudents: `${exam.enrollment_count?.toLocaleString() || '0'}+`,
-          subjects
+          subjects,
+          exam_date: exam.exam_date || undefined,
+          is_tentative: exam.is_tentative ?? undefined,
         };
       });
 
