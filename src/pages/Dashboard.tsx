@@ -85,6 +85,8 @@ const Dashboard = () => {
             id,
             name,
             enrollment_count,
+            exam_date,
+            is_tentative,
             exam_categories (
               name
             )
