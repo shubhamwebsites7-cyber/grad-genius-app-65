@@ -66,6 +66,8 @@ interface Exam {
   completedTopics?: number;
   totalTopics: number;
   total_marks?: number;
+  exam_date?: string;
+  is_tentative?: boolean;
 }
 
 const ExamDetail = () => {
