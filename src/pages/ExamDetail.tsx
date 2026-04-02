@@ -807,14 +807,6 @@ const ExamDetail = () => {
                     <Users className="h-5 w-5" />
                     <span className="font-medium">{exam.enrolledStudents} students</span>
                   </div>
-                  <Badge className="bg-primary/10 text-primary pointer-events-none">
-                    <BookOpen className="h-3 w-3 mr-1" />
-                    {exam.subjects.length} Subjects
-                  </Badge>
-                  <Badge className="bg-secondary/10 text-secondary pointer-events-none">
-                    <Target className="h-3 w-3 mr-1" />
-                    {exam.totalTopics} Topics
-                  </Badge>
                   {exam.total_marks && (
                     <Badge variant="outline" className="text-sm px-3 py-1 pointer-events-none">
                       Total: {exam.total_marks} marks
