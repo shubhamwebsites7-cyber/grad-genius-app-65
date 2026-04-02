@@ -26,7 +26,7 @@ export const ExamCountdown = ({ examDate, isTentative }: ExamCountdownProps) => 
   const isPast = timeLeft.total <= 0;
 
   return (
-    <div className="rounded-lg border bg-card p-4 space-y-3">
+    <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-primary" />
