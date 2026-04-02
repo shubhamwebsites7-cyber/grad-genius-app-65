@@ -294,7 +294,9 @@ const ExamDetail = () => {
           progress: progressPercentage,
           completedTopics: completedCount,
           totalTopics: allTopics.length,
-          total_marks: typedExamData.total_marks || undefined
+          total_marks: typedExamData.total_marks || undefined,
+          exam_date: typedExamData.exam_date || undefined,
+          is_tentative: typedExamData.is_tentative ?? undefined,
         } as Exam,
         completedIds,
         diffMap,
