@@ -29,6 +29,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ExamDetailLoadingSkeleton } from '@/components/exam-detail/LoadingSkeleton';
+import { ExamCountdown } from '@/components/exam-detail/ExamCountdown';
 import { useNavigate } from 'react-router-dom';
 
 interface Topic {
@@ -66,6 +67,8 @@ interface Exam {
   completedTopics?: number;
   totalTopics: number;
   total_marks?: number;
+  exam_date?: string;
+  is_tentative?: boolean;
 }
 
 const ExamDetail = () => {
@@ -292,7 +295,9 @@ const ExamDetail = () => {
           progress: progressPercentage,
           completedTopics: completedCount,
           totalTopics: allTopics.length,
-          total_marks: typedExamData.total_marks || undefined
+          total_marks: typedExamData.total_marks || undefined,
+          exam_date: typedExamData.exam_date || undefined,
+          is_tentative: typedExamData.is_tentative ?? undefined,
         } as Exam,
         completedIds,
         diffMap,
@@ -802,14 +807,6 @@ const ExamDetail = () => {
                     <Users className="h-5 w-5" />
                     <span className="font-medium">{exam.enrolledStudents} students</span>
                   </div>
-                  <Badge className="bg-primary/10 text-primary pointer-events-none">
-                    <BookOpen className="h-3 w-3 mr-1" />
-                    {exam.subjects.length} Subjects
-                  </Badge>
-                  <Badge className="bg-secondary/10 text-secondary pointer-events-none">
-                    <Target className="h-3 w-3 mr-1" />
-                    {exam.totalTopics} Topics
-                  </Badge>
                   {exam.total_marks && (
                     <Badge variant="outline" className="text-sm px-3 py-1 pointer-events-none">
                       Total: {exam.total_marks} marks
@@ -817,6 +814,13 @@ const ExamDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Exam Date & Countdown */}
+              {exam.exam_date && (
+                <div className="mt-4">
+                  <ExamCountdown examDate={exam.exam_date} isTentative={exam.is_tentative ?? false} />
+                </div>
+              )}
 
               {/* Progress Section - Show for all users */}
               <Card className="mt-6">

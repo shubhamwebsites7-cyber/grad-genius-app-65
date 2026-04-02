@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2 } from 'lucide-react';
+import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +41,8 @@ interface EnrolledExam {
   totalTopics: number;
   enrolledStudents: string;
   subjects: Subject[];
+  exam_date?: string;
+  is_tentative?: boolean;
 }
 
 const Dashboard = () => {
@@ -83,6 +85,8 @@ const Dashboard = () => {
             id,
             name,
             enrollment_count,
+            exam_date,
+            is_tentative,
             exam_categories (
               name
             )
@@ -192,7 +196,9 @@ const Dashboard = () => {
           completedTopics,
           totalTopics,
           enrolledStudents: `${exam.enrollment_count?.toLocaleString() || '0'}+`,
-          subjects
+          subjects,
+          exam_date: exam.exam_date || undefined,
+          is_tentative: exam.is_tentative ?? undefined,
         };
       });
 
@@ -429,6 +435,24 @@ const Dashboard = () => {
                     </CardHeader>
                     
                     <CardContent className="space-y-6">
+                      {/* Exam Date */}
+                      {exam.exam_date && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="text-muted-foreground">
+                            {new Date(exam.exam_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] px-1.5 py-0 ${exam.is_tentative
+                              ? 'border-warning text-warning'
+                              : 'border-success text-success'
+                            }`}
+                          >
+                            {exam.is_tentative ? 'Expected' : 'Official'}
+                          </Badge>
+                        </div>
+                      )}
                       {/* Exam Overall Progress */}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">

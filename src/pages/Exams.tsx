@@ -19,7 +19,7 @@ import {
 import { AddExamModal } from '@/components/AddExamModal';
 import { RequestExamModal } from '@/components/RequestExamModal';
 
-import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2, MessageSquarePlus } from 'lucide-react';
+import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2, MessageSquarePlus, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +60,8 @@ interface Exam {
   progress?: number;
   completedTopics?: number;
   totalTopics: number;
+  exam_date?: string;
+  is_tentative?: boolean;
 }
 
 const Exams = () => {
@@ -220,7 +222,9 @@ const Exams = () => {
           isEnrolled,
           progress: progress?.percentage,
           completedTopics: progress?.completed,
-          totalTopics
+          totalTopics,
+          exam_date: exam.exam_date || undefined,
+          is_tentative: exam.is_tentative ?? undefined,
         };
       });
 
@@ -599,6 +603,25 @@ const Exams = () => {
                         <span className="ml-1">Topics</span>
                       </div>
                     </div>
+
+                    {/* Exam Date */}
+                    {exam.exam_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span className="text-muted-foreground">
+                          {new Date(exam.exam_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] px-1.5 py-0 ${exam.is_tentative
+                            ? 'border-warning text-warning'
+                            : 'border-success text-success'
+                          }`}
+                        >
+                          {exam.is_tentative ? 'Expected' : 'Official'}
+                        </Badge>
+                      </div>
+                    )}
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
