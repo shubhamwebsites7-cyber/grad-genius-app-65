@@ -60,6 +60,8 @@ interface Exam {
   progress?: number;
   completedTopics?: number;
   totalTopics: number;
+  exam_date?: string;
+  is_tentative?: boolean;
 }
 
 const Exams = () => {
