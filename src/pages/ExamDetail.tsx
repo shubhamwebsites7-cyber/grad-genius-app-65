@@ -815,180 +815,169 @@ const ExamDetail = () => {
                 </div>
               </div>
 
-              {/* Exam Date & Countdown */}
-              {exam.exam_date && (
-                <div className="mt-4">
-                  <ExamCountdown examDate={exam.exam_date} isTentative={exam.is_tentative ?? false} />
-                </div>
-              )}
-
-              {/* Progress Section - Show for all users */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
-                        {exam.isEnrolled ? (
-                          <span className="text-2xl font-bold text-primary">{exam.progress}%</span>
-                        ) : (
-                          <span className="text-lg font-medium text-muted-foreground">Not enrolled</span>
-                        )}
-                      </div>
+              {/* Three containers: Progress, Countdown, Filters */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+                {/* Container 1: Overall Progress */}
+                <Card>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-muted-foreground">Overall Progress</span>
                       {exam.isEnrolled ? (
-                        <>
-                          <Progress 
-                            value={exam.progress} 
-                            variant={getProgressVariant(exam.progress || 0)}
-                            className="h-3" 
-                          />
-                          <p className="text-sm text-muted-foreground mt-2">
-                            {exam.completedTopics} of {exam.totalTopics} topics completed
-                          </p>
-                        </>
+                        <span className="text-2xl font-bold text-primary">{exam.progress}%</span>
                       ) : (
-                        <>
-                          <Progress value={0} className="h-3" />
-                          <p className="text-sm text-muted-foreground mt-2">
-                            0 of {exam.totalTopics} topics completed
-                          </p>
-                        </>
+                        <span className="text-sm font-medium text-muted-foreground">Not enrolled</span>
                       )}
-                        
-                        {/* Mobile Stats - shown in progress container */}
-                        <div className="flex sm:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-                          <div className="flex items-center gap-1 text-success text-sm">
-                            <Users className="h-4 w-4" />
-                            <span className="font-medium">{exam.enrolledStudents} students</span>
-                          </div>
-                          <Badge className="bg-primary/10 text-primary text-xs pointer-events-none">
-                            <BookOpen className="h-3 w-3 mr-1" />
-                            {exam.subjects.length} Subjects
-                          </Badge>
-                          <Badge className="bg-secondary/10 text-secondary text-xs pointer-events-none">
-                            <Target className="h-3 w-3 mr-1" />
-                            {exam.totalTopics} Topics
-                          </Badge>
-                          {exam.total_marks && (
-                            <Badge variant="outline" className="text-xs px-2 py-1 pointer-events-none">
-                              Total: {exam.total_marks} marks
-                            </Badge>
-                          )}
-                        </div>
+                    </div>
+                    {exam.isEnrolled ? (
+                      <>
+                        <Progress 
+                          value={exam.progress} 
+                          variant={getProgressVariant(exam.progress || 0)}
+                          className="h-3" 
+                        />
+                        <p className="text-sm text-muted-foreground mt-2">
+                          {exam.completedTopics} of {exam.totalTopics} topics completed
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Progress value={0} className="h-3" />
+                        <p className="text-sm text-muted-foreground mt-2">
+                          0 of {exam.totalTopics} topics completed
+                        </p>
+                      </>
+                    )}
+                    
+                    {/* Mobile Stats */}
+                    <div className="flex sm:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+                      <div className="flex items-center gap-1 text-success text-sm">
+                        <Users className="h-4 w-4" />
+                        <span className="font-medium">{exam.enrolledStudents} students</span>
                       </div>
-                     </div>
+                      <Badge className="bg-primary/10 text-primary text-xs pointer-events-none">
+                        <BookOpen className="h-3 w-3 mr-1" />
+                        {exam.subjects.length} Subjects
+                      </Badge>
+                      <Badge className="bg-secondary/10 text-secondary text-xs pointer-events-none">
+                        <Target className="h-3 w-3 mr-1" />
+                        {exam.totalTopics} Topics
+                      </Badge>
+                      {exam.total_marks && (
+                        <Badge variant="outline" className="text-xs px-2 py-1 pointer-events-none">
+                          Total: {exam.total_marks} marks
+                        </Badge>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
-            </div>
 
-            {/* Filters Section */}
-            <Card className="mb-8">
-              <CardContent className="p-4 sm:p-6">
-                {/* Mobile Layout */}
-                <div className="block sm:hidden">
-                  <div className="text-sm font-semibold text-foreground mb-3">Filters & Sorting</div>
-                  <div className="space-y-3">
-                    {/* Status Filter */}
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Status</label>
-                      <div className="flex gap-2 flex-1">
-                        <Badge 
-                          variant={statusFilter === 'all' ? 'default' : 'outline'} 
-                          className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
-                          onClick={() => setStatusFilter('all')}
-                        >
-                          All
-                        </Badge>
-                        <Badge 
-                          variant={statusFilter === 'completed' ? 'default' : 'outline'} 
-                          className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
-                          onClick={() => setStatusFilter('completed')}
-                        >
-                          Completed
-                        </Badge>
-                        <Badge 
-                          variant={statusFilter === 'pending' ? 'default' : 'outline'} 
-                          className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
-                          onClick={() => setStatusFilter('pending')}
-                        >
-                          Pending
-                        </Badge>
+                {/* Container 2: Exam Countdown */}
+                <Card>
+                  <CardContent className="p-4 sm:p-6">
+                    {exam.exam_date ? (
+                      <ExamCountdown examDate={exam.exam_date} isTentative={exam.is_tentative ?? false} />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                        <span className="text-sm">Exam date not announced</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Container 3: Filters & Sorting */}
+                <Card>
+                  <CardContent className="p-4 sm:p-6">
+                    {/* Mobile & Tablet Layout */}
+                    <div className="block lg:hidden">
+                      <div className="text-sm font-semibold text-foreground mb-3">Filters & Sorting</div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Status</label>
+                          <div className="flex gap-2 flex-1">
+                            <Badge 
+                              variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                              className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
+                              onClick={() => setStatusFilter('all')}
+                            >
+                              All
+                            </Badge>
+                            <Badge 
+                              variant={statusFilter === 'completed' ? 'default' : 'outline'} 
+                              className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
+                              onClick={() => setStatusFilter('completed')}
+                            >
+                              Completed
+                            </Badge>
+                            <Badge 
+                              variant={statusFilter === 'pending' ? 'default' : 'outline'} 
+                              className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
+                              onClick={() => setStatusFilter('pending')}
+                            >
+                              Pending
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Difficulty</label>
+                          <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                            <SelectTrigger className="h-8 text-xs flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Levels</SelectItem>
+                              <SelectItem value="easy">Easy</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="hard">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Sort by</label>
+                          <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="h-8 text-xs flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="default">Default</SelectItem>
+                              <SelectItem value="marks-high">Marks (High to Low)</SelectItem>
+                              <SelectItem value="marks-low">Marks (Low to High)</SelectItem>
+                              <SelectItem value="difficulty-easy">Easy First</SelectItem>
+                              <SelectItem value="difficulty-hard">Hard First</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Difficulty Filter */}
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Difficulty</label>
-                      <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                        <SelectTrigger className="h-8 text-xs flex-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Levels</SelectItem>
-                          <SelectItem value="easy">Easy</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="hard">Hard</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {/* Sort By */}
-                    <div className="flex items-center gap-3">
-                      <label className="text-xs font-medium text-muted-foreground min-w-[60px]">Sort by</label>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="h-8 text-xs flex-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="default">Default</SelectItem>
-                          <SelectItem value="marks-high">Marks (High to Low)</SelectItem>
-                          <SelectItem value="marks-low">Marks (Low to High)</SelectItem>
-                          <SelectItem value="difficulty-easy">Easy First</SelectItem>
-                          <SelectItem value="difficulty-hard">Hard First</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Desktop Layout */}
-                <div className="hidden sm:block">
-                  <div className="text-sm font-semibold text-foreground mb-4">Filters & Sorting</div>
-                  <div className="flex items-center justify-between gap-6">
-                    <div className="flex items-center gap-6 flex-1">
-                      {/* Status Filter */}
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Status</label>
-                        <div className="flex gap-2">
+                    {/* Laptop Layout - All in one row */}
+                    <div className="hidden lg:block">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-sm font-semibold text-foreground whitespace-nowrap">Filters & Sorting</span>
+                        <div className="flex gap-1.5">
                           <Badge 
                             variant={statusFilter === 'all' ? 'default' : 'outline'} 
-                            className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
+                            className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
                             onClick={() => setStatusFilter('all')}
                           >
                             All
                           </Badge>
                           <Badge 
                             variant={statusFilter === 'completed' ? 'default' : 'outline'} 
-                            className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
+                            className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
                             onClick={() => setStatusFilter('completed')}
                           >
-                            Completed
+                            Done
                           </Badge>
                           <Badge 
                             variant={statusFilter === 'pending' ? 'default' : 'outline'} 
-                            className="text-sm px-3 py-1 cursor-pointer hover:bg-accent"
+                            className="text-xs px-2 py-1 cursor-pointer hover:bg-accent"
                             onClick={() => setStatusFilter('pending')}
                           >
                             Pending
                           </Badge>
                         </div>
-                      </div>
-                      
-                      {/* Difficulty Filter */}
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium text-muted-foreground min-w-[70px]">Difficulty</label>
                         <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                          <SelectTrigger className="w-[130px]">
+                          <SelectTrigger className="h-7 text-xs w-[100px]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -998,29 +987,24 @@ const ExamDetail = () => {
                             <SelectItem value="hard">Hard</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                      
-                      {/* Sort By */}
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium text-muted-foreground min-w-[50px]">Sort by</label>
                         <Select value={sortBy} onValueChange={setSortBy}>
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="h-7 text-xs w-[120px]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="default">Default</SelectItem>
-                            <SelectItem value="marks-high">Marks (High to Low)</SelectItem>
-                            <SelectItem value="marks-low">Marks (Low to High)</SelectItem>
+                            <SelectItem value="marks-high">Marks ↓</SelectItem>
+                            <SelectItem value="marks-low">Marks ↑</SelectItem>
                             <SelectItem value="difficulty-easy">Easy First</SelectItem>
                             <SelectItem value="difficulty-hard">Hard First</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
 
             {/* Subjects and Topics Header */}
             <div className="mb-4 flex items-center justify-between">
