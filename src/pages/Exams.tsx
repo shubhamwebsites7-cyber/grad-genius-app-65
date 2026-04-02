@@ -19,7 +19,7 @@ import {
 import { AddExamModal } from '@/components/AddExamModal';
 import { RequestExamModal } from '@/components/RequestExamModal';
 
-import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2, MessageSquarePlus } from 'lucide-react';
+import { BookOpen, Clock, Users, TrendingUp, Search, Plus, Filter, Loader2, MessageSquarePlus, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
