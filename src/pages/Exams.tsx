@@ -222,7 +222,9 @@ const Exams = () => {
           isEnrolled,
           progress: progress?.percentage,
           completedTopics: progress?.completed,
-          totalTopics
+          totalTopics,
+          exam_date: exam.exam_date || undefined,
+          is_tentative: exam.is_tentative ?? undefined,
         };
       });
 

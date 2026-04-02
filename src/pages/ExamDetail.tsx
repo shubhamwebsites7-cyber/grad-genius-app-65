@@ -815,6 +815,13 @@ const ExamDetail = () => {
                 </div>
               </div>
 
+              {/* Exam Date & Countdown */}
+              {exam.exam_date && (
+                <div className="mt-4">
+                  <ExamCountdown examDate={exam.exam_date} isTentative={exam.is_tentative ?? false} />
+                </div>
+              )}
+
               {/* Progress Section - Show for all users */}
               <Card className="mt-6">
                 <CardContent className="p-6">

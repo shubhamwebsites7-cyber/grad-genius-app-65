@@ -41,6 +41,8 @@ interface EnrolledExam {
   totalTopics: number;
   enrolledStudents: string;
   subjects: Subject[];
+  exam_date?: string;
+  is_tentative?: boolean;
 }
 
 const Dashboard = () => {
