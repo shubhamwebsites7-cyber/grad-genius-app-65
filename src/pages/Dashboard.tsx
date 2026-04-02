@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2 } from 'lucide-react';
+import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
