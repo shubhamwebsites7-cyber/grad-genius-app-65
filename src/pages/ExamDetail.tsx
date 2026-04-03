@@ -772,145 +772,122 @@ const ExamDetail = () => {
               Back to Exams
             </Button>
 
-            {/* Top Section */}
-            <div className="mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                <div className="flex-1">
-                  <div className="flex-1 min-w-0 mb-2">
-                    <h1 className="text-3xl font-bold text-foreground break-words">{exam.name}</h1>
-                      {exam.full_name && exam.full_name !== exam.name && (
-                        <p className="text-base text-muted-foreground mt-1">
-                          {exam.full_name}
-                        </p>
-                      )}
-                    </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      style={{
-                        backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
-                        color: exam.categoryColor || undefined,
-                        borderColor: exam.categoryColor || undefined
-                      }}
-                    >
-                      {exam.categoryName}
-                    </Badge>
-                  </div>
+            {/* Top Section: Header */}
+            <div className="mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                {/* Left: Name, Full Name, Description */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{exam.name}</h1>
+                  {exam.full_name && exam.full_name !== exam.name && (
+                    <p className="text-sm sm:text-base text-muted-foreground mt-1">{exam.full_name}</p>
+                  )}
                   {exam.description && (
-                    <p className="text-sm text-muted-foreground mt-3 max-w-2xl">
-                      {exam.description}
-                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground/80 mt-2 max-w-2xl">{exam.description}</p>
                   )}
                 </div>
                 
-                {/* Desktop Stats */}
-                <div className="hidden sm:flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2 text-success">
-                    <Users className="h-5 w-5" />
+                {/* Right: Category + Stats (desktop inline, mobile row below) */}
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <Badge
+                    style={{
+                      backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
+                      color: exam.categoryColor || undefined,
+                      borderColor: exam.categoryColor || undefined
+                    }}
+                  >
+                    {exam.categoryName}
+                  </Badge>
+                  <div className="flex items-center gap-1.5 text-success text-sm">
+                    <Users className="h-4 w-4" />
                     <span className="font-medium">{exam.enrolledStudents} students</span>
                   </div>
                   {exam.total_marks && (
-                    <Badge variant="outline" className="text-sm px-3 py-1 pointer-events-none">
+                    <Badge variant="outline" className="text-xs sm:text-sm px-2 py-0.5 pointer-events-none">
                       Total: {exam.total_marks} marks
                     </Badge>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Two cards: Progress + Countdown */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                {/* Card 1: Overall Progress */}
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-5">
-                    <CircularProgress
-                      progress={exam.progress || 0}
-                      completedTopics={exam.completedTopics || 0}
-                      totalTopics={exam.totalTopics}
-                      isEnrolled={exam.isEnrolled}
-                    />
-                    {/* Mobile Stats */}
-                    <div className="flex sm:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-                      <div className="flex items-center gap-1 text-success text-sm">
-                        <Users className="h-4 w-4" />
-                        <span className="font-medium">{exam.enrolledStudents} students</span>
-                      </div>
-                      {exam.total_marks && (
-                        <Badge variant="outline" className="text-xs px-2 py-1 pointer-events-none">
-                          Total: {exam.total_marks} marks
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Three Cards Row: Progress | Countdown | Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {/* Card 1: Overall Progress */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-5 h-full flex items-center">
+                  <CircularProgress
+                    progress={exam.progress || 0}
+                    completedTopics={exam.completedTopics || 0}
+                    totalTopics={exam.totalTopics}
+                    isEnrolled={exam.isEnrolled}
+                  />
+                </CardContent>
+              </Card>
 
-                {/* Card 2: Exam Countdown */}
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-5">
-                    {exam.exam_date ? (
-                      <ExamCountdown examDate={exam.exam_date} isTentative={exam.is_tentative ?? false} />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-4">
-                        <span className="text-sm">Exam date not announced</span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Card 2: Exam Countdown */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-5 h-full flex items-center justify-center">
+                  {exam.exam_date ? (
+                    <ExamCountdown examDate={exam.exam_date} isTentative={exam.is_tentative ?? false} />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-muted-foreground py-4">
+                      <span className="text-sm">Exam date not announced</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-              {/* Filters Section */}
-              <Card className="mt-4 border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="flex items-center gap-2 flex-wrap flex-1">
-                      <span className="text-sm font-semibold text-foreground whitespace-nowrap">Filters</span>
-                      <div className="flex gap-1.5">
-                        <Badge 
-                          variant={statusFilter === 'all' ? 'default' : 'outline'} 
-                          className="text-xs px-2.5 py-1 cursor-pointer hover:bg-accent"
-                          onClick={() => setStatusFilter('all')}
-                        >
-                          All
-                        </Badge>
-                        <Badge 
-                          variant={statusFilter === 'completed' ? 'default' : 'outline'} 
-                          className="text-xs px-2.5 py-1 cursor-pointer hover:bg-accent"
-                          onClick={() => setStatusFilter('completed')}
-                        >
-                          Done
-                        </Badge>
-                        <Badge 
-                          variant={statusFilter === 'pending' ? 'default' : 'outline'} 
-                          className="text-xs px-2.5 py-1 cursor-pointer hover:bg-accent"
-                          onClick={() => setStatusFilter('pending')}
-                        >
-                          Pending
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-                        <SelectTrigger className="h-8 text-xs w-[110px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Levels</SelectItem>
-                          <SelectItem value="easy">Easy</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="hard">Hard</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="h-8 text-xs w-[120px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="default">Default</SelectItem>
-                          <SelectItem value="marks-high">Marks ↓</SelectItem>
-                          <SelectItem value="marks-low">Marks ↑</SelectItem>
-                          <SelectItem value="difficulty-easy">Easy First</SelectItem>
-                          <SelectItem value="difficulty-hard">Hard First</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+              {/* Card 3: Filters */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm md:col-span-2 lg:col-span-1">
+                <CardContent className="p-5 h-full flex flex-col justify-center gap-3">
+                  <span className="text-sm font-semibold text-foreground">Filters & Sorting</span>
+                  <div className="flex gap-1.5">
+                    <Badge 
+                      variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                      className="text-xs px-2.5 py-1 cursor-pointer hover:bg-accent"
+                      onClick={() => setStatusFilter('all')}
+                    >
+                      All
+                    </Badge>
+                    <Badge 
+                      variant={statusFilter === 'completed' ? 'default' : 'outline'} 
+                      className="text-xs px-2.5 py-1 cursor-pointer hover:bg-accent"
+                      onClick={() => setStatusFilter('completed')}
+                    >
+                      Done
+                    </Badge>
+                    <Badge 
+                      variant={statusFilter === 'pending' ? 'default' : 'outline'} 
+                      className="text-xs px-2.5 py-1 cursor-pointer hover:bg-accent"
+                      onClick={() => setStatusFilter('pending')}
+                    >
+                      Pending
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                      <SelectTrigger className="h-8 text-xs flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Levels</SelectItem>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger className="h-8 text-xs flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="marks-high">Marks ↓</SelectItem>
+                        <SelectItem value="marks-low">Marks ↑</SelectItem>
+                        <SelectItem value="difficulty-easy">Easy First</SelectItem>
+                        <SelectItem value="difficulty-hard">Hard First</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </CardContent>
               </Card>
