@@ -15,10 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { 
   ArrowLeft, 
   Users, 
-  BookOpen, 
   Target, 
   ChevronDown, 
-  ChevronUp, 
   FolderOpen,
   Lock,
   ExpandIcon,
@@ -897,12 +895,15 @@ const ExamDetail = () => {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">Subjects and Topics</h2>
               <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate(`/exams/${exam.id}/resources`)}
+                asChild
+                size="sm" 
+                variant="secondary" 
+                className="h-8 px-3 text-xs"
               >
-                <BookOpen className="mr-2 h-4 w-4" />
-                Resources
+                <Link to={`/exams/${exam.id}/resources`}>
+                  <FolderOpen className="h-3 w-3 mr-1" />
+                  Resources
+                </Link>
               </Button>
             </div>
 
@@ -922,15 +923,9 @@ const ExamDetail = () => {
                               {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
                               <div className="flex items-center justify-between w-full" onClick={() => toggleSection(subject.id)}>
                                 <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
-                                {isExpanded ? (
-                                  <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
-                                    <ChevronUp className="h-5 w-5 text-black dark:text-white" />
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
-                                    <ChevronDown className="h-5 w-5 text-black dark:text-white" />
-                                  </div>
-                                )}
+                                <div className={`flex items-center justify-center h-8 w-8 flex-shrink-0 rounded-full bg-muted/80 transition-all duration-300 ${!isExpanded ? 'animate-subtle-pulse' : ''}`}>
+                                  <ChevronDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                </div>
                               </div>
                              
                              {/* Second row: Resources button + Marks (same row) */}
@@ -979,15 +974,9 @@ const ExamDetail = () => {
                                <div className="flex items-start justify-between w-full" onClick={() => toggleSection(subject.id)}>
                                   <CardTitle className="text-xl">{subject.name}</CardTitle>
                                   
-                                  {isExpanded ? (
-                                    <div className="flex items-center justify-center h-8 w-8">
-                                      <ChevronUp className="h-5 w-5 text-black dark:text-white" />
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-center h-8 w-8">
-                                      <ChevronDown className="h-5 w-5 text-black dark:text-white" />
-                                    </div>
-                                  )}
+                                   <div className={`flex items-center justify-center h-8 w-8 rounded-full bg-muted/80 transition-all duration-300 ${!isExpanded ? 'animate-subtle-pulse' : ''}`}>
+                                     <ChevronDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                   </div>
                                 </div>
                               
                               {/* Second row: Resources button + Marks badge */}
