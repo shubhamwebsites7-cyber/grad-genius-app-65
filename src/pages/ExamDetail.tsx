@@ -897,12 +897,15 @@ const ExamDetail = () => {
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-bold text-foreground">Subjects and Topics</h2>
               <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate(`/exams/${exam.id}/resources`)}
+                asChild
+                size="sm" 
+                variant="secondary" 
+                className="h-8 px-3 text-xs"
               >
-                <BookOpen className="mr-2 h-4 w-4" />
-                Resources
+                <Link to={`/exams/${exam.id}/resources`}>
+                  <FolderOpen className="h-3 w-3 mr-1" />
+                  Resources
+                </Link>
               </Button>
             </div>
 
