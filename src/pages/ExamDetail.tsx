@@ -976,15 +976,9 @@ const ExamDetail = () => {
                                <div className="flex items-start justify-between w-full" onClick={() => toggleSection(subject.id)}>
                                   <CardTitle className="text-xl">{subject.name}</CardTitle>
                                   
-                                  {isExpanded ? (
-                                    <div className="flex items-center justify-center h-8 w-8">
-                                      <ChevronUp className="h-5 w-5 text-black dark:text-white" />
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-center h-8 w-8">
-                                      <ChevronDown className="h-5 w-5 text-black dark:text-white" />
-                                    </div>
-                                  )}
+                                   <div className={`flex items-center justify-center h-8 w-8 rounded-full bg-muted/80 transition-all duration-300 ${!isExpanded ? 'animate-subtle-pulse' : ''}`}>
+                                     <ChevronDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                   </div>
                                 </div>
                               
                               {/* Second row: Resources button + Marks badge */}
