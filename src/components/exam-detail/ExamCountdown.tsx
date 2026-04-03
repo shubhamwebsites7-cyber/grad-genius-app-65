@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, CheckCircle } from 'lucide-react';
+import { Calendar, CheckCircle } from 'lucide-react';
 
 interface ExamCountdownProps {
   examDate: string;
@@ -13,7 +13,7 @@ export const ExamCountdown = ({ examDate, isTentative }: ExamCountdownProps) => 
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(getTimeLeft(examDate));
-    }, 60000); // update every minute
+    }, 1000);
     return () => clearInterval(timer);
   }, [examDate]);
 
@@ -49,32 +49,30 @@ export const ExamCountdown = ({ examDate, isTentative }: ExamCountdownProps) => 
           <span className="font-semibold">Exam Completed</span>
         </div>
       ) : (
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <div className="flex gap-3 text-sm">
-            {timeLeft.days > 0 && (
-              <span className="font-semibold text-foreground">
-                {timeLeft.days}<span className="text-muted-foreground font-normal ml-0.5">d</span>
-              </span>
-            )}
-            <span className="font-semibold text-foreground">
-              {timeLeft.hours}<span className="text-muted-foreground font-normal ml-0.5">h</span>
-            </span>
-            <span className="font-semibold text-foreground">
-              {timeLeft.minutes}<span className="text-muted-foreground font-normal ml-0.5">m</span>
-            </span>
-          </div>
+        <div className="flex items-center gap-3">
+          <TimeBlock value={timeLeft.days} label="d" />
+          <TimeBlock value={timeLeft.hours} label="h" />
+          <TimeBlock value={timeLeft.minutes} label="m" />
+          <TimeBlock value={timeLeft.seconds} label="s" />
         </div>
       )}
     </div>
   );
 };
 
+const TimeBlock = ({ value, label }: { value: number; label: string }) => (
+  <div className="flex items-baseline gap-0.5">
+    <span className="text-2xl font-bold text-foreground tabular-nums">{value}</span>
+    <span className="text-sm text-muted-foreground">{label}</span>
+  </div>
+);
+
 function getTimeLeft(examDate: string) {
   const diff = new Date(examDate).getTime() - Date.now();
-  if (diff <= 0) return { total: 0, days: 0, hours: 0, minutes: 0 };
+  if (diff <= 0) return { total: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((diff / (1000 * 60)) % 60);
-  return { total: diff, days, hours, minutes };
+  const seconds = Math.floor((diff / 1000) % 60);
+  return { total: diff, days, hours, minutes, seconds };
 }
