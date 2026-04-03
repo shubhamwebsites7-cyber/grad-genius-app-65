@@ -15,10 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { 
   ArrowLeft, 
   Users, 
-  BookOpen, 
   Target, 
   ChevronDown, 
-  ChevronUp, 
   FolderOpen,
   Lock,
   ExpandIcon,
