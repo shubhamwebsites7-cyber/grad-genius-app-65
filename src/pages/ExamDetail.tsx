@@ -925,15 +925,9 @@ const ExamDetail = () => {
                               {/* First row: Subject name (full width on left) + Arrow button (right side in same row) */}
                               <div className="flex items-center justify-between w-full" onClick={() => toggleSection(subject.id)}>
                                 <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
-                                {isExpanded ? (
-                                  <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
-                                    <ChevronUp className="h-5 w-5 text-black dark:text-white" />
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center h-8 w-8 flex-shrink-0">
-                                    <ChevronDown className="h-5 w-5 text-black dark:text-white" />
-                                  </div>
-                                )}
+                                <div className={`flex items-center justify-center h-8 w-8 flex-shrink-0 rounded-full bg-muted/80 transition-all duration-300 ${!isExpanded ? 'animate-subtle-pulse' : ''}`}>
+                                  <ChevronDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                </div>
                               </div>
                              
                              {/* Second row: Resources button + Marks (same row) */}
