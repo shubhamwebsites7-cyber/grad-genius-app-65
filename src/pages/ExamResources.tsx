@@ -23,39 +23,16 @@ import {
   Plus, 
   Search,
   Filter,
-  Star,
-  Youtube,
-  FileText,
-  ExternalLink,
   BookOpen,
-  Clock,
-  Users,
-  Bookmark,
-  BookmarkCheck,
   Loader2,
   AlertCircle,
   GraduationCap
 } from 'lucide-react';
-import { LockedResourceOverlay, FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
+import { FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
+import { ResourceCard, ResourceCardData } from '@/components/resources/ResourceCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-
-interface Resource {
-  id: string;
-  title: string;
-  description: string | null;
-  type: 'video' | 'pdf' | 'website';
-  url: string;
-  rating: number;
-  totalRatings: number;
-  userRating?: number;
-  dateAdded: Date;
-  isBookmarked?: boolean;
-  isPending?: boolean;
-  contributorName?: string;
-  contributorId?: string;
-}
 
 interface ExamData {
   id: string;
@@ -77,7 +54,7 @@ const ExamResources = () => {
     url: ''
   });
 
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [resources, setResources] = useState<ResourceCardData[]>([]);
   const [exam, setExam] = useState<ExamData | null>(null);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
@@ -92,7 +69,6 @@ const ExamResources = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch exam data
       const { data: examData, error: examError } = await supabase
         .from('exams')
         .select('id, name')
@@ -105,10 +81,8 @@ const ExamResources = () => {
 
       setExam(examData);
 
-      // Fetch exam-level resources (where topic_id = exam_id)
       let resourcesData: any[] = [];
 
-      // Fetch approved resources
       const { data: approvedData, error: approvedError } = await supabase
         .from('topic_resources')
         .select(`
@@ -125,7 +99,6 @@ const ExamResources = () => {
       if (approvedError) throw approvedError;
       resourcesData = approvedData || [];
 
-      // If user is logged in, also fetch their pending contributions
       if (user) {
         const { data: pendingData, error: pendingError } = await supabase
           .from('topic_resources')
@@ -147,70 +120,56 @@ const ExamResources = () => {
         }
       }
 
-      // Fetch ratings for all resources
       const resourceIds = resourcesData.map((r: any) => r.id);
-      
-      let ratingsMap: { [key: string]: { avg: number; count: number } } = {};
-      let userRatingsMap: { [key: string]: number } = {};
+      let userHelpfulSet = new Set<string>();
       let bookmarksSet = new Set<string>();
 
-      if (resourceIds.length > 0) {
-        // Fetch average ratings
-        const { data: ratingsData } = await supabase
+      if (resourceIds.length > 0 && user) {
+        // Fetch user's helpful votes (ratings = helpful votes)
+        const { data: userRatings } = await supabase
           .from('resource_ratings')
-          .select('resource_id, rating');
+          .select('resource_id')
+          .eq('user_id', user.id)
+          .in('resource_id', resourceIds);
 
-        if (ratingsData) {
-          ratingsData.forEach((r: any) => {
-            if (!ratingsMap[r.resource_id]) {
-              ratingsMap[r.resource_id] = { avg: 0, count: 0 };
-            }
-            ratingsMap[r.resource_id].avg += r.rating;
-            ratingsMap[r.resource_id].count += 1;
-          });
-
-          Object.keys(ratingsMap).forEach(id => {
-            ratingsMap[id].avg = ratingsMap[id].avg / ratingsMap[id].count;
-          });
+        if (userRatings) {
+          userRatings.forEach((r: any) => userHelpfulSet.add(r.resource_id));
         }
 
-        // Fetch user's ratings if logged in
-        if (user) {
-          const { data: userRatings } = await supabase
-            .from('resource_ratings')
-            .select('resource_id, rating')
-            .eq('user_id', user.id)
-            .in('resource_id', resourceIds);
+        const { data: bookmarks } = await supabase
+          .from('user_resource_bookmarks')
+          .select('resource_id')
+          .eq('user_id', user.id)
+          .in('resource_id', resourceIds);
 
-          if (userRatings) {
-            userRatings.forEach((r: any) => {
-              userRatingsMap[r.resource_id] = r.rating;
-            });
-          }
-
-          // Fetch user's bookmarks
-          const { data: bookmarks } = await supabase
-            .from('user_resource_bookmarks')
-            .select('resource_id')
-            .eq('user_id', user.id)
-            .in('resource_id', resourceIds);
-
-          if (bookmarks) {
-            bookmarks.forEach((b: any) => bookmarksSet.add(b.resource_id));
-          }
+        if (bookmarks) {
+          bookmarks.forEach((b: any) => bookmarksSet.add(b.resource_id));
         }
       }
 
-      // Map resources
-      const mappedResources: Resource[] = resourcesData.map((r: any) => ({
+      // Count helpful votes per resource
+      let helpfulMap: { [key: string]: number } = {};
+      if (resourceIds.length > 0) {
+        const { data: ratingsData } = await supabase
+          .from('resource_ratings')
+          .select('resource_id')
+          .in('resource_id', resourceIds);
+
+        if (ratingsData) {
+          ratingsData.forEach((r: any) => {
+            helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
+          });
+        }
+      }
+
+      const mappedResources: ResourceCardData[] = resourcesData.map((r: any) => ({
         id: r.id,
         title: r.title,
         description: r.description,
         type: r.resource_type as 'video' | 'pdf' | 'website',
         url: r.url,
-        rating: ratingsMap[r.id]?.avg || 0,
-        totalRatings: ratingsMap[r.id]?.count || 0,
-        userRating: userRatingsMap[r.id],
+        helpfulCount: helpfulMap[r.id] || 0,
+        userHelpful: userHelpfulSet.has(r.id),
         dateAdded: new Date(r.created_at),
         isBookmarked: bookmarksSet.has(r.id),
         isPending: !r.admin_approved,
@@ -233,40 +192,21 @@ const ExamResources = () => {
       (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    // Sort resources
     const sorted = filtered.sort((a, b) => {
       switch (sortBy) {
         case 'latest':
           return b.dateAdded.getTime() - a.dateAdded.getTime();
-        case 'popular':
-          return b.totalRatings - a.totalRatings;
-        case 'highest-rated':
-          return b.rating - a.rating;
+        case 'most-helpful':
+          return b.helpfulCount - a.helpfulCount;
+        case 'least-helpful':
+          return a.helpfulCount - b.helpfulCount;
         default:
           return 0;
       }
     });
 
     return sorted;
-  }, [resources, searchQuery, sortBy, subscription]);
-
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video': return Youtube;
-      case 'pdf': return FileText;
-      case 'website': return ExternalLink;
-      default: return BookOpen;
-    }
-  };
-
-  const getResourceButtonText = (type: string) => {
-    switch (type) {
-      case 'video': return 'Watch Video';
-      case 'pdf': return 'View PDF';
-      case 'website': return 'Visit Website';
-      default: return 'View Resource';
-    }
-  };
+  }, [resources, searchQuery, sortBy]);
 
   const handleAddResource = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,11 +216,10 @@ const ExamResources = () => {
       const resourceType = newResource.url.includes('youtube') || newResource.url.includes('youtu.be') ? 'video' :
                           newResource.url.includes('.pdf') ? 'pdf' : 'website';
 
-      // Add resource with exam_id as topic_id
       const { error } = await supabase
         .from('topic_resources')
         .insert({
-          topic_id: examId, // Store exam_id in topic_id field
+          topic_id: examId,
           title: newResource.title,
           description: newResource.description,
           resource_type: resourceType,
@@ -296,8 +235,6 @@ const ExamResources = () => {
       setNewResource({ title: '', description: '', url: '' });
       setShowAddForm(false);
       setShowSuccessDialog(true);
-      
-      // Refresh the resources list
       await fetchExamAndResources();
     } catch (error: any) {
       console.error('Error adding resource:', error);
@@ -309,58 +246,59 @@ const ExamResources = () => {
     }
   };
 
-  const handleRating = async (resourceId: string, rating: number) => {
+  const handleToggleHelpful = async (resourceId: string) => {
     if (!user) {
       toast({
         title: 'Login required',
-        description: 'Please login to rate resources.',
+        description: 'Please login to mark resources as helpful.',
         variant: 'destructive'
       });
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('resource_ratings')
-        .upsert({
-          resource_id: resourceId,
-          user_id: user.id,
-          rating,
-          updated_at: new Date().toISOString()
-        } as any, {
-          onConflict: 'resource_id,user_id'
-        });
+      const resource = resources.find(r => r.id === resourceId);
+      if (!resource) return;
 
-      if (error) throw error;
+      if (resource.userHelpful) {
+        // Remove helpful vote
+        const { error } = await supabase
+          .from('resource_ratings')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('resource_id', resourceId);
+        if (error) throw error;
 
-      // Update local state
-      setResources(prev => prev.map(resource => {
-        if (resource.id === resourceId) {
-          const oldUserRating = resource.userRating || 0;
-          const newTotalRatings = resource.userRating ? resource.totalRatings : resource.totalRatings + 1;
-          const oldTotal = resource.rating * resource.totalRatings;
-          const newTotal = oldTotal - oldUserRating + rating;
-          const newAvg = newTotalRatings > 0 ? newTotal / newTotalRatings : 0;
+        setResources(prev => prev.map(r =>
+          r.id === resourceId
+            ? { ...r, userHelpful: false, helpfulCount: r.helpfulCount - 1 }
+            : r
+        ));
+      } else {
+        // Add helpful vote
+        const { error } = await supabase
+          .from('resource_ratings')
+          .upsert({
+            resource_id: resourceId,
+            user_id: user.id,
+            rating: 5,
+            updated_at: new Date().toISOString()
+          } as any, {
+            onConflict: 'resource_id,user_id'
+          });
+        if (error) throw error;
 
-          return {
-            ...resource,
-            userRating: rating,
-            rating: newAvg,
-            totalRatings: newTotalRatings
-          };
-        }
-        return resource;
-      }));
-
-      toast({
-        title: 'Success',
-        description: 'Your rating has been saved.'
-      });
+        setResources(prev => prev.map(r =>
+          r.id === resourceId
+            ? { ...r, userHelpful: true, helpfulCount: r.helpfulCount + 1 }
+            : r
+        ));
+      }
     } catch (error: any) {
-      console.error('Error rating resource:', error);
+      console.error('Error toggling helpful:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save rating. Please try again.',
+        description: 'Failed to update. Please try again.',
         variant: 'destructive'
       });
     }
@@ -381,28 +319,23 @@ const ExamResources = () => {
       if (!resource) return;
 
       if (resource.isBookmarked) {
-        // Remove bookmark
         const { error } = await supabase
           .from('user_resource_bookmarks')
           .delete()
           .eq('user_id', user.id)
           .eq('resource_id', resourceId);
-
         if (error) throw error;
       } else {
-        // Add bookmark
         const { error } = await supabase
           .from('user_resource_bookmarks')
           .insert({
             user_id: user.id,
             resource_id: resourceId
           } as any);
-
         if (error) throw error;
       }
 
-      // Update local state
-      setResources(prev => prev.map(r => 
+      setResources(prev => prev.map(r =>
         r.id === resourceId ? { ...r, isBookmarked: !r.isBookmarked } : r
       ));
 
@@ -515,7 +448,6 @@ const ExamResources = () => {
 
           {/* Search and Filters */}
           <div className="space-y-4">
-            {/* Search Bar */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -526,7 +458,6 @@ const ExamResources = () => {
               />
             </div>
 
-            {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-muted-foreground" />
@@ -535,14 +466,13 @@ const ExamResources = () => {
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="latest">Latest Updates</SelectItem>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                    <SelectItem value="highest-rated">Highest Rated</SelectItem>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="most-helpful">Most Helpful</SelectItem>
+                    <SelectItem value="least-helpful">Least Helpful</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
-              {/* Add Resource Button */}
               <Button 
                 onClick={() => setShowAddForm(true)}
                 variant="outline"
@@ -619,145 +549,17 @@ const ExamResources = () => {
         {/* Resources Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredAndSortedResources.map((resource, index) => {
-            const IconComponent = getResourceIcon(resource.type);
             const isLocked = !subscription.isPremium && index >= FREE_RESOURCE_LIMIT;
             
             return (
-              <Card 
-                key={resource.id} 
-                className={`transition-all duration-200 group relative ${
-                  isLocked 
-                    ? 'opacity-70 cursor-not-allowed' 
-                    : 'hover:shadow-lg hover:scale-[1.02]'
-                } ${resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
-              >
-                {isLocked && <LockedResourceOverlay />}
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      resource.type === 'video' ? 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400' :
-                      resource.type === 'pdf' ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400' :
-                      'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400'
-                    }`}>
-                      <IconComponent className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-2">
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2 flex-1">
-                          {resource.title}
-                        </CardTitle>
-                        {resource.isPending && (
-                          <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20">
-                            Pending
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleBookmark(resource.id)}
-                      className={`shrink-0 hover:scale-110 transition-transform ${
-                        resource.isBookmarked ? 'text-primary' : ''
-                      }`}
-                      title={resource.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
-                    >
-                      {resource.isBookmarked ? (
-                        <BookmarkCheck className="h-4 w-4 fill-current" />
-                      ) : (
-                        <Bookmark className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  {/* Description */}
-                  {resource.description && (
-                    <CardDescription className="text-sm line-clamp-3">
-                      {resource.description}
-                    </CardDescription>
-                  )}
-
-                  {/* Rating */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">Rating</span>
-                      <span className="text-sm text-muted-foreground">
-                        {resource.totalRatings} reviews
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => handleRating(resource.id, star)}
-                          className="cursor-pointer hover:scale-110 transition-transform"
-                        >
-                          <Star
-                            className={`h-4 w-4 ${
-                              star <= (resource.userRating || resource.rating) 
-                                ? 'fill-warning text-warning' 
-                                : 'text-muted-foreground'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                      <span className="text-sm text-muted-foreground ml-1">
-                        ({resource.rating.toFixed(1)})
-                      </span>
-                    </div>
-                    {resource.userRating && (
-                      <p className="text-xs text-success">Your rating: {resource.userRating}/5</p>
-                    )}
-                  </div>
-
-                  {/* Contributor Info */}
-                  {resource.contributorName && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Users className="h-3 w-3" />
-                      Added by {resource.contributorId === user?.id ? 'You' : resource.contributorName}
-                    </div>
-                  )}
-
-                  {/* Meta Info */}
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {resource.dateAdded.toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  {!isLocked && (
-                    <Button 
-                      asChild 
-                      variant="hero" 
-                      className="w-full"
-                    >
-                      <a 
-                        href={resource.url} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2"
-                      >
-                        <IconComponent className="h-4 w-4" />
-                        {getResourceButtonText(resource.type)}
-                      </a>
-                    </Button>
-                  )}
-                  {isLocked && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full pointer-events-none"
-                      disabled
-                    >
-                      <IconComponent className="h-4 w-4 mr-2" />
-                      {getResourceButtonText(resource.type)}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                isLocked={isLocked}
+                userId={user?.id}
+                onBookmark={handleBookmark}
+                onToggleHelpful={handleToggleHelpful}
+              />
             );
           })}
         </div>

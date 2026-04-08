@@ -19,44 +19,17 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
-  ArrowLeft, 
   Plus, 
   Search,
   Filter,
-  Star,
-  Youtube,
-  FileText,
-  ExternalLink,
   BookOpen,
-  Clock,
-  Users,
-  Bookmark,
-  BookmarkCheck,
   Loader2,
-  AlertCircle
 } from 'lucide-react';
-import { LockedResourceOverlay, FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
+import { FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
+import { ResourceCard, ResourceCardData } from '@/components/resources/ResourceCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-
-interface Resource {
-  id: string;
-  title: string;
-  description: string | null;
-  type: 'video' | 'pdf' | 'website';
-  url: string;
-  rating: number;
-  totalRatings: number;
-  userRating?: number;
-  dateAdded: Date;
-  isBookmarked?: boolean;
-  topicId?: string;
-  topicName?: string;
-  isPending?: boolean;
-  contributorName?: string;
-  contributorId?: string;
-}
 
 interface TopicData {
   id: string;
@@ -87,7 +60,7 @@ const SectionResources = () => {
     topicId: ''
   });
 
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [resources, setResources] = useState<ResourceCardData[]>([]);
   const [section, setSection] = useState<TopicData | null>(null);
   const [availableTopics, setAvailableTopics] = useState<{ id: string; name: string; isSubject?: boolean }[]>([]);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -106,7 +79,7 @@ const SectionResources = () => {
 
       let isSubject = false;
       let topicIds: string[] = [];
-      let topicsMap: { [key: string]: string } = {}; // Map of topic_id -> topic_name
+      let topicsMap: { [key: string]: string } = {};
 
       // First, try to fetch as a topic
       let { data: topicData, error: topicError } = await supabase
@@ -144,7 +117,6 @@ const SectionResources = () => {
         const subject = subjectData as any;
         isSubject = true;
 
-        // Get exam info - use routeExamId if available, otherwise fallback to junction table
         let examInfo = { id: '', name: '' };
         if (routeExamId) {
           const { data: examData } = await supabase
@@ -175,7 +147,6 @@ const SectionResources = () => {
           difficulty: 'Medium',
         });
 
-        // Fetch all topics for this subject
         const { data: topicsData, error: topicsError } = await supabase
           .from('topics')
           .select('id, name')
@@ -189,7 +160,6 @@ const SectionResources = () => {
           topicsData.forEach((t: any) => {
             topicsMap[t.id] = t.name;
           });
-          // Add subject as first option, then all topics
           setAvailableTopics([
             { id: sectionId, name: `All ${subject.name} (Subject)`, isSubject: true },
             ...topicsData.map((t: any) => ({ id: t.id, name: t.name, isSubject: false }))
@@ -200,7 +170,6 @@ const SectionResources = () => {
         topicIds = [topic.id];
         topicsMap[topic.id] = topic.name;
         
-        // Fetch calculated difficulty and user rating
         let calculatedDifficulty: string | null = null;
         let userDifficultyRating: string | null = null;
 
@@ -221,7 +190,6 @@ const SectionResources = () => {
           }
         }
         
-        // Get exam info - use routeExamId if available, otherwise fallback to junction table
         let topicExamInfo = { id: '', name: '' };
         if (routeExamId) {
           const { data: examData } = await supabase
@@ -256,15 +224,11 @@ const SectionResources = () => {
         });
       }
 
-      // Fetch resources for the topic(s)
+      // Fetch resources
       let resourcesData: any[] = [];
-      
-      // Build the list of IDs to search for resources
-      // Include both topic IDs and section ID (for subject-level resources)
       const searchIds = isSubject ? [...topicIds, sectionId] : topicIds;
       
       if (searchIds.length > 0) {
-        // Fetch approved resources with contributor info
         const { data: approvedData, error: approvedError } = await supabase
           .from('topic_resources')
           .select(`
@@ -281,7 +245,6 @@ const SectionResources = () => {
         if (approvedError) throw approvedError;
         resourcesData = approvedData || [];
 
-        // If user is logged in, also fetch their pending contributions
         if (user) {
           const { data: pendingData, error: pendingError } = await supabase
             .from('topic_resources')
@@ -303,54 +266,40 @@ const SectionResources = () => {
           }
         }
       } else {
-        // If no topics found for subject, set empty resources
         setResources([]);
         setLoading(false);
         return;
       }
 
-      // Fetch ratings for all resources
       const resourceIds = (resourcesData || []).map((r: any) => r.id);
-      
-      let ratingsMap: { [key: string]: { avg: number; count: number } } = {};
-      let userRatingsMap: { [key: string]: number } = {};
+      let userHelpfulSet = new Set<string>();
       let bookmarksSet = new Set<string>();
+      let helpfulMap: { [key: string]: number } = {};
 
       if (resourceIds.length > 0) {
-        // Fetch average ratings
+        // Count helpful votes
         const { data: ratingsData } = await supabase
           .from('resource_ratings')
-          .select('resource_id, rating');
+          .select('resource_id')
+          .in('resource_id', resourceIds);
 
         if (ratingsData) {
           ratingsData.forEach((r: any) => {
-            if (!ratingsMap[r.resource_id]) {
-              ratingsMap[r.resource_id] = { avg: 0, count: 0 };
-            }
-            ratingsMap[r.resource_id].avg += r.rating;
-            ratingsMap[r.resource_id].count += 1;
-          });
-
-          Object.keys(ratingsMap).forEach(id => {
-            ratingsMap[id].avg = ratingsMap[id].avg / ratingsMap[id].count;
+            helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
           });
         }
 
-        // Fetch user's ratings if logged in
         if (user) {
           const { data: userRatings } = await supabase
             .from('resource_ratings')
-            .select('resource_id, rating')
+            .select('resource_id')
             .eq('user_id', user.id)
             .in('resource_id', resourceIds);
 
           if (userRatings) {
-            userRatings.forEach((r: any) => {
-              userRatingsMap[r.resource_id] = r.rating;
-            });
+            userRatings.forEach((r: any) => userHelpfulSet.add(r.resource_id));
           }
 
-          // Fetch user's bookmarks
           const { data: bookmarks } = await supabase
             .from('user_resource_bookmarks')
             .select('resource_id')
@@ -363,21 +312,18 @@ const SectionResources = () => {
         }
       }
 
-      // Map resources
-      const mappedResources: Resource[] = (resourcesData || []).map((r: any) => ({
+      const sectionRef = section;
+      const mappedResources: ResourceCardData[] = (resourcesData || []).map((r: any) => ({
         id: r.id,
         title: r.title,
         description: r.description,
         type: r.resource_type as 'video' | 'pdf' | 'website',
         url: r.url,
-        rating: ratingsMap[r.id]?.avg || 0,
-        totalRatings: ratingsMap[r.id]?.count || 0,
-        userRating: userRatingsMap[r.id],
+        helpfulCount: helpfulMap[r.id] || 0,
+        userHelpful: userHelpfulSet.has(r.id),
         dateAdded: new Date(r.created_at),
         isBookmarked: bookmarksSet.has(r.id),
-        topicId: r.topic_id,
-        // If topic_id matches sectionId (subject), show subject name, otherwise show topic name
-        topicName: r.topic_id === sectionId ? `${section?.name} (Subject)` : (topicsMap[r.topic_id] || 'Unknown Topic'),
+        topicName: r.topic_id === sectionId ? 'General' : (topicsMap[r.topic_id] || 'General'),
         isPending: !r.admin_approved,
         contributorName: r.contributor?.full_name || 'Anonymous',
         contributorId: r.contributed_by_user_id
@@ -398,52 +344,29 @@ const SectionResources = () => {
       (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    // Sort resources
     const sorted = filtered.sort((a, b) => {
       switch (sortBy) {
         case 'latest':
           return b.dateAdded.getTime() - a.dateAdded.getTime();
-        case 'popular':
-          return b.totalRatings - a.totalRatings;
-        case 'highest-rated':
-          return b.rating - a.rating;
+        case 'most-helpful':
+          return b.helpfulCount - a.helpfulCount;
+        case 'least-helpful':
+          return a.helpfulCount - b.helpfulCount;
         default:
           return 0;
       }
     });
 
     return sorted;
-  }, [resources, searchQuery, sortBy, subscription]);
-
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video': return Youtube;
-      case 'pdf': return FileText;
-      case 'website': return ExternalLink;
-      default: return BookOpen;
-    }
-  };
-
-  const getResourceButtonText = (type: string) => {
-    switch (type) {
-      case 'video': return 'Watch Video';
-      case 'pdf': return 'View PDF';
-      case 'website': return 'Visit Website';
-      default: return 'View Resource';
-    }
-  };
+  }, [resources, searchQuery, sortBy]);
 
   const handleAddResource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newResource.title || !newResource.url || !user || !section) return;
 
-    // Determine the topic ID to use
     const selectedId = newResource.topicId || section.id;
-    
-    // Check if a subject is selected (not a specific topic)
     const isSubjectSelected = availableTopics.find(t => t.id === selectedId && t.isSubject);
     
-    // Validate that we have a valid selection
     if (!selectedId) {
       toast({
         title: 'Error',
@@ -457,11 +380,10 @@ const SectionResources = () => {
       const resourceType = newResource.url.includes('youtube') || newResource.url.includes('youtu.be') ? 'video' :
                           newResource.url.includes('.pdf') ? 'pdf' : 'website';
 
-      // Add resource once - either to specific topic or to subject (section_id)
       const { error } = await supabase
         .from('topic_resources')
         .insert({
-          topic_id: selectedId, // Can be either topic_id or section_id (subject)
+          topic_id: selectedId,
           title: newResource.title,
           description: newResource.description,
           resource_type: resourceType,
@@ -477,8 +399,6 @@ const SectionResources = () => {
       setNewResource({ title: '', description: '', url: '', topicId: '' });
       setShowAddForm(false);
       setShowSuccessDialog(true);
-      
-      // Refresh the resources list to show the new pending resource
       await fetchSectionAndResources();
     } catch (error: any) {
       console.error('Error adding resource:', error);
@@ -490,64 +410,63 @@ const SectionResources = () => {
     }
   };
 
-  const handleRating = async (resourceId: string, rating: number) => {
+  const handleToggleHelpful = async (resourceId: string) => {
     if (!user) {
       toast({
         title: 'Login required',
-        description: 'Please login to rate resources.',
+        description: 'Please login to mark resources as helpful.',
         variant: 'destructive'
       });
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('resource_ratings')
-        .upsert({
-          resource_id: resourceId,
-          user_id: user.id,
-          rating,
-          updated_at: new Date().toISOString()
-        } as any, {
-          onConflict: 'resource_id,user_id'
-        });
+      const resource = resources.find(r => r.id === resourceId);
+      if (!resource) return;
 
-      if (error) throw error;
+      if (resource.userHelpful) {
+        const { error } = await supabase
+          .from('resource_ratings')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('resource_id', resourceId);
+        if (error) throw error;
 
-      // Update local state
-      setResources(prev => prev.map(resource => {
-        if (resource.id === resourceId) {
-          const oldUserRating = resource.userRating || 0;
-          const newTotalRatings = resource.userRating ? resource.totalRatings : resource.totalRatings + 1;
-          const oldTotal = resource.rating * resource.totalRatings;
-          const newTotal = oldTotal - oldUserRating + rating;
-          const newAvg = newTotalRatings > 0 ? newTotal / newTotalRatings : 0;
+        setResources(prev => prev.map(r =>
+          r.id === resourceId
+            ? { ...r, userHelpful: false, helpfulCount: r.helpfulCount - 1 }
+            : r
+        ));
+      } else {
+        const { error } = await supabase
+          .from('resource_ratings')
+          .upsert({
+            resource_id: resourceId,
+            user_id: user.id,
+            rating: 5,
+            updated_at: new Date().toISOString()
+          } as any, {
+            onConflict: 'resource_id,user_id'
+          });
+        if (error) throw error;
 
-          return {
-            ...resource,
-            userRating: rating,
-            rating: newAvg,
-            totalRatings: newTotalRatings
-          };
-        }
-        return resource;
-      }));
-
-      toast({
-        title: 'Rating saved',
-        description: 'Your rating has been saved.',
-      });
+        setResources(prev => prev.map(r =>
+          r.id === resourceId
+            ? { ...r, userHelpful: true, helpfulCount: r.helpfulCount + 1 }
+            : r
+        ));
+      }
     } catch (error: any) {
-      console.error('Error rating resource:', error);
+      console.error('Error toggling helpful:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save rating. Please try again.',
+        description: 'Failed to update. Please try again.',
         variant: 'destructive'
       });
     }
   };
 
-  const handleBookmark = async (resourceId: string, isCurrentlyBookmarked: boolean) => {
+  const handleBookmark = async (resourceId: string) => {
     if (!user) {
       toast({
         title: 'Login required',
@@ -558,13 +477,15 @@ const SectionResources = () => {
     }
 
     try {
-      if (isCurrentlyBookmarked) {
+      const resource = resources.find(r => r.id === resourceId);
+      if (!resource) return;
+
+      if (resource.isBookmarked) {
         const { error } = await supabase
           .from('user_resource_bookmarks')
           .delete()
           .eq('user_id', user.id)
           .eq('resource_id', resourceId);
-
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -573,22 +494,19 @@ const SectionResources = () => {
             user_id: user.id,
             resource_id: resourceId
           } as any);
-
         if (error) throw error;
       }
 
-      setResources(prev => prev.map(resource =>
-        resource.id === resourceId
-          ? { ...resource, isBookmarked: !isCurrentlyBookmarked }
-          : resource
+      setResources(prev => prev.map(r =>
+        r.id === resourceId ? { ...r, isBookmarked: !r.isBookmarked } : r
       ));
 
       toast({
-        title: isCurrentlyBookmarked ? 'Bookmark removed' : 'Bookmark added',
-        description: isCurrentlyBookmarked ? 'Resource removed from bookmarks.' : 'Resource added to bookmarks.',
+        title: 'Success',
+        description: resource.isBookmarked ? 'Bookmark removed' : 'Resource bookmarked'
       });
     } catch (error: any) {
-      console.error('Error bookmarking resource:', error);
+      console.error('Error toggling bookmark:', error);
       toast({
         title: 'Error',
         description: 'Failed to update bookmark. Please try again.',
@@ -621,7 +539,6 @@ const SectionResources = () => {
 
       if (error) throw error;
 
-      // Fetch updated calculated difficulty
       const { data: calcDiffData } = await (supabase as any)
         .rpc('get_topic_calculated_difficulty', { p_topic_id: section.id });
 
@@ -643,32 +560,6 @@ const SectionResources = () => {
         variant: 'destructive'
       });
     }
-  };
-
-  const renderStars = (rating: number, userRating?: number, onRate?: (rating: number) => void) => {
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            onClick={() => onRate?.(star)}
-            className={`${onRate ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform`}
-            disabled={!onRate}
-          >
-            <Star
-              className={`h-4 w-4 ${
-                star <= (userRating || rating) 
-                  ? 'fill-warning text-warning' 
-                  : 'text-muted-foreground'
-              }`}
-            />
-          </button>
-        ))}
-        <span className="text-sm text-muted-foreground ml-1">
-          ({rating.toFixed(1)})
-        </span>
-      </div>
-    );
   };
 
   if (loading) {
@@ -708,15 +599,10 @@ const SectionResources = () => {
         <title>Resources for {section.name} - {section.examName} | Examtrakr</title>
         <meta 
           name="description" 
-          content={`Study resources and materials for ${section.name} section of ${section.examName} exam on Examtrakr.`} 
-        />
-        <link rel="canonical" href={`/resources/${section.examId}/${sectionId}`} />
-        <meta name="robots" content="noindex, nofollow" />
-        <meta 
-          name="description" 
           content={`Explore curated resources for ${section.name} in ${section.examName}. Find videos, PDFs, and websites to enhance your preparation.`} 
         />
         <link rel="canonical" href={`/resources/${section.examId}/${section.id}`} />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-screen flex flex-col">
@@ -765,10 +651,10 @@ const SectionResources = () => {
                   {/* Topic Info */}
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge className="bg-primary/10 text-primary">
-                      {section.examName}
+                      {section.examName || 'General'}
                     </Badge>
                     <Badge className="bg-secondary/10 text-secondary">
-                      {section.subjectName}
+                      {section.subjectName || 'General'}
                     </Badge>
                     <Badge className={`${
                       (section.calculatedDifficulty || section.difficulty) === 'Easy' ? 'bg-success/10 text-success' :
@@ -788,7 +674,6 @@ const SectionResources = () => {
 
               {/* Search and Filters */}
               <div className="space-y-4">
-                {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
@@ -799,7 +684,6 @@ const SectionResources = () => {
                   />
                 </div>
 
-                {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-muted-foreground" />
@@ -808,14 +692,13 @@ const SectionResources = () => {
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="latest">Latest Updates</SelectItem>
-                        <SelectItem value="popular">Most Popular</SelectItem>
-                        <SelectItem value="highest-rated">Highest Rated</SelectItem>
+                        <SelectItem value="latest">Latest</SelectItem>
+                        <SelectItem value="most-helpful">Most Helpful</SelectItem>
+                        <SelectItem value="least-helpful">Least Helpful</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  {/* Add Resource Button */}
                   <Button 
                     onClick={() => setShowAddForm(true)}
                     variant="outline"
@@ -914,133 +797,18 @@ const SectionResources = () => {
 
             {/* Resources Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {filteredAndSortedResources.map((resource, index) => {
-                const IconComponent = getResourceIcon(resource.type);
+              {filteredAndSortedResources.map((resource, index) => {
                 const isLocked = !subscription.isPremium && index >= FREE_RESOURCE_LIMIT;
                 
                 return (
-                  <Card 
-                    key={resource.id} 
-                    className={`transition-all duration-200 group relative ${
-                      isLocked 
-                        ? 'opacity-70 cursor-not-allowed' 
-                        : 'hover:shadow-lg hover:scale-[1.02]'
-                    } ${resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
-                  >
-                    {isLocked && <LockedResourceOverlay />}
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          resource.type === 'video' ? 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400' :
-                          resource.type === 'pdf' ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400' :
-                          'bg-green-100 dark:bg-green-950 text-green-600 dark:text-green-400'
-                        }`}>
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-2">
-                            <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2 flex-1">
-                              {resource.title}
-                            </CardTitle>
-                            {resource.isPending && (
-                              <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/20">
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-                          {resource.topicName && (
-                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                              <BookOpen className="h-3 w-3" />
-                              {resource.topicName}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleBookmark(resource.id, resource.isBookmarked || false)}
-                          className={`shrink-0 hover:scale-110 transition-transform ${
-                            resource.isBookmarked ? 'text-primary' : ''
-                          }`}
-                          title={resource.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
-                        >
-                          {resource.isBookmarked ? (
-                            <BookmarkCheck className="h-4 w-4 fill-current" />
-                          ) : (
-                            <Bookmark className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-4">
-                      {/* Description */}
-                      {resource.description && (
-                        <CardDescription className="text-sm line-clamp-3">
-                          {resource.description}
-                        </CardDescription>
-                      )}
-
-                      {/* Rating */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-muted-foreground">Rating</span>
-                          <span className="text-sm text-muted-foreground">
-                            {resource.totalRatings} reviews
-                          </span>
-                        </div>
-                        {renderStars(resource.rating, resource.userRating, (rating) => handleRating(resource.id, rating))}
-                        {resource.userRating && (
-                          <p className="text-xs text-success">Your rating: {resource.userRating}/5</p>
-                        )}
-                      </div>
-
-                      {/* Contributor Info */}
-                      {resource.contributorName && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          Added by {resource.contributorId === user?.id ? 'You' : resource.contributorName}
-                        </div>
-                      )}
-
-                      {/* Meta Info */}
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {resource.dateAdded.toLocaleDateString()}
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      {!isLocked && (
-                        <Button 
-                          asChild 
-                          variant="hero" 
-                          className="w-full"
-                        >
-                          <a 
-                            href={resource.url} 
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2"
-                          >
-                            <IconComponent className="h-4 w-4" />
-                            {getResourceButtonText(resource.type)}
-                          </a>
-                        </Button>
-                      )}
-                      {isLocked && (
-                        <Button 
-                          variant="outline" 
-                          className="w-full pointer-events-none"
-                          disabled
-                        >
-                          <IconComponent className="h-4 w-4 mr-2" />
-                          {getResourceButtonText(resource.type)}
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <ResourceCard
+                    key={resource.id}
+                    resource={resource}
+                    isLocked={isLocked}
+                    userId={user?.id}
+                    onBookmark={handleBookmark}
+                    onToggleHelpful={handleToggleHelpful}
+                  />
                 );
               })}
             </div>
