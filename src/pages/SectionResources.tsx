@@ -438,8 +438,8 @@ const SectionResources = () => {
             : r
         ));
       } else {
-        const { error } = await supabase
-          .from('resource_votes' as any)
+        const { error } = await (supabase as any)
+          .from('resource_votes')
           .insert({
             resource_id: resourceId,
             user_id: user.id
