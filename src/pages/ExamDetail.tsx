@@ -1124,18 +1124,18 @@ const ExamDetail = () => {
                                        </div>
                                      </div>
                                      
-                                     {/* Locked Topic Overlay */}
-                                     {!topic.isAccessible && (
-                                       <div 
-                                         className="mt-2 cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
-                                         onClick={handleLockedTopicClick}
-                                       >
-                                         <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
-                                           <Lock className="h-3 w-3" />
-                                           Click to upgrade and unlock all topics
-                                         </div>
-                                       </div>
-                                     )}
+                                      {/* Locked Topic Overlay - inline on same card */}
+                                      {!topic.isAccessible && (
+                                        <div 
+                                          className="absolute inset-0 backdrop-blur-[2px] bg-background/25 z-10 flex items-center justify-center rounded-lg cursor-pointer"
+                                          onClick={handleLockedTopicClick}
+                                        >
+                                          <div className="text-xs text-warning font-medium bg-card p-3 rounded-lg shadow-lg border border-warning/20 flex items-center gap-2">
+                                            <Lock className="h-3.5 w-3.5" />
+                                            Unlock all topics
+                                          </div>
+                                        </div>
+                                      )}
                                    </div>
                                   
                                     {/* Desktop Layout */}
@@ -1226,15 +1226,15 @@ const ExamDetail = () => {
                                             className={`h-5 w-5 mt-0.5 ${!topic.isAccessible ? 'opacity-50' : ''}`}
                                           />
                                          
-                                         {/* Locked Topic Upgrade CTA */}
+                                         {/* Locked Topic Overlay - inline on same card */}
                                          {!topic.isAccessible && (
                                           <div 
-                                            className="cursor-pointer hover:bg-muted/50 transition-colors p-2 rounded"
+                                            className="absolute inset-0 backdrop-blur-[2px] bg-background/25 z-10 flex items-center justify-center rounded-lg cursor-pointer"
                                             onClick={handleLockedTopicClick}
                                           >
-                                            <div className="text-xs text-warning font-medium bg-warning/10 p-2 rounded border border-warning/20 flex items-center gap-2">
-                                              <Lock className="h-3 w-3" />
-                                              Click to upgrade and unlock all topics
+                                            <div className="text-xs text-warning font-medium bg-card p-3 rounded-lg shadow-lg border border-warning/20 flex items-center gap-2">
+                                              <Lock className="h-3.5 w-3.5" />
+                                              Unlock all topics
                                             </div>
                                           </div>
                                         )}

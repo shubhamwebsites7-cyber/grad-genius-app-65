@@ -347,18 +347,6 @@ export const UnifiedSubscriptionCard = () => {
             </>
           )}
 
-          {subscriptionData.isPremium && platform === 'google_play' && (
-            <Button variant="outline" className="w-full" asChild>
-              <a 
-                href="https://play.google.com/store/account/subscriptions" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Manage on Google Play
-              </a>
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>
