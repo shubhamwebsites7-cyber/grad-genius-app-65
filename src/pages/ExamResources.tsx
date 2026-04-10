@@ -125,15 +125,15 @@ const ExamResources = () => {
       let bookmarksSet = new Set<string>();
 
       if (resourceIds.length > 0 && user) {
-        // Fetch user's helpful votes (ratings = helpful votes)
-        const { data: userRatings } = await supabase
-          .from('resource_ratings')
+        // Fetch user's helpful votes from resource_votes
+        const { data: userVotes } = await supabase
+          .from('resource_votes' as any)
           .select('resource_id')
           .eq('user_id', user.id)
           .in('resource_id', resourceIds);
 
-        if (userRatings) {
-          userRatings.forEach((r: any) => userHelpfulSet.add(r.resource_id));
+        if (userVotes) {
+          (userVotes as any[]).forEach((r: any) => userHelpfulSet.add(r.resource_id));
         }
 
         const { data: bookmarks } = await supabase
@@ -147,16 +147,16 @@ const ExamResources = () => {
         }
       }
 
-      // Count helpful votes per resource
+      // Count helpful votes per resource from resource_votes
       let helpfulMap: { [key: string]: number } = {};
       if (resourceIds.length > 0) {
-        const { data: ratingsData } = await supabase
-          .from('resource_ratings')
+        const { data: votesData } = await supabase
+          .from('resource_votes' as any)
           .select('resource_id')
           .in('resource_id', resourceIds);
 
-        if (ratingsData) {
-          ratingsData.forEach((r: any) => {
+        if (votesData) {
+          (votesData as any[]).forEach((r: any) => {
             helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
           });
         }
@@ -261,9 +261,9 @@ const ExamResources = () => {
       if (!resource) return;
 
       if (resource.userHelpful) {
-        // Remove helpful vote
+        // Remove vote
         const { error } = await supabase
-          .from('resource_ratings')
+          .from('resource_votes' as any)
           .delete()
           .eq('user_id', user.id)
           .eq('resource_id', resourceId);
@@ -275,16 +275,12 @@ const ExamResources = () => {
             : r
         ));
       } else {
-        // Add helpful vote
+        // Add vote
         const { error } = await supabase
-          .from('resource_ratings')
-          .upsert({
+          .from('resource_votes' as any)
+          .insert({
             resource_id: resourceId,
-            user_id: user.id,
-            rating: 5,
-            updated_at: new Date().toISOString()
-          } as any, {
-            onConflict: 'resource_id,user_id'
+            user_id: user.id
           });
         if (error) throw error;
 

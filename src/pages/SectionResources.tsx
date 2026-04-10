@@ -277,27 +277,27 @@ const SectionResources = () => {
       let helpfulMap: { [key: string]: number } = {};
 
       if (resourceIds.length > 0) {
-        // Count helpful votes
-        const { data: ratingsData } = await supabase
-          .from('resource_ratings')
+        // Count helpful votes from resource_votes
+        const { data: votesData } = await supabase
+          .from('resource_votes' as any)
           .select('resource_id')
           .in('resource_id', resourceIds);
 
-        if (ratingsData) {
-          ratingsData.forEach((r: any) => {
+        if (votesData) {
+          (votesData as any[]).forEach((r: any) => {
             helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
           });
         }
 
         if (user) {
-          const { data: userRatings } = await supabase
-            .from('resource_ratings')
+          const { data: userVotes } = await supabase
+            .from('resource_votes' as any)
             .select('resource_id')
             .eq('user_id', user.id)
             .in('resource_id', resourceIds);
 
-          if (userRatings) {
-            userRatings.forEach((r: any) => userHelpfulSet.add(r.resource_id));
+          if (userVotes) {
+            (userVotes as any[]).forEach((r: any) => userHelpfulSet.add(r.resource_id));
           }
 
           const { data: bookmarks } = await supabase
@@ -426,7 +426,7 @@ const SectionResources = () => {
 
       if (resource.userHelpful) {
         const { error } = await supabase
-          .from('resource_ratings')
+          .from('resource_votes' as any)
           .delete()
           .eq('user_id', user.id)
           .eq('resource_id', resourceId);
@@ -439,14 +439,10 @@ const SectionResources = () => {
         ));
       } else {
         const { error } = await supabase
-          .from('resource_ratings')
-          .upsert({
+          .from('resource_votes' as any)
+          .insert({
             resource_id: resourceId,
-            user_id: user.id,
-            rating: 5,
-            updated_at: new Date().toISOString()
-          } as any, {
-            onConflict: 'resource_id,user_id'
+            user_id: user.id
           });
         if (error) throw error;
 
