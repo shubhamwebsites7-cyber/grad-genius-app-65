@@ -69,10 +69,8 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
 
   return (
     <Card
-      className={`transition-all duration-200 group relative ${
-        isLocked
-          ? 'opacity-70 cursor-not-allowed'
-          : 'hover:shadow-lg hover:scale-[1.02]'
+      className={`transition-all duration-200 relative ${
+        isLocked ? 'opacity-70 cursor-not-allowed' : ''
       } ${resource.isBookmarked ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
     >
       {isLocked && <LockedResourceOverlay />}
@@ -81,7 +79,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
         {/* Top: Title + Bookmark */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+            <h3 className="text-base font-semibold text-foreground line-clamp-2">
               {resource.title}
             </h3>
             {resource.topicName && resource.topicName !== 'Unknown Topic' && (
@@ -103,7 +101,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
               size="sm"
               variant="ghost"
               onClick={() => onBookmark(resource.id)}
-              className={`shrink-0 h-8 w-8 p-0 hover:scale-110 transition-transform ${
+              className={`shrink-0 h-8 w-8 p-0 ${
                 resource.isBookmarked ? 'text-primary' : ''
               }`}
               title={resource.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}

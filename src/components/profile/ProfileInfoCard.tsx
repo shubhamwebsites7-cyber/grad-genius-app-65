@@ -137,24 +137,6 @@ export const ProfileInfoCard = ({
               disabled={true}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
-            <Input
-              id="timezone"
-              name="timezone"
-              value={profileData.timezone}
-              disabled={true}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Member Since</Label>
-            <Input
-              value={profileData.created_at ? new Date(profileData.created_at).toLocaleDateString() : '-'}
-              disabled={true}
-            />
-          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
