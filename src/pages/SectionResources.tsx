@@ -147,15 +147,33 @@ const SectionResources = () => {
           difficulty: 'Medium',
         });
 
-        const { data: topicsData, error: topicsError } = await supabase
-          .from('topics')
-          .select('id, name')
-          .eq('subject_id', sectionId)
-          .eq('is_active', true);
+        // Fetch topics via exam_topics junction table for this exam + subject
+        let topicsData: any[] = [];
+        if (routeExamId) {
+          const { data: examTopicsData, error: examTopicsError } = await (supabase as any)
+            .from('exam_topics')
+            .select('topic_id, display_order, topics(id, name)')
+            .eq('exam_id', routeExamId)
+            .eq('subject_id', sectionId)
+            .eq('is_active', true)
+            .order('display_order');
 
-        if (topicsError) throw topicsError;
+          if (examTopicsError) throw examTopicsError;
+          topicsData = (examTopicsData || [])
+            .filter((et: any) => et.topics)
+            .map((et: any) => ({ id: et.topics.id, name: et.topics.name }));
+        } else {
+          // Fallback: fetch topics by subject_id
+          const { data: fallbackTopics, error: topicsError } = await supabase
+            .from('topics')
+            .select('id, name')
+            .eq('subject_id', sectionId)
+            .eq('is_active', true);
+          if (topicsError) throw topicsError;
+          topicsData = fallbackTopics || [];
+        }
         
-        if (topicsData && topicsData.length > 0) {
+        if (topicsData.length > 0) {
           topicIds = topicsData.map((t: any) => t.id);
           topicsData.forEach((t: any) => {
             topicsMap[t.id] = t.name;
