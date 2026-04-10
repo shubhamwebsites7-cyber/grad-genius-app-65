@@ -1029,12 +1029,12 @@ const ExamDetail = () => {
                               return (
                                   <div
                                    key={topic.id}
-                                   className={`p-2 sm:p-4 rounded-lg border sm:border-2 transition-all ${
+                                   className={`relative p-2 sm:p-4 rounded-lg border sm:border-2 transition-all ${
                                      topic.isAccessible
                                        ? topic.isCompleted
                                          ? 'border-border bg-muted/40'
                                          : 'border-border bg-card'
-                                       : 'border-muted bg-muted/20 opacity-70'
+                                       : 'border-muted bg-muted/20'
                                    }`}
                                  >
                                    {/* Mobile Layout */}
