@@ -50,9 +50,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const subscriptionData = data as any;
         const plan = subscriptionData.plan || {};
         
-        // Check if subscription is still valid
+        // Check if subscription is still valid - must be active status AND not expired
         const expiresAt = new Date(subscriptionData.expires_at);
-        const isValid = expiresAt > new Date();
+        const isValid = subscriptionData.status === 'active' && expiresAt > new Date();
 
         if (isValid) {
           setSubscription({

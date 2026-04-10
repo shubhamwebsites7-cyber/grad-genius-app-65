@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { CreditCard, Crown, Calendar, TrendingUp, Award, ExternalLink } from 'lucide-react';
+import { CreditCard, Crown, Calendar, TrendingUp, Award } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -347,18 +347,6 @@ export const UnifiedSubscriptionCard = () => {
             </>
           )}
 
-          {subscriptionData.isPremium && platform === 'google_play' && (
-            <Button variant="outline" className="w-full" asChild>
-              <a 
-                href="https://play.google.com/store/account/subscriptions" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Manage on Google Play
-              </a>
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

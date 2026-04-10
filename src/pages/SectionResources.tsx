@@ -147,15 +147,33 @@ const SectionResources = () => {
           difficulty: 'Medium',
         });
 
-        const { data: topicsData, error: topicsError } = await supabase
-          .from('topics')
-          .select('id, name')
-          .eq('subject_id', sectionId)
-          .eq('is_active', true);
+        // Fetch topics via exam_topics junction table for this exam + subject
+        let topicsData: any[] = [];
+        if (routeExamId) {
+          const { data: examTopicsData, error: examTopicsError } = await (supabase as any)
+            .from('exam_topics')
+            .select('topic_id, display_order, topics(id, name)')
+            .eq('exam_id', routeExamId)
+            .eq('subject_id', sectionId)
+            .eq('is_active', true)
+            .order('display_order');
 
-        if (topicsError) throw topicsError;
+          if (examTopicsError) throw examTopicsError;
+          topicsData = (examTopicsData || [])
+            .filter((et: any) => et.topics)
+            .map((et: any) => ({ id: et.topics.id, name: et.topics.name }));
+        } else {
+          // Fallback: fetch topics by subject_id
+          const { data: fallbackTopics, error: topicsError } = await supabase
+            .from('topics')
+            .select('id, name')
+            .eq('subject_id', sectionId)
+            .eq('is_active', true);
+          if (topicsError) throw topicsError;
+          topicsData = fallbackTopics || [];
+        }
         
-        if (topicsData && topicsData.length > 0) {
+        if (topicsData.length > 0) {
           topicIds = topicsData.map((t: any) => t.id);
           topicsData.forEach((t: any) => {
             topicsMap[t.id] = t.name;
@@ -277,27 +295,27 @@ const SectionResources = () => {
       let helpfulMap: { [key: string]: number } = {};
 
       if (resourceIds.length > 0) {
-        // Count helpful votes
-        const { data: ratingsData } = await supabase
-          .from('resource_ratings')
+        // Count helpful votes from resource_votes
+        const { data: votesData } = await supabase
+          .from('resource_votes' as any)
           .select('resource_id')
           .in('resource_id', resourceIds);
 
-        if (ratingsData) {
-          ratingsData.forEach((r: any) => {
+        if (votesData) {
+          (votesData as any[]).forEach((r: any) => {
             helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
           });
         }
 
         if (user) {
-          const { data: userRatings } = await supabase
-            .from('resource_ratings')
+          const { data: userVotes } = await supabase
+            .from('resource_votes' as any)
             .select('resource_id')
             .eq('user_id', user.id)
             .in('resource_id', resourceIds);
 
-          if (userRatings) {
-            userRatings.forEach((r: any) => userHelpfulSet.add(r.resource_id));
+          if (userVotes) {
+            (userVotes as any[]).forEach((r: any) => userHelpfulSet.add(r.resource_id));
           }
 
           const { data: bookmarks } = await supabase
@@ -426,7 +444,7 @@ const SectionResources = () => {
 
       if (resource.userHelpful) {
         const { error } = await supabase
-          .from('resource_ratings')
+          .from('resource_votes' as any)
           .delete()
           .eq('user_id', user.id)
           .eq('resource_id', resourceId);
@@ -438,15 +456,11 @@ const SectionResources = () => {
             : r
         ));
       } else {
-        const { error } = await supabase
-          .from('resource_ratings')
-          .upsert({
+        const { error } = await (supabase as any)
+          .from('resource_votes')
+          .insert({
             resource_id: resourceId,
-            user_id: user.id,
-            rating: 5,
-            updated_at: new Date().toISOString()
-          } as any, {
-            onConflict: 'resource_id,user_id'
+            user_id: user.id
           });
         if (error) throw error;
 
