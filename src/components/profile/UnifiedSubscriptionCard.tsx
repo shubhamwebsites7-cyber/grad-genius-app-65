@@ -157,7 +157,11 @@ export const UnifiedSubscriptionCard = () => {
         const subRecord = data as any;
         const plan = subRecord.subscription_plans;
         const planName = plan?.name || 'Free Plan';
-        const isPremium = plan?.name !== 'Free Plan' && plan?.name != null;
+        
+        // Premium check: status must be active AND not expired
+        const expiresAt = subRecord.expires_at ? new Date(subRecord.expires_at) : null;
+        const isValid = subRecord.status === 'active' && expiresAt && expiresAt > new Date();
+        const isPremium = isValid && plan?.name !== 'Free Plan' && plan?.name != null;
         
         setSubscriptionRecord(subRecord);
         setPlatform(subRecord.purchase_platform || 'cashfree');
@@ -165,7 +169,7 @@ export const UnifiedSubscriptionCard = () => {
 
         setSubscriptionData({
           plan: planName,
-          status: subRecord.status || 'Active',
+          status: isPremium ? 'active' : (expiresAt && expiresAt < new Date() ? 'expired' : subRecord.status || 'Active'),
           nextBilling: subRecord.expires_at 
             ? new Date(subRecord.expires_at).toLocaleDateString('en-IN', {
                 year: 'numeric',
@@ -174,7 +178,7 @@ export const UnifiedSubscriptionCard = () => {
               })
             : '-',
           price: plan?.name || '₹0',
-          isPremium: isPremium
+          isPremium: !!isPremium
         });
       }
     } catch (error) {
@@ -217,13 +221,20 @@ export const UnifiedSubscriptionCard = () => {
     return <div className="animate-pulse h-96 bg-muted rounded-lg" />;
   }
 
+  // Compute remaining days dynamically from expires_at
+  const dynamicRemainingDays = subscriptionRecord?.expires_at
+    ? Math.max(0, Math.floor((new Date(subscriptionRecord.expires_at).getTime() - Date.now()) / 86400000))
+    : 0;
+
   const { 
     total_days = 0, 
     elapsed_days = 0, 
-    remaining_days = 0, 
     progress_percentage = 0,
     accumulated_total_days = 0
   } = progressData || {};
+
+  // remaining_days is always dynamically computed
+  const remaining_days = dynamicRemainingDays;
 
   // Use accumulated_total_days if available, otherwise fall back to total_days
   const displayTotalDays = accumulated_total_days > 0 ? accumulated_total_days : total_days;
