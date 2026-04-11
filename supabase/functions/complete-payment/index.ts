@@ -91,9 +91,9 @@ serve(async (req)=>{
     }
     console.log('Found plan:', plan.name);
     
-    // Use the extend_subscription_with_trial function to handle trial days
+    // Use extend_subscription to create/extend subscription
     const { data: subscriptionResult, error: subscriptionError } = await supabaseClient
-      .rpc('extend_subscription_with_trial', {
+      .rpc('extend_subscription', {
         p_user_id: payment.user_id,
         p_plan_id: payment.plan_id,
         p_payment_id: payment.id,

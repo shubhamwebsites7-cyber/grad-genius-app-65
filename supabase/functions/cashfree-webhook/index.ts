@@ -195,9 +195,9 @@ serve(async (req)=>{
       const { data: plan, error: planError } = await supabase.from('subscription_plans').select('*').eq('id', payment.plan_id).single();
       if (planError || !plan) throw new Error(`Plan not found: ${planError?.message}`);
       
-      // Use extend_subscription_with_trial to handle trial accumulation
+      // Use extend_subscription to create/extend subscription
       const { data: subscriptionResult, error: subError } = await supabase
-        .rpc('extend_subscription_with_trial', {
+        .rpc('extend_subscription', {
           p_user_id: payment.user_id,
           p_plan_id: payment.plan_id,
           p_payment_id: payment.id,
