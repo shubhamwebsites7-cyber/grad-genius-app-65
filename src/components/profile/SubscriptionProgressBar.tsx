@@ -57,10 +57,12 @@ export const SubscriptionProgressBar = () => {
   const { 
     total_days, 
     elapsed_days, 
-    remaining_days, 
     progress_percentage,
     accumulated_total_days
   } = progressData;
+
+  // Compute remaining days dynamically — never trust DB-calculated value
+  const remaining_days = Math.max(0, total_days - elapsed_days);
 
   return (
     <Card>
