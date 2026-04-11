@@ -132,9 +132,9 @@ export const SubscriptionCard = () => {
         const plan = subRecord.subscription_plans;
         const lastPayment = subRecord.payments;
         
-        // Check if subscription is still valid
+        // Check if subscription is still valid — must be active AND not expired
         const expiresAt = new Date(subRecord.expires_at);
-        const isValid = expiresAt > new Date();
+        const isValid = subRecord.status === 'active' && expiresAt > new Date();
 
         if (isValid && lastPayment) {
           // Get pricing from last payment
