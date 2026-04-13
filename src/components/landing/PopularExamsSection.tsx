@@ -1,84 +1,20 @@
 import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Users, BookOpen, Clock } from 'lucide-react';
+import { ArrowRight, Users, BookOpen, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-const GRADIENTS = [
-  { gradient: 'from-rose-500 to-pink-600', bgGradient: 'from-rose-50 to-pink-50 dark:from-rose-950/20 dark:to-pink-950/20' },
-  { gradient: 'from-blue-500 to-cyan-600', bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20' },
-  { gradient: 'from-violet-500 to-purple-600', bgGradient: 'from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20' },
-  { gradient: 'from-orange-500 to-amber-600', bgGradient: 'from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20' },
-  { gradient: 'from-emerald-500 to-teal-600', bgGradient: 'from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20' },
-  { gradient: 'from-indigo-500 to-blue-600', bgGradient: 'from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20' },
-];
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 const formatStudentCount = (count: number): string => {
   if (count >= 100000) return `${Math.floor(count / 100000)}L+`;
   if (count >= 1000) return `${Math.floor(count / 1000)}K+`;
   return `${count}+`;
 };
-
-interface ExamCardProps {
-  name: string;
-  fullName: string;
-  students: string;
-  topics: string;
-  gradient: string;
-  bgGradient: string;
-  index: number;
-}
-
-const ExamCard = React.memo(({ name, fullName, students, topics, gradient, bgGradient, index }: ExamCardProps) => (
-  <Card 
-    className={`overflow-hidden animate-fade-in bg-gradient-to-br ${bgGradient}`}
-    style={{ animationDelay: `${index * 0.1}s` }}
-  >
-    <CardContent className="p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className={`text-3xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-1`}>
-            {name}
-          </h3>
-          <p className="text-sm text-muted-foreground line-clamp-1">
-            {fullName}
-          </p>
-        </div>
-        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${gradient} opacity-10`}></div>
-      </div>
-
-      <div className="space-y-3 mb-6">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Users className="h-4 w-4 mr-2 text-primary" />
-          <span className="font-semibold text-foreground">{students}</span>
-          <span className="ml-1">Students</span>
-        </div>
-        <div className="flex items-center text-sm text-muted-foreground">
-          <BookOpen className="h-4 w-4 mr-2 text-primary" />
-          <span className="font-semibold text-foreground">{topics}</span>
-          <span className="ml-1">Topics</span>
-        </div>
-      </div>
-
-      <Button 
-        variant="outline" 
-        className="w-full"
-        asChild
-      >
-        <Link to="/signup">
-          Start Tracking
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Link>
-      </Button>
-    </CardContent>
-  </Card>
-));
-
-ExamCard.displayName = 'ExamCard';
 
 const LoadingSkeleton = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -97,46 +33,121 @@ const LoadingSkeleton = () => (
 );
 
 export const PopularExamsSection: React.FC = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [enrollingId, setEnrollingId] = React.useState<string | null>(null);
+
   const { data: exams, isLoading } = useQuery({
-    queryKey: ['popular-exams-landing'],
+    queryKey: ['popular-exams-landing', user?.id],
     queryFn: async () => {
-      // Fetch top 6 exams by enrollment count
+      // Fetch top 6 exams with category
       const { data: examsData, error } = await supabase
         .from('exams')
-        .select('id, name, full_name, enrollment_count')
+        .select(`
+          id, name, full_name, enrollment_count,
+          exam_categories(id, name, color)
+        `)
         .eq('is_active', true)
         .order('enrollment_count', { ascending: false })
         .limit(6);
 
       if (error) throw error;
 
-      // Fetch topic counts per exam via exam_topics junction
-      const examIds = (examsData || []).map(e => e.id);
-      const { data: topicCounts } = await (supabase as any)
-        .from('exam_topics')
-        .select('exam_id')
-        .in('exam_id', examIds)
-        .eq('is_active', true);
+      const examIds = (examsData || []).map((e: any) => e.id);
 
-      // Count topics per exam
+      // Fetch subjects and topic counts in parallel
+      const [subjectsRes, topicsRes, enrollmentsRes] = await Promise.all([
+        (supabase as any)
+          .from('exam_subjects')
+          .select('exam_id, subjects(id, name)')
+          .in('exam_id', examIds)
+          .eq('is_active', true),
+        (supabase as any)
+          .from('exam_topics')
+          .select('exam_id')
+          .in('exam_id', examIds)
+          .eq('is_active', true),
+        user
+          ? supabase
+              .from('user_exam_enrollments')
+              .select('exam_id')
+              .eq('user_id', user.id)
+              .eq('is_active', true)
+              .in('exam_id', examIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+
       const topicCountMap: Record<string, number> = {};
-      (topicCounts || []).forEach((t: any) => {
+      (topicsRes.data || []).forEach((t: any) => {
         topicCountMap[t.exam_id] = (topicCountMap[t.exam_id] || 0) + 1;
       });
 
-      return (examsData || []).map((exam: any, index: number) => ({
+      const subjectMap: Record<string, { id: string; name: string }[]> = {};
+      (subjectsRes.data || []).forEach((es: any) => {
+        if (!subjectMap[es.exam_id]) subjectMap[es.exam_id] = [];
+        if (es.subjects) subjectMap[es.exam_id].push(es.subjects);
+      });
+
+      const enrolledSet = new Set(
+        ((enrollmentsRes as any).data || []).map((e: any) => e.exam_id)
+      );
+
+      return (examsData || []).map((exam: any) => ({
+        id: exam.id,
         name: exam.name,
         fullName: exam.full_name || exam.name,
         students: formatStudentCount(exam.enrollment_count || 0),
-        topics: `${topicCountMap[exam.id] || 0}+`,
-        ...GRADIENTS[index % GRADIENTS.length],
+        topics: topicCountMap[exam.id] || 0,
+        subjects: subjectMap[exam.id] || [],
+        categoryName: exam.exam_categories?.name || 'General',
+        categoryColor: exam.exam_categories?.color || undefined,
+        isEnrolled: enrolledSet.has(exam.id),
       }));
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
 
-  const totalExams = useMemo(() => exams?.length || 0, [exams]);
+  const handleEnroll = async (examId: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      setEnrollingId(examId);
+      const { data: subData } = await supabase
+        .from('user_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (!subData) {
+        const { count } = await supabase
+          .from('user_exam_enrollments')
+          .select('exam_id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_active', true);
+        if (count && count >= 1) {
+          navigate('/pricing');
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('user_exam_enrollments')
+        .insert({ user_id: user.id, exam_id: examId, is_active: true } as any);
+      if (error) throw error;
+
+      toast({ title: 'Enrolled Successfully' });
+      // Refetch will update the card
+    } catch (err: any) {
+      toast({ title: 'Enrollment Failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setEnrollingId(null);
+    }
+  };
 
   return (
     <section className="py-24 bg-background">
@@ -163,7 +174,88 @@ export const PopularExamsSection: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {(exams || []).map((exam, index) => (
-              <ExamCard key={exam.name} {...exam} index={index} />
+              <Card
+                key={exam.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-xl">{exam.name}</CardTitle>
+                    <Badge
+                      className="flex-shrink-0 text-xs"
+                      style={{
+                        backgroundColor: exam.categoryColor ? `${exam.categoryColor}20` : undefined,
+                        color: exam.categoryColor || undefined,
+                        borderColor: exam.categoryColor || undefined,
+                      }}
+                    >
+                      {exam.categoryName}
+                    </Badge>
+                  </div>
+                  {exam.fullName !== exam.name && (
+                    <p className="text-sm text-muted-foreground line-clamp-1">{exam.fullName}</p>
+                  )}
+                  {/* Subject badges */}
+                  {exam.subjects.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {exam.subjects.slice(0, 4).map((s: any) => (
+                        <Badge key={s.id} variant="outline" className="text-xs">
+                          {s.name}
+                        </Badge>
+                      ))}
+                      {exam.subjects.length > 4 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{exam.subjects.length - 4}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4 pt-0">
+                  {/* Stats */}
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{exam.students}</span>
+                      <span className="ml-1">Students</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-foreground">{exam.topics}</span>
+                      <span className="ml-1">Topics</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons - same as Exams page */}
+                  <div className="flex gap-3">
+                    {exam.isEnrolled ? (
+                      <Button asChild variant="hero" className="flex-1">
+                        <Link to={`/exam/${exam.id}`}>Continue</Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="hero"
+                        className="flex-1"
+                        onClick={() => handleEnroll(exam.id)}
+                        disabled={enrollingId === exam.id}
+                      >
+                        {enrollingId === exam.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Enrolling...
+                          </>
+                        ) : (
+                          'Enroll'
+                        )}
+                      </Button>
+                    )}
+                    <Button variant="outline" className="flex-1" asChild>
+                      <Link to={`/exam/${exam.id}`}>View Details</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
