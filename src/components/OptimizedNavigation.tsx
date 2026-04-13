@@ -311,7 +311,7 @@ export const Navigation = memo(() => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-t border-border/50 z-50 shadow-lg">
         <nav className="flex justify-around items-center h-16 px-2">
-          {navItems.map((item) => (
+          {navItems.filter(item => !(item as any).desktopOnly).map((item) => (
             <Link
               key={item.name}
               to={item.href}
