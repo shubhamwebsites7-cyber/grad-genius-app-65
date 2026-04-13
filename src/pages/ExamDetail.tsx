@@ -16,6 +16,7 @@ import {
   ArrowLeft, 
   Users, 
   Target, 
+  ChevronsDown,
   ChevronDown, 
   FolderOpen,
   Lock,
@@ -924,7 +925,7 @@ const ExamDetail = () => {
                               <div className="flex items-center justify-between w-full" onClick={() => toggleSection(subject.id)}>
                                 <CardTitle className="text-lg flex-1">{subject.name}</CardTitle>
                                 <div className={`flex items-center justify-center h-8 w-8 flex-shrink-0 rounded-full bg-muted/80 transition-all duration-300 ${!isExpanded ? 'animate-subtle-pulse' : ''}`}>
-                                  <ChevronDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                  <ChevronsDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
                               </div>
                              
@@ -975,7 +976,7 @@ const ExamDetail = () => {
                                   <CardTitle className="text-xl">{subject.name}</CardTitle>
                                   
                                    <div className={`flex items-center justify-center h-8 w-8 rounded-full bg-muted/80 transition-all duration-300 ${!isExpanded ? 'animate-subtle-pulse' : ''}`}>
-                                     <ChevronDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                     <ChevronsDown className={`h-5 w-5 text-foreground transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                    </div>
                                 </div>
                               

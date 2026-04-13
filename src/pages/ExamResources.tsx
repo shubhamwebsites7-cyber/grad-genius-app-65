@@ -28,7 +28,7 @@ import {
   AlertCircle,
   GraduationCap
 } from 'lucide-react';
-import { FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
+
 import { ResourceCard, ResourceCardData } from '@/components/resources/ResourceCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -545,7 +545,7 @@ const ExamResources = () => {
         {/* Resources Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredAndSortedResources.map((resource, index) => {
-            const isLocked = !subscription.isPremium && index >= FREE_RESOURCE_LIMIT;
+            const isLocked = !subscription.isPremium;
             
             return (
               <ResourceCard
