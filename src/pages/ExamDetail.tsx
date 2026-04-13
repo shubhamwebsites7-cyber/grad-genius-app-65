@@ -16,7 +16,7 @@ import {
   ArrowLeft, 
   Users, 
   Target, 
-  ChevronDown, 
+  ChevronsDown, 
   FolderOpen,
   Lock,
   ExpandIcon,

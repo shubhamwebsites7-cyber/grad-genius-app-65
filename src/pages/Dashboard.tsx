@@ -385,11 +385,11 @@ const Dashboard = () => {
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {enrolledExams.map((exam) => (
-                  <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
+                  <Card key={exam.id} className="group">
                     <CardHeader>
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex-1">
-                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                          <CardTitle className="text-xl">
                             {exam.name}
                           </CardTitle>
                           <CardDescription className="mt-2">

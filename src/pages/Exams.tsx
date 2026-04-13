@@ -465,7 +465,7 @@ const Exams = () => {
             {/* Exam Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {paginatedExams.map((exam) => (
-                <Card key={exam.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group">
+                <Card key={exam.id} className="group">
                   <CardHeader className="pb-4">
                     {/* Mobile Layout */}
                     <div className="md:hidden space-y-3">
@@ -484,7 +484,7 @@ const Exams = () => {
                       </div>
                       
                       {/* Exam Name */}
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                      <CardTitle className="text-xl">
                         {exam.name}
                       </CardTitle>
                       
@@ -524,7 +524,7 @@ const Exams = () => {
                     <div className="hidden md:block">
                       <div className="flex justify-between items-start gap-3 mb-3">
                         {/* Left: Exam Name */}
-                        <CardTitle className="text-xl group-hover:text-primary transition-colors flex-1">
+                        <CardTitle className="text-xl flex-1">
                           {exam.name}
                         </CardTitle>
                         
