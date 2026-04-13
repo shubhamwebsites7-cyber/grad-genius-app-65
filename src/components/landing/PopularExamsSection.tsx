@@ -199,16 +199,11 @@ export const PopularExamsSection: React.FC = () => {
                   {/* Subject badges */}
                   {exam.subjects.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      {exam.subjects.slice(0, 4).map((s: any) => (
+                      {exam.subjects.map((s: any) => (
                         <Badge key={s.id} variant="outline" className="text-xs">
                           {s.name}
                         </Badge>
                       ))}
-                      {exam.subjects.length > 4 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{exam.subjects.length - 4}
-                        </Badge>
-                      )}
                     </div>
                   )}
                 </CardHeader>
