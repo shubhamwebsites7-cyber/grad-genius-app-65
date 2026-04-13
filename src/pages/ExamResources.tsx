@@ -28,7 +28,7 @@ import {
   AlertCircle,
   GraduationCap
 } from 'lucide-react';
-import { LockedResourceOverlay } from '@/components/resources/LockedResourceOverlay';
+
 import { ResourceCard, ResourceCardData } from '@/components/resources/ResourceCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
