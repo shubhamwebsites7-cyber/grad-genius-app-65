@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen, Smartphone } from 'lucide-react';
+import { Menu, X, Home, User, BarChart3, CreditCard, LogOut, Download, UserCircle, BookOpen, Smartphone, Timer } from 'lucide-react';
 import examtrackerIcon from '@/assets/srcassetsexamtracker-icon.jpeg';
 
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.examtrakr.android';
@@ -23,6 +23,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Exams', href: '/exams', icon: BookOpen },
+  { name: 'Pomodoro', href: '/pomodoro', icon: Timer },
   { name: 'Pricing', href: '/pricing', icon: CreditCard },
   { name: 'Profile', href: '/profile', icon: User },
 ];
