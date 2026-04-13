@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .select('*, plan:subscription_plans(*)')
+        .select('id, user_id, status, expires_at, created_at, plan:subscription_plans(id, name)')
         .eq('user_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
