@@ -25,7 +25,7 @@ import {
   BookOpen,
   Loader2,
 } from 'lucide-react';
-import { FREE_RESOURCE_LIMIT } from '@/components/resources/LockedResourceOverlay';
+import { LockedResourceOverlay } from '@/components/resources/LockedResourceOverlay';
 import { ResourceCard, ResourceCardData } from '@/components/resources/ResourceCard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
