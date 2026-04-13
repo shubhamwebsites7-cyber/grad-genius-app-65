@@ -86,7 +86,16 @@ const ExamResources = () => {
       const { data: approvedData, error: approvedError } = await supabase
         .from('topic_resources')
         .select(`
-          *,
+          id,
+          title,
+          description,
+          resource_type,
+          url,
+          is_premium,
+          admin_approved,
+          created_at,
+          contributed_by_user_id,
+          topic_id,
           contributor:users!topic_resources_contributed_by_user_id_fkey(
             id,
             full_name
@@ -103,7 +112,16 @@ const ExamResources = () => {
         const { data: pendingData, error: pendingError } = await supabase
           .from('topic_resources')
           .select(`
-            *,
+            id,
+            title,
+            description,
+            resource_type,
+            url,
+            is_premium,
+            admin_approved,
+            created_at,
+            contributed_by_user_id,
+            topic_id,
             contributor:users!topic_resources_contributed_by_user_id_fkey(
               id,
               full_name
