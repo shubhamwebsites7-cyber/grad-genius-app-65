@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2, Calendar } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2, Calendar, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +25,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+
+const PerformanceAnalytics = lazy(() => import('@/components/dashboard/PerformanceAnalytics'));
 
 interface Subject {
   name: string;
