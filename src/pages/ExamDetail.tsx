@@ -1070,14 +1070,29 @@ const ExamDetail = () => {
                                            {topic.difficulty}
                                          </Badge>
                                          {topic.isAccessible && (
-                                           <DropdownMenu>
-                                             <DropdownMenuTrigger asChild>
-                                               <Button 
-                                                 variant="ghost" 
-                                                 size="sm" 
-                                                 className="h-6 px-2 text-xs flex items-center gap-1"
-                                                 onClick={(e) => e.stopPropagation()}
-                                               >
+                                            <DropdownMenu modal={false}>
+                                              <DropdownMenuTrigger asChild>
+                                                <Button 
+                                                  variant="ghost" 
+                                                  size="sm" 
+                                                  className="h-6 px-2 text-xs flex items-center gap-1"
+                                                  onClick={(e) => e.stopPropagation()}
+                                                  onPointerDown={(e) => {
+                                                    // Only allow mouse clicks and direct taps, not touch drags
+                                                    if (e.pointerType === 'touch') {
+                                                      (e.currentTarget as HTMLElement).dataset.touchStartY = String(e.clientY);
+                                                    }
+                                                  }}
+                                                  onPointerUp={(e) => {
+                                                    if (e.pointerType === 'touch') {
+                                                      const startY = Number((e.currentTarget as HTMLElement).dataset.touchStartY || 0);
+                                                      if (Math.abs(e.clientY - startY) > 10) {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                      }
+                                                    }
+                                                  }}
+                                                >
                                                  <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
                                                  <ChevronDown className="h-3 w-3" />
                                                </Button>
@@ -1164,14 +1179,28 @@ const ExamDetail = () => {
                                                {topic.difficulty}
                                              </Badge>
                                              {topic.isAccessible && (
-                                               <DropdownMenu>
-                                                 <DropdownMenuTrigger asChild>
-                                                   <Button 
-                                                     variant="ghost" 
-                                                     size="sm" 
-                                                     className="h-6 px-2 text-xs flex items-center gap-1"
-                                                     onClick={(e) => e.stopPropagation()}
-                                                   >
+                                                <DropdownMenu modal={false}>
+                                                  <DropdownMenuTrigger asChild>
+                                                    <Button 
+                                                      variant="ghost" 
+                                                      size="sm" 
+                                                      className="h-6 px-2 text-xs flex items-center gap-1"
+                                                      onClick={(e) => e.stopPropagation()}
+                                                      onPointerDown={(e) => {
+                                                        if (e.pointerType === 'touch') {
+                                                          (e.currentTarget as HTMLElement).dataset.touchStartY = String(e.clientY);
+                                                        }
+                                                      }}
+                                                      onPointerUp={(e) => {
+                                                        if (e.pointerType === 'touch') {
+                                                          const startY = Number((e.currentTarget as HTMLElement).dataset.touchStartY || 0);
+                                                          if (Math.abs(e.clientY - startY) > 10) {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                          }
+                                                        }
+                                                      }}
+                                                    >
                                                      <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
                                                      <ChevronDown className="h-3 w-3" />
                                                    </Button>
