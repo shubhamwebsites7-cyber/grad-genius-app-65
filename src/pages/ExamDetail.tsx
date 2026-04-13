@@ -1057,87 +1057,19 @@ const ExamDetail = () => {
                                            />
                                         </div>
                                        
-                                       {/* Second row: Marks + Difficulty + Vote dropdown */}
+                                       {/* Second row: Marks + Difficulty */}
                                        <div className="flex items-center gap-3 mb-2">
-                                         {topic.marks && (
-                                           <span className="text-sm text-muted-foreground">
-                                             {topic.marks} marks
-                                           </span>
-                                         )}
-                                         <Badge 
-                                           className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
-                                         >
-                                           {topic.difficulty}
-                                         </Badge>
-                                         {topic.isAccessible && (
-                                            <DropdownMenu modal={false}>
-                                              <DropdownMenuTrigger asChild>
-                                                <Button 
-                                                  variant="ghost" 
-                                                  size="sm" 
-                                                  className="h-6 px-2 text-xs flex items-center gap-1"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                  onPointerDown={(e) => {
-                                                    // Only allow mouse clicks and direct taps, not touch drags
-                                                    if (e.pointerType === 'touch') {
-                                                      (e.currentTarget as HTMLElement).dataset.touchStartY = String(e.clientY);
-                                                    }
-                                                  }}
-                                                  onPointerUp={(e) => {
-                                                    if (e.pointerType === 'touch') {
-                                                      const startY = Number((e.currentTarget as HTMLElement).dataset.touchStartY || 0);
-                                                      if (Math.abs(e.clientY - startY) > 10) {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                      }
-                                                    }
-                                                  }}
-                                                >
-                                                 <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
-                                                 <ChevronDown className="h-3 w-3" />
-                                               </Button>
-                                             </DropdownMenuTrigger>
-                                             <DropdownMenuContent align="end" className="w-40">
-                                               <DropdownMenuItem 
-                                                 onClick={(e) => {
-                                                   e.stopPropagation();
-                                                   handleDifficultyVote(topic.id, 'Easy');
-                                                 }}
-                                                 className={topic.userDifficultyRating === 'Easy' ? 'bg-success/10' : ''}
-                                               >
-                                                 <div className="flex items-center gap-2 w-full">
-                                                   <Badge className="text-xs bg-success">Easy</Badge>
-                                                   {topic.userDifficultyRating === 'Easy' && <span className="ml-auto text-xs">✓</span>}
-                                                 </div>
-                                               </DropdownMenuItem>
-                                               <DropdownMenuItem 
-                                                 onClick={(e) => {
-                                                   e.stopPropagation();
-                                                   handleDifficultyVote(topic.id, 'Medium');
-                                                 }}
-                                                 className={topic.userDifficultyRating === 'Medium' ? 'bg-warning/10' : ''}
-                                               >
-                                                 <div className="flex items-center gap-2 w-full">
-                                                   <Badge className="text-xs bg-warning">Medium</Badge>
-                                                   {topic.userDifficultyRating === 'Medium' && <span className="ml-auto text-xs">✓</span>}
-                                                 </div>
-                                               </DropdownMenuItem>
-                                               <DropdownMenuItem 
-                                                 onClick={(e) => {
-                                                   e.stopPropagation();
-                                                   handleDifficultyVote(topic.id, 'Hard');
-                                                 }}
-                                                 className={topic.userDifficultyRating === 'Hard' ? 'bg-destructive/10' : ''}
-                                               >
-                                                 <div className="flex items-center gap-2 w-full">
-                                                   <Badge className="text-xs bg-destructive">Hard</Badge>
-                                                   {topic.userDifficultyRating === 'Hard' && <span className="ml-auto text-xs">✓</span>}
-                                                 </div>
-                                               </DropdownMenuItem>
-                                             </DropdownMenuContent>
-                                           </DropdownMenu>
-                                         )}
-                                       </div>
+                                          {topic.marks && (
+                                            <span className="text-sm text-muted-foreground">
+                                              {topic.marks} marks
+                                            </span>
+                                          )}
+                                          <Badge 
+                                            className={`text-xs pointer-events-none ${getDifficultyColor(topic.difficulty)}`}
+                                          >
+                                            {topic.difficulty}
+                                          </Badge>
+                                        </div>
                                      </div>
                                      
                                       {/* Locked Topic Overlay - inline on same card */}
@@ -1173,79 +1105,12 @@ const ExamDetail = () => {
                                              )}
                                            </h4>
                                            <div className="flex items-center gap-2 mt-1">
-                                             <Badge 
-                                               className={`text-xs ${getDifficultyColor(topic.difficulty)}`}
-                                             >
-                                               {topic.difficulty}
-                                             </Badge>
-                                             {topic.isAccessible && (
-                                                <DropdownMenu modal={false}>
-                                                  <DropdownMenuTrigger asChild>
-                                                    <Button 
-                                                      variant="ghost" 
-                                                      size="sm" 
-                                                      className="h-6 px-2 text-xs flex items-center gap-1"
-                                                      onClick={(e) => e.stopPropagation()}
-                                                      onPointerDown={(e) => {
-                                                        if (e.pointerType === 'touch') {
-                                                          (e.currentTarget as HTMLElement).dataset.touchStartY = String(e.clientY);
-                                                        }
-                                                      }}
-                                                      onPointerUp={(e) => {
-                                                        if (e.pointerType === 'touch') {
-                                                          const startY = Number((e.currentTarget as HTMLElement).dataset.touchStartY || 0);
-                                                          if (Math.abs(e.clientY - startY) > 10) {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                          }
-                                                        }
-                                                      }}
-                                                    >
-                                                     <span className={topic.userDifficultyRating ? 'text-primary font-medium' : ''}>Difficulty</span>
-                                                     <ChevronDown className="h-3 w-3" />
-                                                   </Button>
-                                                 </DropdownMenuTrigger>
-                                                 <DropdownMenuContent align="start" className="w-40">
-                                                   <DropdownMenuItem 
-                                                     onClick={(e) => {
-                                                       e.stopPropagation();
-                                                       handleDifficultyVote(topic.id, 'Easy');
-                                                     }}
-                                                     className={topic.userDifficultyRating === 'Easy' ? 'bg-success/10' : ''}
-                                                   >
-                                                     <div className="flex items-center gap-2 w-full">
-                                                       <Badge className="text-xs bg-success">Easy</Badge>
-                                                       {topic.userDifficultyRating === 'Easy' && <span className="ml-auto text-xs">✓</span>}
-                                                     </div>
-                                                   </DropdownMenuItem>
-                                                   <DropdownMenuItem 
-                                                     onClick={(e) => {
-                                                       e.stopPropagation();
-                                                       handleDifficultyVote(topic.id, 'Medium');
-                                                     }}
-                                                     className={topic.userDifficultyRating === 'Medium' ? 'bg-warning/10' : ''}
-                                                   >
-                                                     <div className="flex items-center gap-2 w-full">
-                                                       <Badge className="text-xs bg-warning">Medium</Badge>
-                                                       {topic.userDifficultyRating === 'Medium' && <span className="ml-auto text-xs">✓</span>}
-                                                     </div>
-                                                   </DropdownMenuItem>
-                                                   <DropdownMenuItem 
-                                                     onClick={(e) => {
-                                                       e.stopPropagation();
-                                                       handleDifficultyVote(topic.id, 'Hard');
-                                                     }}
-                                                     className={topic.userDifficultyRating === 'Hard' ? 'bg-destructive/10' : ''}
-                                                   >
-                                                     <div className="flex items-center gap-2 w-full">
-                                                       <Badge className="text-xs bg-destructive">Hard</Badge>
-                                                       {topic.userDifficultyRating === 'Hard' && <span className="ml-auto text-xs">✓</span>}
-                                                     </div>
-                                                   </DropdownMenuItem>
-                                                 </DropdownMenuContent>
-                                               </DropdownMenu>
-                                             )}
-                                            </div>
+                                              <Badge 
+                                                className={`text-xs pointer-events-none ${getDifficultyColor(topic.difficulty)}`}
+                                              >
+                                                {topic.difficulty}
+                                              </Badge>
+                                             </div>
                                           </div>
 
                                           {/* Checkbox on the right, top-aligned */}

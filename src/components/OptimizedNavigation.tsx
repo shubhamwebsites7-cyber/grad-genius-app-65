@@ -25,7 +25,6 @@ const navItems = [
   { name: 'Exams', href: '/exams', icon: BookOpen },
   { name: 'Pomodoro', href: '/pomodoro', icon: Timer },
   { name: 'Pricing', href: '/pricing', icon: CreditCard },
-  { name: 'Profile', href: '/profile', icon: User },
 ];
 
 // Memoized components for better performance
