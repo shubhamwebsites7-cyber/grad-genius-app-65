@@ -20,7 +20,7 @@ console.log(`[App] Running in ${isStandalone ? 'standalone' : isNativeApp ? 'nat
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ThemeProvider defaultTheme="light" storageKey="examtrakr-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="examtrakr-theme">
       <App />
     </ThemeProvider>
   </React.StrictMode>
