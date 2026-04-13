@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2, Calendar } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TrendingUp, Target, BookOpen, Award, ArrowRight, Plus, AlertCircle, Trash2, Calendar, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +25,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+
+const PerformanceAnalytics = lazy(() => import('@/components/dashboard/PerformanceAnalytics'));
 
 interface Subject {
   name: string;
@@ -366,9 +369,21 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Enrolled Exams Overview */}
-            <div className="space-y-6 mb-8">
-              <h2 className="text-2xl font-semibold text-foreground">Enrolled Exams</h2>
+            {/* Tabs: Enrolled Exams & Performance Analytics */}
+            <Tabs defaultValue="enrolled" className="space-y-6 mb-8">
+              <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="enrolled" className="gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Enrolled Exams
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Performance
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="enrolled">
+                <div className="space-y-6">
               {enrolledExams.length === 0 ? (
                 <Card className="p-8">
                   <div className="text-center space-y-4">
@@ -513,7 +528,15 @@ const Dashboard = () => {
                 ))}
                 </div>
               )}
-            </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="analytics">
+                <Suspense fallback={<div className="flex justify-center py-12"><BarChart3 className="h-6 w-6 animate-spin text-primary" /></div>}>
+                  <PerformanceAnalytics />
+                </Suspense>
+              </TabsContent>
+            </Tabs>
 
             {/* Upgrade CTA */}
             <Card className="mb-8 bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">

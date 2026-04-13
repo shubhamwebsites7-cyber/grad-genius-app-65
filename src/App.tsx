@@ -49,7 +49,7 @@ const GovernmentExams = lazy(() => import("./pages/GovernmentExams"));
 const TeachingExams = lazy(() => import("./pages/TeachingExams"));
 const SyllabusTracker = lazy(() => import("./pages/SyllabusTracker"));
 const ProgressTracker = lazy(() => import("./pages/ProgressTracker"));
-
+const PomodoroStudy = lazy(() => import("./pages/PomodoroStudy"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -98,6 +98,7 @@ const App = () => (
                   <Route path="/resources/:examId/:sectionId" element={<SectionResources />} />
                   <Route path="/resources/:sectionId" element={<SectionResources />} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/pomodoro" element={<ProtectedRoute><PomodoroStudy /></ProtectedRoute>} />
                   <Route path="/support" element={<Support />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
