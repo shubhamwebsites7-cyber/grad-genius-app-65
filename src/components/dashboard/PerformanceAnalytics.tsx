@@ -103,13 +103,14 @@ const PerformanceAnalytics = () => {
     }
 
     // Streak calculation
-    const uniqueDates = [...new Set(sessions.filter((s: any) => s.session_type === 'work').map((s: any) => new Date(s.created_at).toDateString()))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    const uniqueDates = [...new Set(sessions.filter((s: any) => s.session_type === 'work').map((s: any) => new Date(s.created_at).toDateString()))] as string[];
+    uniqueDates.sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime());
     let currentStreak = 0;
     const today = new Date();
     for (let i = 0; i < uniqueDates.length; i++) {
       const expected = new Date(today);
       expected.setDate(expected.getDate() - i);
-      if (new Date(uniqueDates[i]).toDateString() === expected.toDateString()) {
+      if (new Date(uniqueDates[i] as string).toDateString() === expected.toDateString()) {
         currentStreak++;
       } else break;
     }
