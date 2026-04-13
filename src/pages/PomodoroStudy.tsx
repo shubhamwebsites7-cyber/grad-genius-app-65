@@ -6,11 +6,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, RotateCcw, Timer, Lock } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, Lock, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Exam { id: string; name: string; }
 interface Subject { id: string; name: string; }
@@ -26,6 +34,7 @@ const FREE_SESSION_LIMIT = 3;
 const PomodoroStudy = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -42,21 +51,41 @@ const PomodoroStudy = () => {
   const [sessionCount, setSessionCount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [limitReached, setLimitReached] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Refs for stable access in timer callback
+  const sessionCountRef = useRef(0);
+  const isPremiumRef = useRef(false);
+  const modeRef = useRef<'work' | 'break'>('work');
+  const presetRef = useRef(0);
+  const selectedExamRef = useRef('');
+  const selectedSubjectRef = useRef('');
+  const selectedTopicRef = useRef('');
+
+  // Keep refs in sync
+  useEffect(() => { sessionCountRef.current = sessionCount; }, [sessionCount]);
+  useEffect(() => { isPremiumRef.current = isPremium; }, [isPremium]);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
+  useEffect(() => { presetRef.current = preset; }, [preset]);
+  useEffect(() => { selectedExamRef.current = selectedExam; }, [selectedExam]);
+  useEffect(() => { selectedSubjectRef.current = selectedSubject; }, [selectedSubject]);
+  useEffect(() => { selectedTopicRef.current = selectedTopic; }, [selectedTopic]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const totalSeconds = mode === 'work' ? PRESETS[preset].work * 60 : PRESETS[preset].break * 60;
   const progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
 
-  // Fetch enrolled exams
+  const limitReached = !isPremium && sessionCount >= FREE_SESSION_LIMIT;
+
+  // Fetch enrolled exams + premium status + session count
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
       setLoading(true);
       const [enrollRes, subRes, sessionRes] = await Promise.all([
         supabase.from('user_exam_enrollments').select('exam_id, exams(id, name)').eq('user_id', user.id).eq('is_active', true),
-        supabase.from('subscription_payments').select('status').eq('user_id', user.id).eq('status', 'active').limit(1),
-        supabase.from('pomodoro_sessions').select('id').eq('user_id', user.id).eq('session_type', 'work'),
+        (supabase as any).from('subscription_payments').select('status').eq('user_id', user.id).eq('status', 'active').limit(1),
+        (supabase as any).from('pomodoro_sessions').select('id').eq('user_id', user.id).eq('session_type', 'work'),
       ]);
 
       if (enrollRes.data) {
@@ -64,10 +93,10 @@ const PomodoroStudy = () => {
         setExams(e);
         if (e.length > 0) setSelectedExam(e[0].id);
       }
-      setIsPremium((subRes.data?.length || 0) > 0);
+      const premium = (subRes.data?.length || 0) > 0;
+      setIsPremium(premium);
       const count = sessionRes.data?.length || 0;
       setSessionCount(count);
-      setLimitReached(!((subRes.data?.length || 0) > 0) && count >= FREE_SESSION_LIMIT);
       setLoading(false);
     };
     fetchData();
@@ -76,7 +105,7 @@ const PomodoroStudy = () => {
   // Fetch subjects when exam changes
   useEffect(() => {
     if (!selectedExam) { setSubjects([]); return; }
-    const fetch = async () => {
+    const fetchSubjects = async () => {
       const { data } = await (supabase as any)
         .from('exam_subjects')
         .select('subject_id, subjects(id, name)')
@@ -88,13 +117,13 @@ const PomodoroStudy = () => {
       setSelectedTopic('');
       setSelectedTopicName('');
     };
-    fetch();
+    fetchSubjects();
   }, [selectedExam]);
 
   // Fetch topics when subject changes
   useEffect(() => {
     if (!selectedSubject || !selectedExam) { setTopics([]); return; }
-    const fetch = async () => {
+    const fetchTopics = async () => {
       const { data } = await (supabase as any)
         .from('exam_topics')
         .select('topic_id, topics(id, name)')
@@ -106,8 +135,48 @@ const PomodoroStudy = () => {
       setSelectedTopic('');
       setSelectedTopicName('');
     };
-    fetch();
+    fetchTopics();
   }, [selectedSubject, selectedExam]);
+
+  // Session complete handler using refs for fresh values
+  const handleSessionComplete = useCallback(async () => {
+    setIsRunning(false);
+    const currentMode = modeRef.current;
+    const currentPreset = presetRef.current;
+    const duration = currentMode === 'work' ? PRESETS[currentPreset].work : PRESETS[currentPreset].break;
+
+    // Save session to DB
+    if (user) {
+      await (supabase as any).from('pomodoro_sessions').insert({
+        user_id: user.id,
+        exam_id: selectedExamRef.current,
+        subject_id: selectedSubjectRef.current,
+        topic_id: selectedTopicRef.current,
+        duration_minutes: duration,
+        session_type: currentMode,
+      });
+    }
+
+    if (currentMode === 'work') {
+      const newCount = sessionCountRef.current + 1;
+      setSessionCount(newCount);
+
+      // Check if limit reached after this session
+      if (!isPremiumRef.current && newCount >= FREE_SESSION_LIMIT) {
+        setShowPaywall(true);
+      }
+
+      // Switch to break
+      setMode('break');
+      setTimeLeft(PRESETS[currentPreset].break * 60);
+      toast({ title: "Work session complete!", description: "Time for a break." });
+    } else {
+      // Switch to work
+      setMode('work');
+      setTimeLeft(PRESETS[currentPreset].work * 60);
+      toast({ title: "Break over!", description: "Ready for another session?" });
+    }
+  }, [user, toast]);
 
   // Timer logic
   useEffect(() => {
@@ -123,46 +192,17 @@ const PomodoroStudy = () => {
       });
     }, 1000);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isRunning, mode]);
-
-  const handleSessionComplete = useCallback(async () => {
-    setIsRunning(false);
-    const duration = mode === 'work' ? PRESETS[preset].work : PRESETS[preset].break;
-
-    // Save session
-    if (user) {
-      await (supabase as any).from('pomodoro_sessions').insert({
-        user_id: user.id,
-        exam_id: selectedExam,
-        subject_id: selectedSubject,
-        topic_id: selectedTopic,
-        duration_minutes: duration,
-        session_type: mode,
-      });
-    }
-
-    if (mode === 'work') {
-      const newCount = sessionCount + 1;
-      setSessionCount(newCount);
-      if (!isPremium && newCount >= FREE_SESSION_LIMIT) setLimitReached(true);
-      // Switch to break
-      setMode('break');
-      setTimeLeft(PRESETS[preset].break * 60);
-      toast({ title: "Work session complete!", description: "Time for a break." });
-    } else {
-      // Switch to work
-      setMode('work');
-      setTimeLeft(PRESETS[preset].work * 60);
-      toast({ title: "Break over!", description: "Ready for another session?" });
-    }
-  }, [mode, preset, user, selectedExam, selectedSubject, selectedTopic, sessionCount, isPremium, toast]);
+  }, [isRunning, handleSessionComplete]);
 
   const handleStart = () => {
     if (!selectedTopic) {
       toast({ title: "Select a topic", description: "Please select exam, subject, and topic before starting.", variant: "destructive" });
       return;
     }
-    if (limitReached) return;
+    if (limitReached) {
+      setShowPaywall(true);
+      return;
+    }
     setIsRunning(true);
   };
 
@@ -213,6 +253,42 @@ const PomodoroStudy = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
+      {/* Premium Paywall Dialog */}
+      <AlertDialog open={showPaywall} onOpenChange={setShowPaywall}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader className="text-center space-y-3">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Crown className="h-8 w-8 text-primary" />
+            </div>
+            <AlertDialogTitle className="text-xl">Upgrade to Premium</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              You've used all {FREE_SESSION_LIMIT} free Pomodoro sessions. Upgrade to Premium for <span className="font-semibold text-foreground">unlimited study sessions</span> and unlock your full potential!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full gap-2"
+              onClick={() => {
+                setShowPaywall(false);
+                navigate('/pricing');
+              }}
+            >
+              <Crown className="h-4 w-4" />
+              Upgrade Now
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowPaywall(false)}
+            >
+              Maybe Later
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="min-h-screen flex flex-col">
         <Navigation />
 
@@ -222,6 +298,11 @@ const PomodoroStudy = () => {
             <div className="text-center">
               <h1 className="text-2xl font-bold text-foreground">Pomodoro Study</h1>
               <p className="text-sm text-muted-foreground mt-1">Stay focused, one session at a time</p>
+              {isPremium && (
+                <Badge className="mt-2 bg-primary/10 text-primary">
+                  <Crown className="h-3 w-3 mr-1" /> Premium
+                </Badge>
+              )}
             </div>
 
             {/* Dropdowns */}
@@ -305,7 +386,7 @@ const PomodoroStudy = () => {
                     size="lg"
                     variant="hero"
                     onClick={handleStart}
-                    disabled={!selectedTopic || limitReached}
+                    disabled={!selectedTopic}
                     className="gap-2"
                   >
                     <Play className="h-5 w-5" /> Start
@@ -320,22 +401,23 @@ const PomodoroStudy = () => {
                 </Button>
               </div>
 
-              {/* Session counter */}
+              {/* Session counter for free users */}
               {!isPremium && (
-                <p className="text-xs text-muted-foreground">
+                <p className={`text-xs ${limitReached ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                   Sessions used: {sessionCount}/{FREE_SESSION_LIMIT}
+                  {limitReached && ' — Limit reached'}
                 </p>
               )}
             </div>
 
-            {/* Paywall */}
+            {/* Inline paywall card for free users who reached limit */}
             {limitReached && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-6 text-center space-y-3">
                   <Lock className="h-8 w-8 mx-auto text-primary" />
                   <h3 className="font-semibold text-foreground">Free Limit Reached</h3>
                   <p className="text-sm text-muted-foreground">
-                    You've used all 3 free sessions. Upgrade to Premium for unlimited study sessions.
+                    You've used all {FREE_SESSION_LIMIT} free sessions. Upgrade to Premium for unlimited study sessions.
                   </p>
                   <Button variant="hero" asChild>
                     <Link to="/pricing">Upgrade to Premium</Link>
