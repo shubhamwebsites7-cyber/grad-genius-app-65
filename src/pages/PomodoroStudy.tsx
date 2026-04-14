@@ -262,7 +262,7 @@ const PomodoroStudy = () => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-  const dailyProgress = Math.min((todaySessions / dailyGoal) * 100, 100);
+  
 
   if (loading) {
     return (
