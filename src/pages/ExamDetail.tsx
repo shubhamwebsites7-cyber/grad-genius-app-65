@@ -761,15 +761,7 @@ const ExamDetail = () => {
         
         <main className="flex-1 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto">
-            {/* Back Button */}
-            <Button 
-              variant="ghost" 
-              className="mb-6 flex items-center gap-2"
-              onClick={() => navigate('/exams')}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Exams
-            </Button>
+            {/* Breadcrumb-style navigation via browser back */}
 
             {/* Top Section: Header */}
             <div className="mb-6">

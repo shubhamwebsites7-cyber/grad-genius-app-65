@@ -487,7 +487,7 @@ const ExamResources = () => {
                   <SelectItem value="latest">Latest</SelectItem>
                   <SelectItem value="most-helpful">Most Helpful</SelectItem>
                   <SelectItem value="least-helpful">Least Helpful</SelectItem>
-                  <SelectItem value="bookmarked">⭐ Bookmarked</SelectItem>
+                  <SelectItem value="bookmarked">Bookmarked</SelectItem>
                 </SelectContent>
               </Select>
               <Button 
@@ -520,7 +520,7 @@ const ExamResources = () => {
                     <SelectItem value="latest">Latest</SelectItem>
                     <SelectItem value="most-helpful">Most Helpful</SelectItem>
                     <SelectItem value="least-helpful">Least Helpful</SelectItem>
-                    <SelectItem value="bookmarked">⭐ Bookmarked</SelectItem>
+                    <SelectItem value="bookmarked">Bookmarked</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button 
@@ -529,7 +529,7 @@ const ExamResources = () => {
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Add</span>
+                  <span>Add Resource</span>
                 </Button>
               </div>
             </div>

@@ -706,39 +706,70 @@ const SectionResources = () => {
 
               {/* Search and Filters */}
               <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search resources..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-11"
-                  />
+                {/* Desktop: Single row */}
+                <div className="hidden lg:flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search resources..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="latest">Latest</SelectItem>
+                      <SelectItem value="most-helpful">Most Helpful</SelectItem>
+                      <SelectItem value="least-helpful">Least Helpful</SelectItem>
+                      <SelectItem value="bookmarked">Bookmarked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={() => setShowAddForm(true)}
+                    variant="outline"
+                    className="flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Resource
+                  </Button>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center">
+                {/* Mobile: Search on first row, filter + button on second */}
+                <div className="lg:hidden space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search resources..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
                     <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="latest">Latest</SelectItem>
                         <SelectItem value="most-helpful">Most Helpful</SelectItem>
                         <SelectItem value="least-helpful">Least Helpful</SelectItem>
+                        <SelectItem value="bookmarked">Bookmarked</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button 
+                      onClick={() => setShowAddForm(true)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Resource
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    onClick={() => setShowAddForm(true)}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Resource
-                  </Button>
                 </div>
               </div>
             </div>
