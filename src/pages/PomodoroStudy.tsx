@@ -400,30 +400,27 @@ const PomodoroStudy = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Timer Mode</label>
+                      <Select
+                        value={String(preset)}
+                        onValueChange={v => handlePresetChange(Number(v))}
+                        disabled={isRunning}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Timer Mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRESETS.map((p, i) => (
+                            <SelectItem key={i} value={String(i)}>
+                              {p.icon} {p.label} ({p.work}m / {p.break}m break)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </CardContent>
                 </Card>
-
-                {/* Timer Mode Dropdown */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Timer Mode</label>
-                  <Select
-                    value={String(preset)}
-                    onValueChange={v => handlePresetChange(Number(v))}
-                    disabled={isRunning}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Timer Mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PRESETS.map((p, i) => (
-                        <SelectItem key={i} value={String(i)}>
-                          {p.icon} {p.label} ({p.work}m / {p.break}m break)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
               </div>
 
               {/* CENTER: Stats */}
