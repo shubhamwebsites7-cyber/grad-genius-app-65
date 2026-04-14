@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Play, Pause, RotateCcw, Timer, Lock, Crown, BookOpen, Target, Flame, Coffee, SkipForward, Volume2, VolumeX, CheckCircle2, Clock } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, Lock, Crown, BookOpen, Target, Flame, SkipForward, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -34,12 +34,6 @@ const PRESETS = [
 
 const FREE_SESSION_LIMIT = 3;
 
-const AMBIENT_SOUNDS = [
-  { id: 'none', label: 'No Sound', icon: VolumeX },
-  { id: 'rain', label: 'Rain', icon: Volume2 },
-  { id: 'forest', label: 'Forest', icon: Volume2 },
-  { id: 'cafe', label: 'Café', icon: Volume2 },
-];
 
 const PomodoroStudy = () => {
   const { user } = useAuth();
@@ -64,8 +58,6 @@ const PomodoroStudy = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [dailyGoal, setDailyGoal] = useState(4);
-  const [selectedSound, setSelectedSound] = useState('none');
 
   // Refs for stable access in timer callback
   const sessionCountRef = useRef(0);
