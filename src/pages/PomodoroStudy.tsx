@@ -123,7 +123,7 @@ const PomodoroStudy = () => {
       setLoading(false);
     };
     fetchData();
-  }, [user]);
+  }, [user?.id]);
 
   // Fetch subjects when exam changes
   useEffect(() => {
@@ -403,35 +403,26 @@ const PomodoroStudy = () => {
                   </CardContent>
                 </Card>
 
-                {/* Timer Presets */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-primary" />
-                      Timer Mode
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
+                {/* Timer Mode Dropdown */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Timer Mode</label>
+                  <Select
+                    value={String(preset)}
+                    onValueChange={v => handlePresetChange(Number(v))}
+                    disabled={isRunning}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Timer Mode" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {PRESETS.map((p, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handlePresetChange(i)}
-                          disabled={isRunning}
-                          className={`p-3 rounded-xl border-2 transition-all text-left ${
-                            preset === i
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/30 bg-card'
-                          } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                        >
-                          <span className="text-lg">{p.icon}</span>
-                          <p className="text-sm font-semibold text-foreground mt-1">{p.label}</p>
-                          <p className="text-xs text-muted-foreground">{p.work}m / {p.break}m</p>
-                        </button>
+                        <SelectItem key={i} value={String(i)}>
+                          {p.icon} {p.label} ({p.work}m / {p.break}m break)
+                        </SelectItem>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Ambient Sound */}
                 <Card>
@@ -501,23 +492,6 @@ const PomodoroStudy = () => {
                     <p className="text-sm text-muted-foreground">Total Sessions</p>
                   </CardContent>
                 </Card>
-                {/* Daily Goal */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                        <Target className="h-4 w-4 text-primary" />
-                        Daily Goal
-                      </span>
-                      <span className="text-sm text-muted-foreground">{todaySessions}/{dailyGoal}</span>
-                    </div>
-                    <Progress value={dailyProgress} className="h-2.5" />
-                    {todaySessions >= dailyGoal && (
-                      <p className="text-xs text-green-600 mt-2 font-medium">🎉 Goal achieved!</p>
-                    )}
-                  </CardContent>
-                </Card>
-
                 {/* Session limit for free users */}
                 {!isPremium && (
                   <Card className="border-primary/20">
