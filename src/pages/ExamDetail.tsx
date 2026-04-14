@@ -1032,7 +1032,7 @@ const ExamDetail = () => {
                                  >
                                    {/* Mobile Layout */}
                                    <div className="block sm:hidden">
-                                      <div className={topic.isAccessible ? '' : 'opacity-50'}>
+                                      <div className={topic.isAccessible ? '' : 'opacity-60'}>
                                         {/* First row: Number + Topic name + Checkbox */}
                                          <div className="flex items-start gap-3 mb-3">
                                            <span className="text-sm font-medium text-muted-foreground mt-0.5">
@@ -1067,7 +1067,7 @@ const ExamDetail = () => {
                                       {/* Locked Topic Overlay - inline on same card */}
                                       {!topic.isAccessible && (
                                         <div 
-                                          className="absolute inset-0 backdrop-blur-[2px] bg-background/25 z-10 flex items-center justify-center rounded-lg cursor-pointer"
+                                          className="absolute inset-0 bg-background/40 z-10 flex items-center justify-center rounded-lg cursor-pointer"
                                           onClick={handleLockedTopicClick}
                                         >
                                           <div className="text-xs text-warning font-medium bg-card p-3 rounded-lg shadow-lg border border-warning/20 flex items-center gap-2">
@@ -1082,12 +1082,12 @@ const ExamDetail = () => {
                                     <div className="hidden sm:block">
                                        <div className="flex items-start gap-3">
                                           {/* Number on the left */}
-                                          <span className={`text-sm font-medium text-muted-foreground mt-0.5 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                          <span className={`text-sm font-medium text-muted-foreground mt-0.5 ${!topic.isAccessible ? 'opacity-60' : ''}`}>
                                             {index + 1}.
                                           </span>
                                           
                                           {/* Topic content */}
-                                          <div className={`flex-1 ${!topic.isAccessible ? 'opacity-50' : ''}`}>
+                                          <div className={`flex-1 ${!topic.isAccessible ? 'opacity-60' : ''}`}>
                                             <h4 className={`font-medium flex items-center gap-2 ${topic.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                                               {topic.name}
                                              {topic.marks && (
@@ -1110,13 +1110,13 @@ const ExamDetail = () => {
                                             checked={topic.isCompleted}
                                             onCheckedChange={() => topic.isAccessible && exam.isEnrolled && handleTopicToggle(topic.id)}
                                             disabled={!topic.isAccessible || !exam.isEnrolled}
-                                            className={`h-5 w-5 mt-0.5 ${!topic.isAccessible ? 'opacity-50' : ''}`}
+                                            className={`h-5 w-5 mt-0.5 ${!topic.isAccessible ? 'opacity-60' : ''}`}
                                           />
                                          
                                          {/* Locked Topic Overlay - inline on same card */}
                                          {!topic.isAccessible && (
-                                          <div 
-                                            className="absolute inset-0 backdrop-blur-[2px] bg-background/25 z-10 flex items-center justify-center rounded-lg cursor-pointer"
+                                         <div 
+                                            className="absolute inset-0 bg-background/40 z-10 flex items-center justify-center rounded-lg cursor-pointer"
                                             onClick={handleLockedTopicClick}
                                           >
                                             <div className="text-xs text-warning font-medium bg-card p-3 rounded-lg shadow-lg border border-warning/20 flex items-center gap-2">
