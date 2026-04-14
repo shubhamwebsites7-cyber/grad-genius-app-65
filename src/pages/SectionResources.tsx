@@ -380,9 +380,15 @@ const SectionResources = () => {
       (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
+    // Bookmarked filter
+    if (sortBy === 'bookmarked') {
+      filtered = filtered.filter(r => r.isBookmarked);
+    }
+
     const sorted = filtered.sort((a, b) => {
       switch (sortBy) {
         case 'latest':
+        case 'bookmarked':
           return b.dateAdded.getTime() - a.dateAdded.getTime();
         case 'most-helpful':
           return b.helpfulCount - a.helpfulCount;
