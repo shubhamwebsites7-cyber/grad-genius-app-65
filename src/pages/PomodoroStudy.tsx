@@ -91,9 +91,9 @@ const PomodoroStudy = () => {
 
   const limitReached = !isPremium && sessionCount >= FREE_SESSION_LIMIT;
 
-  // Fetch enrolled exams + premium status + session count
+  // Fetch enrolled exams + premium status + session count (use user?.id to prevent refetch on tab switch)
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     const fetchData = async () => {
       setLoading(true);
       const today = new Date();
@@ -424,49 +424,6 @@ const PomodoroStudy = () => {
                   </Select>
                 </div>
 
-                {/* Ambient Sound */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Volume2 className="h-4 w-4 text-primary" />
-                      Ambient Sound
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-4 gap-2">
-                      {AMBIENT_SOUNDS.map(sound => (
-                        <button
-                          key={sound.id}
-                          onClick={() => setSelectedSound(sound.id)}
-                          className={`p-2 rounded-lg border text-center transition-all ${
-                            selectedSound === sound.id
-                              ? 'border-primary bg-primary/5 text-primary'
-                              : 'border-border text-muted-foreground hover:border-primary/30'
-                          }`}
-                        >
-                          <sound.icon className="h-4 w-4 mx-auto mb-1" />
-                          <span className="text-xs">{sound.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {selectedSound !== 'none' && (
-                      <p className="text-xs text-muted-foreground mt-2 text-center">🔊 Coming soon</p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Quick Tips - desktop only */}
-                <Card className="border-dashed hidden lg:block">
-                  <CardContent className="p-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">💡 Study Tips</p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• Keep your phone away during focus sessions</li>
-                      <li>• Take a short walk during breaks</li>
-                      <li>• Stay hydrated — drink water between sessions</li>
-                      <li>• Review what you studied after every 4 sessions</li>
-                    </ul>
-                  </CardContent>
-                </Card>
               </div>
 
               {/* CENTER: Stats */}
