@@ -81,106 +81,19 @@ const ExamResources = () => {
 
       setExam(examData);
 
-      let resourcesData: any[] = [];
+      // Use edge function to fetch resources (URLs stripped for non-premium)
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-resources', {
+        body: { topicIds: [examId], includeUserPending: !!user },
+      });
 
-      const { data: approvedData, error: approvedError } = await supabase
-        .from('topic_resources')
-        .select(`
-          id,
-          title,
-          description,
-          resource_type,
-          url,
-          is_premium,
-          admin_approved,
-          created_at,
-          contributed_by_user_id,
-          topic_id,
-          contributor:users!topic_resources_contributed_by_user_id_fkey(
-            id,
-            full_name
-          )
-        `)
-        .eq('is_active', true)
-        .eq('admin_approved', true)
-        .eq('topic_id', examId);
+      if (edgeError) throw edgeError;
 
-      if (approvedError) throw approvedError;
-      resourcesData = approvedData || [];
+      const { resources: resourcesData, voteCounts, userVotes, userBookmarks } = edgeData;
+      const userHelpfulSet = new Set<string>(userVotes || []);
+      const bookmarksSet = new Set<string>(userBookmarks || []);
+      const helpfulMap: Record<string, number> = voteCounts || {};
 
-      if (user) {
-        const { data: pendingData, error: pendingError } = await supabase
-          .from('topic_resources')
-          .select(`
-            id,
-            title,
-            description,
-            resource_type,
-            url,
-            is_premium,
-            admin_approved,
-            created_at,
-            contributed_by_user_id,
-            topic_id,
-            contributor:users!topic_resources_contributed_by_user_id_fkey(
-              id,
-              full_name
-            )
-          `)
-          .eq('is_active', true)
-          .eq('admin_approved', false)
-          .eq('contributed_by_user_id', user.id)
-          .eq('topic_id', examId);
-
-        if (pendingError) throw pendingError;
-        if (pendingData) {
-          resourcesData = [...resourcesData, ...pendingData];
-        }
-      }
-
-      const resourceIds = resourcesData.map((r: any) => r.id);
-      let userHelpfulSet = new Set<string>();
-      let bookmarksSet = new Set<string>();
-
-      if (resourceIds.length > 0 && user) {
-        // Fetch user's helpful votes from resource_votes
-        const { data: userVotes } = await supabase
-          .from('resource_votes' as any)
-          .select('resource_id')
-          .eq('user_id', user.id)
-          .in('resource_id', resourceIds);
-
-        if (userVotes) {
-          (userVotes as any[]).forEach((r: any) => userHelpfulSet.add(r.resource_id));
-        }
-
-        const { data: bookmarks } = await supabase
-          .from('user_resource_bookmarks')
-          .select('resource_id')
-          .eq('user_id', user.id)
-          .in('resource_id', resourceIds);
-
-        if (bookmarks) {
-          bookmarks.forEach((b: any) => bookmarksSet.add(b.resource_id));
-        }
-      }
-
-      // Count helpful votes per resource from resource_votes
-      let helpfulMap: { [key: string]: number } = {};
-      if (resourceIds.length > 0) {
-        const { data: votesData } = await supabase
-          .from('resource_votes' as any)
-          .select('resource_id')
-          .in('resource_id', resourceIds);
-
-        if (votesData) {
-          (votesData as any[]).forEach((r: any) => {
-            helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
-          });
-        }
-      }
-
-      const mappedResources: ResourceCardData[] = resourcesData.map((r: any) => ({
+      const mappedResources: ResourceCardData[] = (resourcesData || []).map((r: any) => ({
         id: r.id,
         title: r.title,
         description: r.description,
