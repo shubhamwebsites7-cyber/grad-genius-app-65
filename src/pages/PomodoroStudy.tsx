@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Play, Pause, RotateCcw, Timer, Lock, Crown, BookOpen, Target, Flame, Coffee, SkipForward, Volume2, VolumeX, CheckCircle2, Clock } from 'lucide-react';
+import { Play, Pause, RotateCcw, Timer, Lock, Crown, BookOpen, Target, Flame, SkipForward, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -34,12 +34,6 @@ const PRESETS = [
 
 const FREE_SESSION_LIMIT = 3;
 
-const AMBIENT_SOUNDS = [
-  { id: 'none', label: 'No Sound', icon: VolumeX },
-  { id: 'rain', label: 'Rain', icon: Volume2 },
-  { id: 'forest', label: 'Forest', icon: Volume2 },
-  { id: 'cafe', label: 'Café', icon: Volume2 },
-];
 
 const PomodoroStudy = () => {
   const { user } = useAuth();
@@ -64,8 +58,6 @@ const PomodoroStudy = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [dailyGoal, setDailyGoal] = useState(4);
-  const [selectedSound, setSelectedSound] = useState('none');
 
   // Refs for stable access in timer callback
   const sessionCountRef = useRef(0);
@@ -91,9 +83,9 @@ const PomodoroStudy = () => {
 
   const limitReached = !isPremium && sessionCount >= FREE_SESSION_LIMIT;
 
-  // Fetch enrolled exams + premium status + session count
+  // Fetch enrolled exams + premium status + session count (use user?.id to prevent refetch on tab switch)
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
     const fetchData = async () => {
       setLoading(true);
       const today = new Date();
@@ -123,7 +115,7 @@ const PomodoroStudy = () => {
       setLoading(false);
     };
     fetchData();
-  }, [user]);
+  }, [user?.id]);
 
   // Fetch subjects when exam changes
   useEffect(() => {
@@ -270,7 +262,7 @@ const PomodoroStudy = () => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-  const dailyProgress = Math.min((todaySessions / dailyGoal) * 100, 100);
+  
 
   if (loading) {
     return (
@@ -400,80 +392,25 @@ const PomodoroStudy = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Timer Presets */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-primary" />
-                      Timer Mode
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      {PRESETS.map((p, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handlePresetChange(i)}
-                          disabled={isRunning}
-                          className={`p-3 rounded-xl border-2 transition-all text-left ${
-                            preset === i
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:border-primary/30 bg-card'
-                          } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                        >
-                          <span className="text-lg">{p.icon}</span>
-                          <p className="text-sm font-semibold text-foreground mt-1">{p.label}</p>
-                          <p className="text-xs text-muted-foreground">{p.work}m / {p.break}m</p>
-                        </button>
-                      ))}
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Timer Mode</label>
+                      <Select
+                        value={String(preset)}
+                        onValueChange={v => handlePresetChange(Number(v))}
+                        disabled={isRunning}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Timer Mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRESETS.map((p, i) => (
+                            <SelectItem key={i} value={String(i)}>
+                              {p.icon} {p.label} ({p.work}m / {p.break}m break)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Ambient Sound */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Volume2 className="h-4 w-4 text-primary" />
-                      Ambient Sound
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-4 gap-2">
-                      {AMBIENT_SOUNDS.map(sound => (
-                        <button
-                          key={sound.id}
-                          onClick={() => setSelectedSound(sound.id)}
-                          className={`p-2 rounded-lg border text-center transition-all ${
-                            selectedSound === sound.id
-                              ? 'border-primary bg-primary/5 text-primary'
-                              : 'border-border text-muted-foreground hover:border-primary/30'
-                          }`}
-                        >
-                          <sound.icon className="h-4 w-4 mx-auto mb-1" />
-                          <span className="text-xs">{sound.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {selectedSound !== 'none' && (
-                      <p className="text-xs text-muted-foreground mt-2 text-center">🔊 Coming soon</p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Quick Tips - desktop only */}
-                <Card className="border-dashed hidden lg:block">
-                  <CardContent className="p-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">💡 Study Tips</p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• Keep your phone away during focus sessions</li>
-                      <li>• Take a short walk during breaks</li>
-                      <li>• Stay hydrated — drink water between sessions</li>
-                      <li>• Review what you studied after every 4 sessions</li>
-                    </ul>
                   </CardContent>
                 </Card>
               </div>
@@ -501,23 +438,6 @@ const PomodoroStudy = () => {
                     <p className="text-sm text-muted-foreground">Total Sessions</p>
                   </CardContent>
                 </Card>
-                {/* Daily Goal */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                        <Target className="h-4 w-4 text-primary" />
-                        Daily Goal
-                      </span>
-                      <span className="text-sm text-muted-foreground">{todaySessions}/{dailyGoal}</span>
-                    </div>
-                    <Progress value={dailyProgress} className="h-2.5" />
-                    {todaySessions >= dailyGoal && (
-                      <p className="text-xs text-green-600 mt-2 font-medium">🎉 Goal achieved!</p>
-                    )}
-                  </CardContent>
-                </Card>
-
                 {/* Session limit for free users */}
                 {!isPremium && (
                   <Card className="border-primary/20">
