@@ -341,17 +341,17 @@ const Dashboard = () => {
 
             {/* Overall Progress Section */}
             <Card className="mb-8">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
                   Overall Exam Progress
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="mb-0">
                   Your progress across all enrolled exams
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="pt-2">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className={`text-2xl font-bold ${getProgressColor(overallProgress.percentage)}`}>
                       {overallProgress.percentage}%

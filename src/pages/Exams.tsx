@@ -99,11 +99,19 @@ const Exams = () => {
       // Fetch categories first
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('exam_categories')
-        .select('*')
+        .select('id, name, is_active')
         .eq('is_active', true)
         .order('name');
 
-      if (categoriesError) throw categoriesError;
+      if (categoriesError) {
+        console.error('Categories fetch error:', categoriesError);
+        throw categoriesError;
+      }
+      if (!categoriesData || categoriesData.length === 0) {
+        console.warn('No categories returned from exam_categories table');
+      } else {
+        console.log('Categories loaded:', categoriesData.length);
+      }
       setCategories(categoriesData || []);
 
       // Fetch exams with category join
@@ -405,26 +413,57 @@ const Exams = () => {
             <div className="max-w-7xl mx-auto">
             {/* Header Section */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-4">All Exams</h1>
-              
-              {/* Search Bar */}
-              <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search exams (SAT, IELTS, IBPS, NEET...)"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 text-base"
-                />
+              {/* Desktop: Single row - Title | Search | Filter | Button */}
+              <div className="hidden lg:flex items-center gap-4">
+                <h1 className="text-3xl font-bold text-foreground whitespace-nowrap">All Exams</h1>
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search exams (SAT, IELTS, IBPS, NEET...)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-11"
+                  />
+                </div>
+                <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2 whitespace-nowrap"
+                  onClick={() => setIsRequestModalOpen(true)}
+                >
+                  <MessageSquarePlus className="h-4 w-4" />
+                  Request New Exam
+                </Button>
               </div>
 
-              {/* Toolbar */}
-              <div className="flex flex-row gap-3 justify-between items-center">
-                <div className="flex items-center gap-2 flex-1">
-                  <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
+              {/* Mobile: Stacked layout */}
+              <div className="lg:hidden space-y-4">
+                <h1 className="text-2xl font-bold text-foreground">All Exams</h1>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search exams..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-11"
+                  />
+                </div>
+                <div className="flex gap-3 items-center">
                   <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                    <SelectTrigger className="w-full sm:w-[200px]">
-                      <SelectValue placeholder="Filter by category" />
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
@@ -435,17 +474,15 @@ const Exams = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                
                   <Button 
                     variant="outline" 
                     className="flex items-center gap-2"
                     onClick={() => setIsRequestModalOpen(true)}
                   >
                     <MessageSquarePlus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Request New Exam</span>
-                    <span className="sm:hidden">Request</span>
+                    <span>Request</span>
                   </Button>
+                </div>
               </div>
             </div>
 

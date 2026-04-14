@@ -214,11 +214,16 @@ const PomodoroStudy = () => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isRunning, handleSessionComplete]);
 
+  const [validationError, setValidationError] = useState('');
+
   const handleStart = () => {
-    if (!selectedTopic) {
-      toast({ title: "Select a topic", description: "Please select exam, subject, and topic before starting.", variant: "destructive" });
+    if (!selectedExam || !selectedSubject || !selectedTopic) {
+      const msg = 'Please select Exam, Subject, and Topic before starting Pomodoro';
+      setValidationError(msg);
+      toast({ title: "Selection Required", description: msg, variant: "destructive" });
       return;
     }
+    setValidationError('');
     if (limitReached) {
       setShowPaywall(true);
       return;
@@ -348,12 +353,18 @@ const PomodoroStudy = () => {
               </div>
             </div>
 
-            {/* Main Layout: Side-by-side on desktop, stacked on mobile */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Validation Error */}
+            {validationError && (
+              <div className="mb-4 p-3 rounded-lg border border-destructive/30 bg-destructive/5 text-destructive text-sm flex items-center gap-2">
+                <span>👉</span> {validationError}
+              </div>
+            )}
+
+            {/* Main Layout: 3-column on desktop, stacked on mobile */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* LEFT PANEL: Study Setup */}
-              <div className="lg:col-span-2 space-y-4">
-                {/* Study Selection */}
+              {/* LEFT: Study Setup */}
+              <div className="space-y-4">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -364,27 +375,25 @@ const PomodoroStudy = () => {
                   <CardContent className="space-y-3">
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Exam</label>
-                      <Select value={selectedExam} onValueChange={v => setSelectedExam(v)}>
+                      <Select value={selectedExam} onValueChange={v => { setSelectedExam(v); setValidationError(''); }}>
                         <SelectTrigger><SelectValue placeholder="Select Exam" /></SelectTrigger>
                         <SelectContent>
                           {exams.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Subject</label>
-                      <Select value={selectedSubject} onValueChange={v => setSelectedSubject(v)} disabled={!selectedExam}>
+                      <Select value={selectedSubject} onValueChange={v => { setSelectedSubject(v); setValidationError(''); }} disabled={!selectedExam}>
                         <SelectTrigger><SelectValue placeholder="Select Subject" /></SelectTrigger>
                         <SelectContent>
                           {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Topic</label>
-                      <Select value={selectedTopic} onValueChange={v => { setSelectedTopic(v); setSelectedTopicName(topics.find(t => t.id === v)?.name || ''); }} disabled={!selectedSubject}>
+                      <Select value={selectedTopic} onValueChange={v => { setSelectedTopic(v); setSelectedTopicName(topics.find(t => t.id === v)?.name || ''); setValidationError(''); }} disabled={!selectedSubject}>
                         <SelectTrigger><SelectValue placeholder="Select Topic" /></SelectTrigger>
                         <SelectContent>
                           {topics.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
@@ -417,14 +426,14 @@ const PomodoroStudy = () => {
                         >
                           <span className="text-lg">{p.icon}</span>
                           <p className="text-sm font-semibold text-foreground mt-1">{p.label}</p>
-                          <p className="text-xs text-muted-foreground">{p.work}m work / {p.break}m break</p>
+                          <p className="text-xs text-muted-foreground">{p.work}m / {p.break}m</p>
                         </button>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Ambient Sound (visual only) */}
+                {/* Ambient Sound */}
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -454,19 +463,84 @@ const PomodoroStudy = () => {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Quick Tips - desktop only */}
+                <Card className="border-dashed hidden lg:block">
+                  <CardContent className="p-4">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">💡 Study Tips</p>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Keep your phone away during focus sessions</li>
+                      <li>• Take a short walk during breaks</li>
+                      <li>• Stay hydrated — drink water between sessions</li>
+                      <li>• Review what you studied after every 4 sessions</li>
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
 
-              {/* RIGHT PANEL: Timer + Stats */}
-              <div className="lg:col-span-3 space-y-4">
-                {/* Timer Card */}
+              {/* CENTER: Stats */}
+              <div className="space-y-4">
+                <Card>
+                  <CardContent className="p-5 text-center">
+                    <Flame className="h-6 w-6 text-orange-500 mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-foreground">{todaySessions}</p>
+                    <p className="text-sm text-muted-foreground">Sessions Today</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5 text-center">
+                    <Clock className="h-6 w-6 text-primary mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-foreground">{todayMinutes}</p>
+                    <p className="text-sm text-muted-foreground">Minutes Studied</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-5 text-center">
+                    <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-foreground">{sessionCount}</p>
+                    <p className="text-sm text-muted-foreground">Total Sessions</p>
+                  </CardContent>
+                </Card>
+                {/* Daily Goal */}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                        <Target className="h-4 w-4 text-primary" />
+                        Daily Goal
+                      </span>
+                      <span className="text-sm text-muted-foreground">{todaySessions}/{dailyGoal}</span>
+                    </div>
+                    <Progress value={dailyProgress} className="h-2.5" />
+                    {todaySessions >= dailyGoal && (
+                      <p className="text-xs text-green-600 mt-2 font-medium">🎉 Goal achieved!</p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Session limit for free users */}
+                {!isPremium && (
+                  <Card className="border-primary/20">
+                    <CardContent className="p-4 text-center">
+                      <p className={`text-xs ${limitReached ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                        Free: {sessionCount}/{FREE_SESSION_LIMIT} sessions
+                        {limitReached && ' — Limit reached'}
+                      </p>
+                      <Progress value={(sessionCount / FREE_SESSION_LIMIT) * 100} className="h-1.5 mt-2" />
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* RIGHT: Focus Mode / Timer */}
+              <div className="space-y-4">
                 <Card className="overflow-hidden">
                   <div className={`p-1 ${mode === 'work' ? 'bg-gradient-to-r from-primary/20 to-primary/5' : 'bg-gradient-to-r from-green-500/20 to-green-500/5'}`}>
                     <span className="text-xs font-medium px-3 py-0.5 text-foreground">
                       {mode === 'work' ? '🔥 Focus Mode' : '☕ Break Time'}
                     </span>
                   </div>
-                  <CardContent className="p-6 sm:p-8">
-                    {/* Current topic */}
+                  <CardContent className="p-6">
                     {selectedTopicName && (
                       <div className="text-center mb-4">
                         <Badge variant="outline" className="text-sm px-3 py-1">
@@ -496,7 +570,7 @@ const PomodoroStudy = () => {
                           />
                         </svg>
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="text-5xl sm:text-6xl font-mono font-bold text-foreground tracking-tight">
+                          <span className="text-5xl font-mono font-bold text-foreground tracking-tight">
                             {formatTime(timeLeft)}
                           </span>
                           <span className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">
@@ -508,111 +582,26 @@ const PomodoroStudy = () => {
 
                     {/* Controls */}
                     <div className="flex items-center justify-center gap-3">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={handleReset}
-                        className="h-12 w-12 rounded-full"
-                      >
+                      <Button size="icon" variant="outline" onClick={handleReset} className="h-12 w-12 rounded-full">
                         <RotateCcw className="h-5 w-5" />
                       </Button>
-                      
                       {!isRunning ? (
                         <Button
-                          size="lg"
-                          variant="hero"
-                          onClick={handleStart}
-                          disabled={!selectedTopic}
+                          size="lg" variant="hero" onClick={handleStart}
+                          disabled={!selectedExam || !selectedSubject || !selectedTopic}
                           className="h-14 w-14 rounded-full p-0"
                         >
                           <Play className="h-6 w-6 ml-0.5" />
                         </Button>
                       ) : (
-                        <Button
-                          size="lg"
-                          variant="default"
-                          onClick={handlePause}
-                          className="h-14 w-14 rounded-full p-0"
-                        >
+                        <Button size="lg" variant="default" onClick={handlePause} className="h-14 w-14 rounded-full p-0">
                           <Pause className="h-6 w-6" />
                         </Button>
                       )}
-
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={handleSkip}
-                        className="h-12 w-12 rounded-full"
-                      >
+                      <Button size="icon" variant="outline" onClick={handleSkip} className="h-12 w-12 rounded-full">
                         <SkipForward className="h-5 w-5" />
                       </Button>
                     </div>
-
-                    {/* Session counter for free users */}
-                    {!isPremium && (
-                      <div className="mt-4 text-center">
-                        <p className={`text-xs ${limitReached ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-                          Sessions: {sessionCount}/{FREE_SESSION_LIMIT}
-                          {limitReached && ' — Limit reached'}
-                        </p>
-                        <Progress value={(sessionCount / FREE_SESSION_LIMIT) * 100} className="h-1.5 mt-1.5 max-w-[200px] mx-auto" />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Today's Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <Card>
-                    <CardContent className="p-4 text-center">
-                      <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
-                      <p className="text-2xl font-bold text-foreground">{todaySessions}</p>
-                      <p className="text-xs text-muted-foreground">Sessions Today</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4 text-center">
-                      <Clock className="h-5 w-5 text-primary mx-auto mb-1" />
-                      <p className="text-2xl font-bold text-foreground">{todayMinutes}</p>
-                      <p className="text-xs text-muted-foreground">Minutes Studied</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4 text-center">
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto mb-1" />
-                      <p className="text-2xl font-bold text-foreground">{sessionCount}</p>
-                      <p className="text-xs text-muted-foreground">Total Sessions</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Daily Goal */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                        <Target className="h-4 w-4 text-primary" />
-                        Daily Goal
-                      </span>
-                      <span className="text-sm text-muted-foreground">{todaySessions}/{dailyGoal} sessions</span>
-                    </div>
-                    <Progress value={dailyProgress} className="h-2.5" />
-                    {todaySessions >= dailyGoal && (
-                      <p className="text-xs text-green-600 mt-2 font-medium">🎉 Goal achieved! Keep going!</p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Quick Tips */}
-                <Card className="border-dashed">
-                  <CardContent className="p-4">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">💡 Study Tips</p>
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• Keep your phone away during focus sessions</li>
-                      <li>• Take a short walk during breaks</li>
-                      <li>• Stay hydrated — drink water between sessions</li>
-                      <li>• Review what you studied after every 4 sessions</li>
-                    </ul>
                   </CardContent>
                 </Card>
               </div>
