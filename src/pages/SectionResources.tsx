@@ -242,113 +242,26 @@ const SectionResources = () => {
         });
       }
 
-      // Fetch resources
-      let resourcesData: any[] = [];
+      // Fetch resources via edge function (URLs stripped for non-premium)
       const searchIds = isSubject ? [...topicIds, sectionId] : topicIds;
       
-      if (searchIds.length > 0) {
-        const { data: approvedData, error: approvedError } = await supabase
-          .from('topic_resources')
-          .select(`
-            id,
-            title,
-            description,
-            resource_type,
-            url,
-            is_premium,
-            admin_approved,
-            created_at,
-            contributed_by_user_id,
-            topic_id,
-            contributor:users!topic_resources_contributed_by_user_id_fkey(
-              id,
-              full_name
-            )
-          `)
-          .eq('is_active', true)
-          .eq('admin_approved', true)
-          .in('topic_id', searchIds);
-
-        if (approvedError) throw approvedError;
-        resourcesData = approvedData || [];
-
-        if (user) {
-          const { data: pendingData, error: pendingError } = await supabase
-            .from('topic_resources')
-            .select(`
-              id,
-              title,
-              description,
-              resource_type,
-              url,
-              is_premium,
-              admin_approved,
-              created_at,
-              contributed_by_user_id,
-              topic_id,
-              contributor:users!topic_resources_contributed_by_user_id_fkey(
-                id,
-                full_name
-              )
-            `)
-            .eq('is_active', true)
-            .eq('admin_approved', false)
-            .eq('contributed_by_user_id', user.id)
-            .in('topic_id', searchIds);
-
-          if (pendingError) throw pendingError;
-          if (pendingData) {
-            resourcesData = [...resourcesData, ...pendingData];
-          }
-        }
-      } else {
+      if (searchIds.length === 0) {
         setResources([]);
         setLoading(false);
         return;
       }
 
-      const resourceIds = (resourcesData || []).map((r: any) => r.id);
-      let userHelpfulSet = new Set<string>();
-      let bookmarksSet = new Set<string>();
-      let helpfulMap: { [key: string]: number } = {};
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-resources', {
+        body: { topicIds: searchIds, includeUserPending: !!user },
+      });
 
-      if (resourceIds.length > 0) {
-        // Count helpful votes from resource_votes
-        const { data: votesData } = await supabase
-          .from('resource_votes' as any)
-          .select('resource_id')
-          .in('resource_id', resourceIds);
+      if (edgeError) throw edgeError;
 
-        if (votesData) {
-          (votesData as any[]).forEach((r: any) => {
-            helpfulMap[r.resource_id] = (helpfulMap[r.resource_id] || 0) + 1;
-          });
-        }
+      const { resources: resourcesData, voteCounts, userVotes, userBookmarks } = edgeData;
+      const userHelpfulSet = new Set<string>(userVotes || []);
+      const bookmarksSet = new Set<string>(userBookmarks || []);
+      const helpfulMap: Record<string, number> = voteCounts || {};
 
-        if (user) {
-          const { data: userVotes } = await supabase
-            .from('resource_votes' as any)
-            .select('resource_id')
-            .eq('user_id', user.id)
-            .in('resource_id', resourceIds);
-
-          if (userVotes) {
-            (userVotes as any[]).forEach((r: any) => userHelpfulSet.add(r.resource_id));
-          }
-
-          const { data: bookmarks } = await supabase
-            .from('user_resource_bookmarks')
-            .select('resource_id')
-            .eq('user_id', user.id)
-            .in('resource_id', resourceIds);
-
-          if (bookmarks) {
-            bookmarks.forEach((b: any) => bookmarksSet.add(b.resource_id));
-          }
-        }
-      }
-
-      const sectionRef = section;
       const mappedResources: ResourceCardData[] = (resourcesData || []).map((r: any) => ({
         id: r.id,
         title: r.title,
