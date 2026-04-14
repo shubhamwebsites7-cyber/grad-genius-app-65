@@ -20,7 +20,7 @@ export interface ResourceCardData {
   title: string;
   description: string | null;
   type: 'video' | 'pdf' | 'website';
-  url: string;
+  url: string | null;
   helpfulCount: number;
   userHelpful: boolean;
   dateAdded: Date;
@@ -153,7 +153,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
           </Button>
 
           {/* Action Button */}
-          {!isLocked ? (
+          {!isLocked && resource.url ? (
             <Button
               asChild
               variant="hero"
