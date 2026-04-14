@@ -93,7 +93,7 @@ const PomodoroStudy = () => {
       
       const [enrollRes, subRes, sessionRes, todayRes] = await Promise.all([
         supabase.from('user_exam_enrollments').select('exam_id, exams(id, name)').eq('user_id', user.id).eq('is_active', true),
-        (supabase as any).from('subscription_payments').select('status').eq('user_id', user.id).eq('status', 'active').limit(1),
+        supabase.from('user_subscriptions').select('id, status, expires_at').eq('user_id', user.id).eq('status', 'active').limit(1),
         (supabase as any).from('pomodoro_sessions').select('id').eq('user_id', user.id).eq('session_type', 'work'),
         (supabase as any).from('pomodoro_sessions').select('id, duration_minutes').eq('user_id', user.id).eq('session_type', 'work').gte('created_at', today.toISOString()),
       ]);
@@ -103,8 +103,16 @@ const PomodoroStudy = () => {
         setExams(e);
         if (e.length > 0) setSelectedExam(e[0].id);
       }
-      const premium = (subRes.data?.length || 0) > 0;
+      
+      // Check subscription: must be active AND not expired
+      let premium = false;
+      if (subRes.data && subRes.data.length > 0) {
+        const sub = subRes.data[0] as any;
+        const expiresAt = new Date(sub.expires_at);
+        premium = sub.status === 'active' && expiresAt > new Date();
+      }
       setIsPremium(premium);
+      
       const count = sessionRes.data?.length || 0;
       setSessionCount(count);
       

@@ -413,39 +413,41 @@ const Exams = () => {
             <div className="max-w-7xl mx-auto">
             {/* Header Section */}
             <div className="mb-8">
-              {/* Desktop: Single row - Title | Search | Filter | Button */}
-              <div className="hidden lg:flex items-center gap-4">
-                <h1 className="text-3xl font-bold text-foreground whitespace-nowrap">All Exams</h1>
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search exams (SAT, IELTS, IBPS, NEET...)"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-11"
-                  />
+              {/* Desktop layout */}
+              <div className="hidden lg:block space-y-4">
+                <h1 className="text-3xl font-bold text-foreground">All Exams</h1>
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Search exams (SAT, IELTS, IBPS, NEET...)"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-11"
+                    />
+                  </div>
+                  <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2 whitespace-nowrap"
+                    onClick={() => setIsRequestModalOpen(true)}
+                  >
+                    <MessageSquarePlus className="h-4 w-4" />
+                    Request New Exam
+                  </Button>
                 </div>
-                <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2 whitespace-nowrap"
-                  onClick={() => setIsRequestModalOpen(true)}
-                >
-                  <MessageSquarePlus className="h-4 w-4" />
-                  Request New Exam
-                </Button>
               </div>
 
               {/* Mobile: Stacked layout */}
