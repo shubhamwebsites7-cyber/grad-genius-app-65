@@ -109,28 +109,6 @@ export default function Goals() {
     }
   };
 
-  const fetchStreaks = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('streaks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('streak_number', { ascending: false });
-
-      if (error) throw error;
-      setStreaks((data || []) as Streak[]);
-    } catch (error) {
-      console.error('Error fetching streaks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch streaks",
-        variant: "destructive",
-      });
-    }
-  };
-
   const addGoal = async () => {
     if (!newGoal.trim() || !user) return;
 
