@@ -525,6 +525,16 @@ export default function Goals() {
                         }
                       }}
                     />
+                    <Select value={newGoalPriority} onValueChange={(v) => setNewGoalPriority(v as 'high' | 'medium' | 'low')}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High Priority</SelectItem>
+                        <SelectItem value="medium">Medium Priority</SelectItem>
+                        <SelectItem value="low">Low Priority</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <div className="flex gap-2">
                       <Button onClick={addGoal} disabled={!newGoal.trim()} className="flex-1">
                         Add
@@ -539,56 +549,91 @@ export default function Goals() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {goals.map((goal) => (
-                <div key={goal.id} className="flex items-center gap-2 p-2 rounded-lg border">
-                  <Checkbox
-                    checked={goal.completed}
-                    onCheckedChange={(checked) => 
-                      updateGoal(goal.id, { completed: checked as boolean })
-                    }
-                  />
-                  {editingGoal?.id === goal.id ? (
-                    <Input
-                      value={editingGoal.title}
-                      onChange={(e) => setEditingGoal({ ...editingGoal, title: e.target.value })}
-                      onBlur={() => updateGoal(goal.id, { title: editingGoal.title })}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          updateGoal(goal.id, { title: editingGoal.title });
-                        }
-                      }}
-                      className="flex-1"
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      className={`flex-1 cursor-pointer ${
-                        goal.completed ? 'line-through text-muted-foreground' : ''
-                      }`}
-                      onClick={() => setEditingGoal(goal)}
-                    >
-                      {goal.title}
-                    </span>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingGoal(goal)}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteGoal(goal.id)}
-                    className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+            <div className="space-y-4 max-h-[32rem] overflow-y-auto">
+              {(['high', 'medium', 'low'] as const).map((level) => {
+                const levelGoals = goals.filter((g) => (g.priority || 'medium') === level);
+                const styles = {
+                  high: { label: 'High Priority', badge: 'bg-destructive/10 text-destructive border-destructive/30' },
+                  medium: { label: 'Medium Priority', badge: 'bg-primary/10 text-primary border-primary/30' },
+                  low: { label: 'Low Priority', badge: 'bg-muted text-muted-foreground border-border' },
+                }[level];
+                return (
+                  <div key={level} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${styles.badge}`}>
+                        {styles.label}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{levelGoals.length}</span>
+                    </div>
+                    {levelGoals.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic px-1">No {level} priority goals</p>
+                    ) : (
+                      levelGoals.map((goal) => (
+                        <div key={goal.id} className="flex items-center gap-2 p-2 rounded-lg border">
+                          <Checkbox
+                            checked={goal.completed}
+                            onCheckedChange={(checked) =>
+                              updateGoal(goal.id, { completed: checked as boolean })
+                            }
+                          />
+                          {editingGoal?.id === goal.id ? (
+                            <Input
+                              value={editingGoal.title}
+                              onChange={(e) => setEditingGoal({ ...editingGoal, title: e.target.value })}
+                              onBlur={() => updateGoal(goal.id, { title: editingGoal.title })}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  updateGoal(goal.id, { title: editingGoal.title });
+                                }
+                              }}
+                              className="flex-1"
+                              autoFocus
+                            />
+                          ) : (
+                            <span
+                              className={`flex-1 cursor-pointer ${
+                                goal.completed ? 'line-through text-muted-foreground' : ''
+                              }`}
+                              onClick={() => setEditingGoal(goal)}
+                            >
+                              {goal.title}
+                            </span>
+                          )}
+                          <Select
+                            value={goal.priority || 'medium'}
+                            onValueChange={(v) => updateGoal(goal.id, { priority: v as 'high' | 'medium' | 'low' })}
+                          >
+                            <SelectTrigger className="h-7 w-[90px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="high">High</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="low">Low</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingGoal(goal)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteGoal(goal.id)}
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                );
+              })}
               {goals.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">
                   No goals yet. Click the + button to add your first goal!
