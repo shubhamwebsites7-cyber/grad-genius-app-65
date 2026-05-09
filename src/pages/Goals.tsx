@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -40,23 +39,11 @@ interface Tip {
   created_at: string;
 }
 
-interface Streak {
-  id: string;
-  current_count: number;
-  max_count: number;
-  is_active: boolean;
-  last_updated: string;
-  created_at: string;
-  streak_number: number;
-  final_count: number;
-}
-
 export default function Goals() {
   console.log("Goals component is rendering - updates are working!");
   const { signOut, user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tips, setTips] = useState<Tip[]>([]);
-  const [streaks, setStreaks] = useState<Streak[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Form states
@@ -75,43 +62,8 @@ export default function Goals() {
     if (user) {
       fetchGoals();
       fetchTips();
-      fetchStreaks();
-      checkAutoUpdateStreak();
     }
   }, [user]);
-
-  // Check and auto-update streak daily
-  const checkAutoUpdateStreak = async () => {
-    if (!user) return;
-
-    try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const activeStreak = streaks.find(s => s.is_active);
-
-      // Auto-update if there's an active streak and it hasn't been updated today
-      if (activeStreak && activeStreak.last_updated !== today) {
-        const newCount = activeStreak.current_count + 1;
-        const { error } = await supabase
-          .from('streaks')
-          .update({
-            current_count: newCount,
-            max_count: Math.max(newCount, activeStreak.max_count),
-            last_updated: today
-          })
-          .eq('id', activeStreak.id);
-
-        if (!error) {
-          fetchStreaks();
-          toast({
-            title: "Auto-updated!",
-            description: `Strike ${activeStreak.streak_number} - Day ${newCount}`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error auto-updating streak:', error);
-    }
-  };
 
   const fetchGoals = async () => {
     if (!user) return;
@@ -152,28 +104,6 @@ export default function Goals() {
       toast({
         title: "Error",
         description: "Failed to fetch tips",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const fetchStreaks = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('streaks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('streak_number', { ascending: false });
-
-      if (error) throw error;
-      setStreaks((data || []) as Streak[]);
-    } catch (error) {
-      console.error('Error fetching streaks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch streaks",
         variant: "destructive",
       });
     }
@@ -362,128 +292,6 @@ export default function Goals() {
         variant: "destructive",
       });
     }
-  };
-
-  const updateStreakDaily = async () => {
-    if (!user) return;
-
-    try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const activeStreak = streaks.find(s => s.is_active);
-
-      if (activeStreak && activeStreak.last_updated === today) {
-        toast({
-          title: "Already updated",
-          description: "Streak already updated today",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (activeStreak) {
-        // Update existing active streak
-        const newCount = activeStreak.current_count + 1;
-        const { error } = await supabase
-          .from('streaks')
-          .update({
-            current_count: newCount,
-            max_count: Math.max(newCount, activeStreak.max_count),
-            last_updated: today
-          })
-          .eq('id', activeStreak.id);
-
-        if (error) throw error;
-      } else {
-        // Create new streak with next streak number
-        const maxStreakNumber = Math.max(...streaks.map(s => s.streak_number), 0);
-        const { error } = await supabase
-          .from('streaks')
-          .insert([{
-            user_id: user.id,
-            current_count: 1,
-            max_count: 1,
-            last_updated: today,
-            streak_number: maxStreakNumber + 1,
-            final_count: 0,
-            is_active: true
-          }]);
-
-        if (error) throw error;
-      }
-
-      fetchStreaks();
-      toast({
-        title: "Success",
-        description: "Daily streak updated!",
-      });
-    } catch (error) {
-      console.error('Error updating streak:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update streak",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const breakStreak = async (streakId: string) => {
-    try {
-      const streakToBreak = streaks.find(s => s.id === streakId);
-      if (!streakToBreak) return;
-
-      const { error } = await supabase
-        .from('streaks')
-        .update({ 
-          is_active: false,
-          final_count: streakToBreak.current_count
-        })
-        .eq('id', streakId);
-
-      if (error) throw error;
-
-      fetchStreaks();
-      toast({
-        title: "Streak completed",
-        description: `Streak ${streakToBreak.streak_number} completed with ${streakToBreak.current_count} days!`,
-      });
-    } catch (error) {
-      console.error('Error breaking streak:', error);
-      toast({
-        title: "Error",
-        description: "Failed to break streak",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const generateChartData = () => {
-    const chartData = [];
-    
-    // Generate chart data for strikes 1-20 and days 1-150
-    for (let strike = 1; strike <= 20; strike++) {
-      const streakData = streaks.find(s => s.streak_number === strike);
-      
-      if (streakData) {
-        // Use final_count for completed streaks, current_count for active streak
-        const days = streakData.is_active ? streakData.current_count : streakData.final_count;
-        chartData.push({
-          strike,
-          days,
-          isActive: streakData.is_active,
-          isCompleted: !streakData.is_active && streakData.final_count > 0
-        });
-      } else {
-        // Future strikes that haven't been started
-        chartData.push({
-          strike,
-          days: 0,
-          isActive: false,
-          isCompleted: false
-        });
-      }
-    }
-    
-    return chartData;
   };
 
   return (
@@ -758,136 +566,6 @@ export default function Goals() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Streak Tracking */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex flex-col gap-4">
-            <span className="text-lg sm:text-xl">Strike Progress Chart</span>
-            <div className="flex flex-col sm:flex-row gap-2 w-full">
-              <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 text-sm sm:text-base w-full sm:w-auto h-12 sm:h-10">
-                Update Daily +1
-              </Button>
-              {streaks.some(s => s.is_active) && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => {
-                    const activeStreak = streaks.find(s => s.is_active);
-                    if (activeStreak) breakStreak(activeStreak.id);
-                  }}
-                  className="text-sm w-full sm:w-auto h-12 sm:h-10"
-                >
-                  Break Streak
-                </Button>
-              )}
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-2 sm:px-6">
-          <div className="space-y-6">
-            {/* Current Active Strike Info */}
-            {streaks.some(s => s.is_active) && (
-              <div className="bg-card border rounded-lg p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-success">
-                      Strike {streaks.find(s => s.is_active)?.streak_number} - Active
-                    </h3>
-                    <p className="text-success-foreground">
-                      Day {streaks.find(s => s.is_active)?.current_count} - Keep going!
-                    </p>
-                  </div>
-                  <div className="w-16 h-16 bg-success rounded-lg flex items-center justify-center">
-                    <span className="text-2xl font-bold text-success-foreground">
-                      {streaks.find(s => s.is_active)?.current_count}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Strike Bars Row */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">All Strikes Progress</h3>
-              
-              {/* Horizontal Strike Bars with responsive scroll */}
-              <div className="overflow-x-auto pb-4">
-                <div className="flex gap-3 min-w-max">
-                  {streaks
-                    .sort((a, b) => a.streak_number - b.streak_number)
-                    .map((streak) => (
-                      <div key={streak.id} className="bg-card border rounded-lg p-3 min-w-[80px] flex-shrink-0">
-                        <div className="text-center mb-2">
-                          <h4 className="font-semibold text-sm">Strike {streak.streak_number}</h4>
-                          <p className={`text-xs ${streak.is_active ? 'text-green-600' : 'text-blue-600'}`}>
-                            {streak.is_active ? 'Active' : 'Completed'}
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          {/* Vertical Bar - Responsive height */}
-                          <div className="h-32 sm:h-48 md:h-64 w-6 mx-auto bg-gray-200 rounded-lg relative overflow-hidden">
-                            <div 
-                              className={`absolute bottom-0 left-0 right-0 rounded-lg transition-all duration-500 ${
-                                streak.is_active 
-                                  ? 'bg-green-500 animate-pulse' 
-                                  : 'bg-blue-500'
-                              }`}
-                              style={{ 
-                                height: `${Math.min((streak.is_active ? streak.current_count : streak.final_count) / 30 * 100, 100)}%` 
-                              }}
-                            />
-                            
-                            {/* Day count label */}
-                            <div className="absolute inset-0 flex items-end justify-center pb-2">
-                              <span className="text-xs sm:text-sm font-bold text-white drop-shadow-sm">
-                                {streak.is_active ? streak.current_count : streak.final_count}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="text-center">
-                            <p className="text-xs text-muted-foreground">
-                              {streak.is_active ? streak.current_count : streak.final_count} days
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-            
-            {/* Legend and Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-card rounded-lg border shadow-sm">
-                <div className="w-4 h-4 bg-blue-500 rounded-full mx-auto mb-2"></div>
-                <span className="text-sm font-medium text-foreground">Completed Strikes</span>
-                <p className="text-xs text-muted-foreground">
-                  {streaks.filter(s => s.final_count > 0).length} finished streaks
-                </p>
-              </div>
-              <div className="text-center p-4 bg-card rounded-lg border shadow-sm">
-                <div className="w-4 h-4 bg-green-500 rounded-full mx-auto mb-2 animate-pulse"></div>
-                <span className="text-sm font-medium text-foreground">Active Strike</span>
-                <p className="text-xs text-muted-foreground">Currently growing</p>
-              </div>
-            </div>
-
-            {streaks.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🎯</div>
-                <h3 className="text-lg font-semibold mb-2">Start Your First Strike!</h3>
-                <p className="text-muted-foreground mb-6">Begin tracking your daily consistency</p>
-                <Button onClick={updateStreakDaily} className="bg-green-600 hover:bg-green-700 px-8">
-                  Start Strike 1
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
