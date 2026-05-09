@@ -16,6 +16,13 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Goal {
@@ -23,6 +30,7 @@ interface Goal {
   title: string;
   completed: boolean;
   created_at: string;
+  priority: 'high' | 'medium' | 'low';
 }
 
 interface Tip {
@@ -53,6 +61,7 @@ export default function Goals() {
   
   // Form states
   const [newGoal, setNewGoal] = useState('');
+  const [newGoalPriority, setNewGoalPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [newTip, setNewTip] = useState('');
   const [newTipDescription, setNewTipDescription] = useState('');
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -180,7 +189,8 @@ export default function Goals() {
         .insert([{ 
           title: newGoal.trim(), 
           user_id: user.id,
-          completed: false
+          completed: false,
+          priority: newGoalPriority,
         }])
         .select();
 
@@ -191,6 +201,7 @@ export default function Goals() {
 
       console.log('Goal added successfully:', data);
       setNewGoal('');
+      setNewGoalPriority('medium');
       setShowGoalForm(false);
       await fetchGoals();
       
