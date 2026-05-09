@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -40,23 +39,11 @@ interface Tip {
   created_at: string;
 }
 
-interface Streak {
-  id: string;
-  current_count: number;
-  max_count: number;
-  is_active: boolean;
-  last_updated: string;
-  created_at: string;
-  streak_number: number;
-  final_count: number;
-}
-
 export default function Goals() {
   console.log("Goals component is rendering - updates are working!");
   const { signOut, user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tips, setTips] = useState<Tip[]>([]);
-  const [streaks, setStreaks] = useState<Streak[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Form states
@@ -75,43 +62,8 @@ export default function Goals() {
     if (user) {
       fetchGoals();
       fetchTips();
-      fetchStreaks();
-      checkAutoUpdateStreak();
     }
   }, [user]);
-
-  // Check and auto-update streak daily
-  const checkAutoUpdateStreak = async () => {
-    if (!user) return;
-
-    try {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const activeStreak = streaks.find(s => s.is_active);
-
-      // Auto-update if there's an active streak and it hasn't been updated today
-      if (activeStreak && activeStreak.last_updated !== today) {
-        const newCount = activeStreak.current_count + 1;
-        const { error } = await supabase
-          .from('streaks')
-          .update({
-            current_count: newCount,
-            max_count: Math.max(newCount, activeStreak.max_count),
-            last_updated: today
-          })
-          .eq('id', activeStreak.id);
-
-        if (!error) {
-          fetchStreaks();
-          toast({
-            title: "Auto-updated!",
-            description: `Strike ${activeStreak.streak_number} - Day ${newCount}`,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error auto-updating streak:', error);
-    }
-  };
 
   const fetchGoals = async () => {
     if (!user) return;
