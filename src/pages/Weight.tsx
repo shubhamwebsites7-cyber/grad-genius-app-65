@@ -7,11 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, subDays, subMonths, eachWeekOfInterval, endOfWeek } from 'date-fns';
 
 interface WeightEntry {
   id: string;
@@ -40,6 +41,7 @@ export default function Weight() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [editingWeight, setEditingWeight] = useState<WeightEntry | null>(null);
+  const [period, setPeriod] = useState<'week' | 'month' | '3months' | '6months' | 'year'>('month');
 
   useEffect(() => {
     if (user) {
@@ -286,15 +288,51 @@ export default function Weight() {
 
   const currentWeight = weights.length > 0 ? weights[0].weight : null;
   const goalWeight = goal?.weight_goal || null;
-  
-  const chartData: ChartData[] = weights
-    .slice(0, 30)
-    .reverse()
-    .map(w => ({
-      date: format(new Date(w.date), 'MMM dd'),
-      weight: w.weight,
-      goal: goalWeight || 0
-    }));
+
+  const today = new Date();
+  const periodStart = (() => {
+    switch (period) {
+      case 'week': return subDays(today, 6);
+      case 'month': return subDays(today, 29);
+      case '3months': return subMonths(today, 3);
+      case '6months': return subMonths(today, 6);
+      case 'year': return subMonths(today, 12);
+    }
+  })();
+  const isWeeklyAgg = period === '3months' || period === '6months' || period === 'year';
+  const inRangeWeights = weights.filter(w => {
+    const d = new Date(w.date);
+    return d >= periodStart && d <= today;
+  });
+
+  let chartData: ChartData[];
+  if (!isWeeklyAgg) {
+    chartData = [...inRangeWeights]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(w => ({
+        date: format(new Date(w.date), 'MMM dd'),
+        weight: w.weight,
+        goal: goalWeight || 0,
+      }));
+  } else {
+    const weeks = eachWeekOfInterval({ start: periodStart, end: today });
+    chartData = weeks
+      .map(ws => {
+        const we = endOfWeek(ws);
+        const wItems = inRangeWeights.filter(w => {
+          const d = new Date(w.date);
+          return d >= ws && d <= we;
+        });
+        if (wItems.length === 0) return null;
+        const avg = wItems.reduce((s, w) => s + Number(w.weight), 0) / wItems.length;
+        return {
+          date: format(ws, 'MMM dd'),
+          weight: Math.round(avg * 10) / 10,
+          goal: goalWeight || 0,
+        };
+      })
+      .filter(Boolean) as ChartData[];
+  }
 
   const progressPercentage = currentWeight && goalWeight 
     ? Math.abs(((currentWeight - goalWeight) / goalWeight) * 100)
@@ -387,17 +425,34 @@ export default function Weight() {
       </div>
 
       {/* Weight Progress Chart */}
-      {chartData.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <CardTitle>Weight Progress</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <div className="min-w-[500px]">
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={chartData}>
+            <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">1 Week</SelectItem>
+                <SelectItem value="month">1 Month</SelectItem>
+                <SelectItem value="3months">3 Months</SelectItem>
+                <SelectItem value="6months">6 Months</SelectItem>
+                <SelectItem value="year">1 Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="px-2 sm:px-6">
+          {chartData.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8 text-sm">No weight entries in this period</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <div style={{ minWidth: `${Math.max(500, chartData.length * 60)}px` }}>
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <XAxis dataKey="date" angle={-45} textAnchor="end" height={50} interval={0} fontSize={11} />
                   <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
                   <Tooltip />
                   <Legend />
@@ -421,11 +476,12 @@ export default function Weight() {
                     />
                   )}
                 </LineChart>
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       {/* Add Weight Entry */}
       <div className="mb-6">
