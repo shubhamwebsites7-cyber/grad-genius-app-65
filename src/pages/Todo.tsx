@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, subDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, subDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, ArrowRight } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -277,6 +277,53 @@ export default function Todo() {
     }
   };
 
+  const copyTaskToNextDay = async (task: Task) => {
+    if (!user) return;
+    const nextDateObj = addDays(new Date(task.date), 1);
+    const nextDate = format(nextDateObj, 'yyyy-MM-dd');
+    try {
+      const { data: existing, error: checkError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('date', nextDate)
+        .eq('title', task.title)
+        .eq('priority', task.priority)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (existing) {
+        toast({
+          title: "Already exists",
+          description: `"${task.title}" is already on ${format(nextDateObj, 'MMM dd')}`,
+        });
+        return;
+      }
+
+      const { error } = await supabase.from('tasks').insert([
+        {
+          title: task.title,
+          priority: task.priority,
+          date: nextDate,
+          user_id: user.id,
+        },
+      ]);
+      if (error) throw error;
+
+      toast({
+        title: "Copied to next day",
+        description: `"${task.title}" added to ${format(nextDateObj, 'MMM dd')}`,
+      });
+    } catch (error) {
+      console.error('Error copying task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy task to next day",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchProgressData();
   }, [activeTab]);
@@ -415,6 +462,15 @@ export default function Todo() {
                       <span className={`flex-1 text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
                         {task.title}
                       </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyTaskToNextDay(task)}
+                        title="Copy to next day"
+                        className="h-6 w-6 p-0 text-primary hover:text-primary"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
