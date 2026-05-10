@@ -258,7 +258,6 @@ export default function CalendarView() {
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
-  const isWeeklyAgg = period === '3months' || period === '6months' || period === 'year';
   const chartData: ChartData[] = progressData.map(item => ({
     date: format(new Date(item.date), 'MMM dd'),
     calories: item.total,
