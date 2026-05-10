@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { format, subDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
+import { format, subDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, eachWeekOfInterval, addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, LogOut, ArrowRight } from 'lucide-react';
+import { Plus, LogOut, ArrowRight, Pencil, X, Check } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +41,9 @@ export default function Todo() {
   const [newTaskPriority, setNewTaskPriority] = useState<'high' | 'medium' | 'low'>('low');
   const [loading, setLoading] = useState(false);
   const [progressData, setProgressData] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState('weekly');
+  const [period, setPeriod] = useState<'week' | 'month' | '3months' | '6months' | 'year'>('week');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
 
   const taskCounts: TaskCounts = tasks.reduce(
     (acc, task) => {
@@ -103,25 +104,31 @@ export default function Todo() {
     if (!user) return;
 
     try {
+      const today = new Date();
       let startDate: Date;
-      let interval: string;
+      let mode: 'day' | 'week';
 
-      switch (activeTab) {
-        case 'weekly':
-          startDate = startOfWeek(subDays(selectedDate, 7));
-          interval = 'day';
+      switch (period) {
+        case 'week':
+          startDate = subDays(today, 6);
+          mode = 'day';
           break;
-        case 'monthly':
-          startDate = subMonths(selectedDate, 1);
-          interval = 'day';
+        case 'month':
+          startDate = subDays(today, 29);
+          mode = 'day';
           break;
         case '3months':
-          startDate = subMonths(selectedDate, 3);
-          interval = 'week';
+          startDate = subMonths(today, 3);
+          mode = 'week';
           break;
-        default:
-          startDate = startOfWeek(subDays(selectedDate, 7));
-          interval = 'day';
+        case '6months':
+          startDate = subMonths(today, 6);
+          mode = 'week';
+          break;
+        case 'year':
+          startDate = subMonths(today, 12);
+          mode = 'week';
+          break;
       }
 
       const { data, error } = await supabase
@@ -129,32 +136,44 @@ export default function Todo() {
         .select('date, completed')
         .eq('user_id', user.id)
         .gte('date', format(startDate, 'yyyy-MM-dd'))
-        .lte('date', format(selectedDate, 'yyyy-MM-dd'));
+        .lte('date', format(today, 'yyyy-MM-dd'));
 
       if (error) throw error;
 
-      // Process data for chart
-      const processedData = processProgressData(data || [], startDate, selectedDate, interval);
+      const processedData = processProgressData(data || [], startDate, today, mode);
       setProgressData(processedData);
     } catch (error) {
       console.error('Error fetching progress data:', error);
     }
   };
 
-  const processProgressData = (data: any[], startDate: Date, endDate: Date, interval: string) => {
-    const days = eachDayOfInterval({ start: startDate, end: endDate });
-    
-    return days.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd');
-      const dayTasks = data.filter(task => task.date === dayStr);
-      const completed = dayTasks.filter(task => task.completed).length;
-      // Always calculate percentage out of 10, capping at 100%
-      const percentage = Math.min(Math.round((completed / 10) * 100), 100);
-
+  const processProgressData = (data: any[], startDate: Date, endDate: Date, mode: 'day' | 'week') => {
+    if (mode === 'day') {
+      const days = eachDayOfInterval({ start: startDate, end: endDate });
+      return days.map(day => {
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const dayTasks = data.filter(task => task.date === dayStr);
+        const completed = dayTasks.filter(task => task.completed).length;
+        const percentage = Math.min(Math.round((completed / 10) * 100), 100);
+        return {
+          date: format(day, 'MMM dd'),
+          day: format(day, 'EEE dd'),
+          percentage,
+        };
+      });
+    }
+    const weekStarts = eachWeekOfInterval({ start: startDate, end: endDate });
+    return weekStarts.map(weekStart => {
+      const weekEnd = endOfWeek(weekStart);
+      const completed = data.filter(t => {
+        const d = new Date(t.date);
+        return t.completed && d >= weekStart && d <= weekEnd;
+      }).length;
+      const percentage = Math.min(Math.round((completed / 70) * 100), 100);
       return {
-        date: format(day, interval === 'day' ? 'MMM dd' : 'MMM dd'),
-        day: format(day, 'EEE'),
-        percentage
+        date: format(weekStart, 'MMM dd'),
+        day: format(weekStart, 'MMM dd'),
+        percentage,
       };
     });
   };
@@ -326,7 +345,31 @@ export default function Todo() {
 
   useEffect(() => {
     fetchProgressData();
-  }, [activeTab]);
+  }, [period]);
+
+  const startEditTask = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditingTitle(task.title);
+  };
+
+  const saveTaskTitle = async () => {
+    if (!editingTaskId || !editingTitle.trim()) {
+      setEditingTaskId(null);
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ title: editingTitle.trim() })
+        .eq('id', editingTaskId);
+      if (error) throw error;
+      setTasks(tasks.map(t => (t.id === editingTaskId ? { ...t, title: editingTitle.trim() } : t)));
+      setEditingTaskId(null);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({ title: 'Error', description: 'Failed to update task', variant: 'destructive' });
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -459,26 +502,65 @@ export default function Todo() {
                         checked={task.completed}
                         onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
                       />
-                      <span className={`flex-1 text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                        {task.title}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyTaskToNextDay(task)}
-                        title="Copy to next day"
-                        className="h-6 w-6 p-0 text-primary hover:text-primary"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteTask(task.id)}
-                        className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                      >
-                        ×
-                      </Button>
+                      {editingTaskId === task.id ? (
+                        <Input
+                          autoFocus
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={saveTaskTitle}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveTaskTitle();
+                            if (e.key === 'Escape') setEditingTaskId(null);
+                          }}
+                          className="flex-1 h-7 text-sm"
+                        />
+                      ) : (
+                        <span className={`flex-1 text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                          {task.title}
+                        </span>
+                      )}
+                      {editingTaskId === task.id ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={saveTaskTitle}
+                          title="Save"
+                          className="h-6 w-6 p-0 text-primary hover:bg-transparent hover:text-primary"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditTask(task)}
+                            title="Edit"
+                            className="h-6 w-6 p-0 text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyTaskToNextDay(task)}
+                            title="Copy to next day"
+                            className="h-6 w-6 p-0 text-primary hover:bg-transparent hover:text-primary"
+                          >
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteTask(task.id)}
+                            title="Delete"
+                            className="h-6 w-6 p-0 text-destructive hover:bg-transparent hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   ))
               )}
@@ -490,45 +572,55 @@ export default function Todo() {
       {/* Progress Chart */}
       <Card className="mt-4 sm:mt-6">
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">Progress Overview</CardTitle>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 text-xs sm:text-sm">
-              <TabsTrigger value="weekly">Weekly</TabsTrigger>
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="3months">3 Months</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle className="text-lg sm:text-xl">Progress Overview</CardTitle>
+            <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">1 Week</SelectItem>
+                <SelectItem value="month">1 Month</SelectItem>
+                <SelectItem value="3months">3 Months</SelectItem>
+                <SelectItem value="6months">6 Months</SelectItem>
+                <SelectItem value="year">1 Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
-        <CardContent className="px-2 sm:px-6 overflow-x-auto">
-          <div className="min-w-[500px]">
-            <ChartContainer className="h-48 sm:h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={progressData}>
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={40}
-                  />
-                  <YAxis 
-                    domain={[0, 100]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10 }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="percentage" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+        <CardContent className="px-2 sm:px-6">
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: `${Math.max(500, progressData.length * 60)}px` }}>
+              <ChartContainer className="h-56 sm:h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={progressData} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={50}
+                      interval={0}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="percentage"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </div>
         </CardContent>
       </Card>
