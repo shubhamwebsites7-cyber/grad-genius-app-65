@@ -510,7 +510,7 @@ export default function CalendarView() {
                   </CardHeader>
                   <CardContent className="p-2 sm:px-6">
                     <div className="overflow-x-auto">
-                      <div className="min-w-[600px]">
+                      <div style={{ minWidth: `${Math.max(600, chartData.length * 60)}px` }}>
                         <ResponsiveContainer width="100%" height={250}>
                           <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -541,7 +541,7 @@ export default function CalendarView() {
                   </CardHeader>
                   <CardContent className="p-2 sm:px-6">
                     <div className="overflow-x-auto">
-                      <div className="min-w-[600px]">
+                      <div style={{ minWidth: `${Math.max(600, chartData.length * 60)}px` }}>
                         <ResponsiveContainer width="100%" height={250}>
                           <BarChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" />
