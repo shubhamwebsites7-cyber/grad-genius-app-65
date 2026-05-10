@@ -465,6 +465,15 @@ export default function Todo() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => copyTaskToNextDay(task)}
+                        title="Copy to next day"
+                        className="h-6 w-6 p-0 text-primary hover:text-primary"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => deleteTask(task.id)}
                         className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                       >
