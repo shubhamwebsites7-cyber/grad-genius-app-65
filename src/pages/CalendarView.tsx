@@ -3,12 +3,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { format, subDays, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays, subMonths, startOfWeek, endOfWeek, eachWeekOfInterval } from 'date-fns';
 import { Edit2, Save, X, TrendingUp, TrendingDown, Target, Activity, PlusCircle, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,7 +49,7 @@ export default function CalendarView() {
   const [editedData, setEditedData] = useState<CalorieEntry | null>(null);
   
   // Progress data
-  const [activeTab, setActiveTab] = useState('weekly');
+  const [period, setPeriod] = useState<'week' | 'month' | '3months' | '6months' | 'year'>('week');
   const [progressData, setProgressData] = useState<CalorieData[]>([]);
   const [isProgressLoading, setIsProgressLoading] = useState(true);
 
@@ -88,7 +87,7 @@ export default function CalendarView() {
     if (user) {
       fetchProgressData();
     }
-  }, [user, activeTab]);
+  }, [user, period]);
 
   const fetchCalorieData = async (date: Date) => {
     setIsLoading(true);
@@ -118,19 +117,27 @@ export default function CalendarView() {
     try {
       const today = new Date();
       let startDate: Date;
-      
-      switch (activeTab) {
-        case 'weekly':
-          startDate = startOfWeek(today);
+      let aggregateWeekly = false;
+
+      switch (period) {
+        case 'week':
+          startDate = subDays(today, 6);
           break;
-        case 'monthly':
-          startDate = subDays(today, 30);
+        case 'month':
+          startDate = subDays(today, 29);
           break;
-        case 'quarter':
+        case '3months':
           startDate = subMonths(today, 3);
+          aggregateWeekly = true;
           break;
-        default:
-          startDate = subDays(today, 7);
+        case '6months':
+          startDate = subMonths(today, 6);
+          aggregateWeekly = true;
+          break;
+        case 'year':
+          startDate = subMonths(today, 12);
+          aggregateWeekly = true;
+          break;
       }
 
       const { data: calorieProgressData } = await supabase
@@ -142,11 +149,34 @@ export default function CalendarView() {
         .order('date');
 
       if (calorieProgressData) {
-        const processedData = calorieProgressData.map(item => ({
+        const daily = calorieProgressData.map(item => ({
           ...item,
-          total: item.morning + item.afternoon + item.evening + item.dinner
+          total: item.morning + item.afternoon + item.evening + item.dinner,
         }));
-        setProgressData(processedData);
+        if (!aggregateWeekly) {
+          setProgressData(daily);
+        } else {
+          const weeks = eachWeekOfInterval({ start: startDate, end: today });
+          const weekly = weeks.map(ws => {
+            const we = endOfWeek(ws);
+            const wItems = daily.filter(d => {
+              const dt = new Date(d.date);
+              return dt >= ws && dt <= we;
+            });
+            const sum = (k: keyof typeof daily[number]) =>
+              wItems.reduce((s, it) => s + (Number((it as any)[k]) || 0), 0);
+            return {
+              date: format(ws, 'yyyy-MM-dd'),
+              morning: sum('morning'),
+              afternoon: sum('afternoon'),
+              evening: sum('evening'),
+              dinner: sum('dinner'),
+              daily_goal: wItems.length ? Math.round(sum('daily_goal') / wItems.length) : 0,
+              total: sum('total'),
+            } as CalorieData;
+          });
+          setProgressData(weekly);
+        }
       }
     } catch (error) {
       console.error('Error fetching progress data:', error);
@@ -228,7 +258,7 @@ export default function CalendarView() {
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
-  // Progress calculations
+  const isWeeklyAgg = period === '3months' || period === '6months' || period === 'year';
   const chartData: ChartData[] = progressData.map(item => ({
     date: format(new Date(item.date), 'MMM dd'),
     calories: item.total,
@@ -404,19 +434,23 @@ export default function CalendarView() {
 
       {/* Progress Section */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold mb-4">Progress Overview</h2>
-        
-        {/* Time Period Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <ScrollArea className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-12 min-w-[300px]">
-              <TabsTrigger value="weekly" className="text-sm">Weekly</TabsTrigger>
-              <TabsTrigger value="monthly" className="text-sm">Monthly</TabsTrigger>
-              <TabsTrigger value="quarter" className="text-sm">3 Months</TabsTrigger>
-            </TabsList>
-          </ScrollArea>
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+          <h2 className="text-xl font-bold">Progress Overview</h2>
+          <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">1 Week</SelectItem>
+              <SelectItem value="month">1 Month</SelectItem>
+              <SelectItem value="3months">3 Months</SelectItem>
+              <SelectItem value="6months">6 Months</SelectItem>
+              <SelectItem value="year">1 Year</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <TabsContent value={activeTab} className="space-y-6">
+        <div className="space-y-6">
             {isProgressLoading ? (
               <div className="flex items-center justify-center min-h-[200px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -548,8 +582,7 @@ export default function CalendarView() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
