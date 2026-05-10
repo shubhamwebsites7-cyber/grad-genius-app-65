@@ -277,6 +277,53 @@ export default function Todo() {
     }
   };
 
+  const copyTaskToNextDay = async (task: Task) => {
+    if (!user) return;
+    const nextDateObj = addDays(new Date(task.date), 1);
+    const nextDate = format(nextDateObj, 'yyyy-MM-dd');
+    try {
+      const { data: existing, error: checkError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('date', nextDate)
+        .eq('title', task.title)
+        .eq('priority', task.priority)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (existing) {
+        toast({
+          title: "Already exists",
+          description: `"${task.title}" is already on ${format(nextDateObj, 'MMM dd')}`,
+        });
+        return;
+      }
+
+      const { error } = await supabase.from('tasks').insert([
+        {
+          title: task.title,
+          priority: task.priority,
+          date: nextDate,
+          user_id: user.id,
+        },
+      ]);
+      if (error) throw error;
+
+      toast({
+        title: "Copied to next day",
+        description: `"${task.title}" added to ${format(nextDateObj, 'MMM dd')}`,
+      });
+    } catch (error) {
+      console.error('Error copying task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy task to next day",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchProgressData();
   }, [activeTab]);
