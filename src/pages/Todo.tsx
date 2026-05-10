@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, subDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, subDays, subMonths, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, ArrowRight } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
