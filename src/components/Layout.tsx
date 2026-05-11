@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Utensils, Weight, Download, CheckSquare, Target, Dumbbell } from 'lucide-react';
+import { Utensils, Weight, Download, CheckSquare, Target, Dumbbell, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -40,6 +40,7 @@ export function Layout() {
     { href: '/dashboard/todo', icon: CheckSquare, label: 'Todo' },
     { href: '/dashboard/goals', icon: Target, label: 'Goals' },
     { href: '/dashboard/exercise', icon: Dumbbell, label: 'Exercise' },
+    { href: '/dashboard/pomodoro', icon: Timer, label: 'Pomodoro' },
   ];
 
   const currentPage = navigationItems.find(item => item.href === location.pathname);
@@ -54,6 +55,19 @@ export function Layout() {
               GoalGrip
             </h1>
           </div>
+
+          {/* Desktop Navigation - in header */}
+          <nav className="hidden md:flex items-center space-x-1">
+            {navigationItems.map((item) => (
+              <NavigationLink
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                isActive={location.pathname === item.href}
+              />
+            ))}
+          </nav>
 
           <div className="flex items-center space-x-2 sm:space-x-4">
             <ThemeToggle />
@@ -95,13 +109,13 @@ export function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pb-20">
+      <main className="flex-1 pb-20 md:pb-4">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation - Fixed Sticky Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <nav className="flex items-center justify-around h-16 px-4 max-w-md mx-auto md:max-w-2xl">
+      {/* Bottom Navigation - Mobile only */}
+      <footer className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 md:hidden">
+        <nav className="flex items-center justify-around h-16 px-2 max-w-md mx-auto overflow-x-auto">
           {navigationItems.map((item) => (
             <NavigationLink
               key={item.href}
