@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LogOut, ArrowRight, Pencil, X, Check } from 'lucide-react';
+import { Plus, LogOut, ArrowRight, Pencil, X, Check, ChevronDown } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +66,19 @@ export default function Todo() {
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.completed).length;
+
+  // Build a 10-cell progress bar ordered high → medium → low
+  const orderedTasks = (['high', 'medium', 'low'] as const).flatMap((p) =>
+    tasks.filter((t) => t.priority === p)
+  );
+  const cellPriorityColor = (p: 'high' | 'medium' | 'low') =>
+    p === 'high' ? 'bg-red-500' : p === 'medium' ? 'bg-yellow-500' : 'bg-green-500';
+  const progressCells = Array.from({ length: 10 }).map((_, i) => {
+    const t = orderedTasks[i];
+    const filled = t && t.completed;
+    return { filled: !!filled, color: t ? cellPriorityColor(t.priority) : '' };
+  });
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -395,9 +409,29 @@ export default function Todo() {
       <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">My ToDo</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            {format(selectedDate, 'MMMM do, yyyy')}
-          </p>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button className="text-muted-foreground mt-1 text-sm sm:text-base inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                {format(selectedDate, 'MMMM do, yyyy')}
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${calendarOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-0 animate-in fade-in-0 zoom-in-95">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date);
+                    setCalendarOpen(false);
+                  }
+                }}
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
         <Button variant="ghost" onClick={() => signOut()} size="sm">
           <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
@@ -405,33 +439,34 @@ export default function Todo() {
         </Button>
       </div>
 
-      {/* Progress Overview */}
+      {/* Progress Overview - 10-cell priority bar */}
       <Card className="mb-4 sm:mb-6">
         <CardContent className="pt-4 sm:pt-6">
-          <div className="text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">{Math.min(completedTasks, 10)}/10 tasks</h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg sm:text-xl font-bold">
+              {Math.min(completedTasks, 10)}/10 tasks
+            </h2>
+            <p className="text-muted-foreground text-xs sm:text-sm">
               {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
             </p>
+          </div>
+          <div className="flex gap-1.5 w-full">
+            {progressCells.map((c, i) => (
+              <div
+                key={i}
+                className={`flex-1 h-3 rounded-full transition-colors ${
+                  c.filled ? c.color : 'bg-muted'
+                }`}
+                title={c.filled ? 'Completed' : 'Empty'}
+              />
+            ))}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Calendar */}
-        <Card>
-          <CardContent className="pt-4 sm:pt-6 flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border scale-90 sm:scale-100"
-            />
-          </CardContent>
-        </Card>
-
         {/* Add New Task */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
