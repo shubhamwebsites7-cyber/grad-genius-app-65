@@ -138,7 +138,7 @@ function DayRing({ sessions, dateStr }: { sessions: PomoSession[]; dateStr: stri
         );
       })}
       <text x="50%" y="48%" textAnchor="middle" className="fill-foreground" fontSize="22" fontWeight="700">
-        {Math.round(arcs.reduce((acc, a) => acc + (a.end - a.start) * 24 * 60) )}m
+        {Math.round(arcs.reduce((acc, a) => acc + (a.end - a.start) * 24 * 60, 0))}m
       </text>
       <text x="50%" y="58%" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
         tracked today
