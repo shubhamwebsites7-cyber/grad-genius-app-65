@@ -430,31 +430,10 @@ export default function Pomodoro() {
           </CardContent>
         </Card>
 
-        {/* Day ring + calendar */}
+        {/* Day ring */}
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>24h Timeline</CardTitle>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {format(viewDate, 'MMM dd')}
-                  <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${calendarOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={viewDate}
-                  onSelect={(d) => {
-                    if (d) {
-                      setViewDate(d);
-                      setCalendarOpen(false);
-                    }
-                  }}
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
           </CardHeader>
           <CardContent>
             <DayRing sessions={sessions} dateStr={viewDateStr} />
@@ -470,27 +449,51 @@ export default function Pomodoro() {
         </Card>
       </div>
 
-      {/* Weekly chart */}
+      {/* Time analytics chart */}
       <Card className="mt-4 sm:mt-6">
-        <CardHeader>
-          <CardTitle>Last 7 Days</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle>
+              {chartPeriod === '7d' ? 'Last 7 Days'
+                : chartPeriod === '1m' ? 'Last 1 Month'
+                : chartPeriod === '3m' ? 'Last 3 Months'
+                : 'Last 6 Months'}
+            </CardTitle>
+            <Select value={chartPeriod} onValueChange={(v) => setChartPeriod(v as typeof chartPeriod)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">7 Days</SelectItem>
+                <SelectItem value="1m">1 Month</SelectItem>
+                <SelectItem value="3m">3 Months (weekly)</SelectItem>
+                <SelectItem value="6m">6 Months (weekly)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weekData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} label={{ value: 'hrs', angle: -90, position: 'insideLeft', fontSize: 11 }} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="high" stackId="a" fill={CATEGORY_COLOR.high} />
-                <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} />
-                <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} />
-                <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} />
-                <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" />
-              </BarChart>
-            </ResponsiveContainer>
+        <CardContent className="px-2 sm:px-6">
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: `${Math.max(600, weekData.length * 60)}px` }} className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weekData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-35} textAnchor="end" height={50} />
+                  <YAxis tick={{ fontSize: 11 }} label={{ value: 'hrs', angle: -90, position: 'insideLeft', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    formatter={(v: number, name: string) => [`${Number(v).toFixed(2)}h`, name]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="high" stackId="a" fill={CATEGORY_COLOR.high} />
+                  <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} />
+                  <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} />
+                  <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} />
+                  <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </CardContent>
       </Card>
