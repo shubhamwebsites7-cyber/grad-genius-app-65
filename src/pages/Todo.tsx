@@ -440,27 +440,24 @@ export default function Todo() {
         </Button>
       </div>
 
-      {/* Progress Overview - 10-cell priority bar */}
+      {/* Progress Overview - smooth segmented bar */}
       <Card className="mb-4 sm:mb-6">
         <CardContent className="pt-4 sm:pt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg sm:text-xl font-bold">
-              {Math.min(completedTasks, 10)}/10 tasks
-            </h2>
-            <p className="text-muted-foreground text-xs sm:text-sm">
-              {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
-            </p>
+          <div className="mb-3 text-sm sm:text-base font-medium">
+            {Math.min(completedTasks, 10)}/10 tasks &middot; {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
           </div>
-          <div className="flex gap-1.5 w-full">
-            {progressCells.map((c, i) => (
-              <div
-                key={i}
-                className={`flex-1 h-3 rounded-full transition-colors ${
-                  c.filled ? c.color : 'bg-muted'
-                }`}
-                title={c.filled ? 'Completed' : 'Empty'}
-              />
-            ))}
+          <div className="relative w-full h-3 rounded-full bg-muted overflow-hidden">
+            <div className="absolute inset-y-0 left-0 flex h-full">
+              {progressCells
+                .filter((c) => c.filled)
+                .map((c, i) => (
+                  <div
+                    key={i}
+                    className={`${c.color} transition-all duration-500`}
+                    style={{ width: `10%` }}
+                  />
+                ))}
+            </div>
           </div>
         </CardContent>
       </Card>
