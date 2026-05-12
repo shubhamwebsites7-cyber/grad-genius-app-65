@@ -8,17 +8,35 @@ interface NavigationLinkProps {
   label: string;
   isActive?: boolean;
   onClick?: () => void;
+  /** When true, only label is shown (used for desktop navbar). */
+  textOnly?: boolean;
 }
 
-export function NavigationLink({ href, icon: Icon, label, isActive = false, onClick }: NavigationLinkProps) {
+export function NavigationLink({ href, icon: Icon, label, isActive = false, onClick, textOnly = false }: NavigationLinkProps) {
+  if (textOnly) {
+    return (
+      <Link
+        to={href}
+        onClick={onClick}
+        className={cn(
+          "px-3 py-2 rounded-lg transition-colors text-sm font-medium",
+          isActive
+            ? "text-primary bg-primary/10"
+            : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+        )}
+      >
+        {label}
+      </Link>
+    );
+  }
   return (
     <Link
       to={href}
       onClick={onClick}
       className={cn(
         "flex flex-col items-center justify-center space-y-1 px-3 py-2 rounded-lg transition-colors text-xs font-medium",
-        isActive 
-          ? "text-primary bg-primary/10" 
+        isActive
+          ? "text-primary bg-primary/10"
           : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
       )}
     >

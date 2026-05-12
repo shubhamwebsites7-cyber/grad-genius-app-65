@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { format, subDays, eachDayOfInterval } from 'date-fns';
+import { format, subDays, subMonths, eachDayOfInterval, eachWeekOfInterval, endOfWeek } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -159,9 +159,9 @@ export default function Pomodoro() {
   const tickRef = useRef<number | null>(null);
 
   const [viewDate, setViewDate] = useState<Date>(new Date());
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [sessions, setSessions] = useState<PomoSession[]>([]);
   const [weekData, setWeekData] = useState<any[]>([]);
+  const [chartPeriod, setChartPeriod] = useState<'7d' | '1m' | '3m' | '6m'>('7d');
 
   const total = mode === 'break' ? PRESETS[preset].break : PRESETS[preset].work;
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
@@ -179,44 +179,78 @@ export default function Pomodoro() {
       .then(({ data }) => setTasks(((data || []) as Task[])));
   }, [user]);
 
-  // Fetch sessions for viewed date + last 7 days for chart
+  // Fetch sessions and aggregate based on selected chart period
   const fetchSessions = async () => {
     if (!user) return;
-    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+    const today = new Date();
+    let startDate: Date;
+    let mode: 'day' | 'week';
+    switch (chartPeriod) {
+      case '7d': startDate = subDays(today, 6); mode = 'day'; break;
+      case '1m': startDate = subDays(today, 29); mode = 'day'; break;
+      case '3m': startDate = subMonths(today, 3); mode = 'week'; break;
+      case '6m': startDate = subMonths(today, 6); mode = 'week'; break;
+    }
     const { data } = await (supabase as any)
       .from('pomodoro_sessions')
       .select('*')
       .eq('user_id', user.id)
-      .gte('date', start);
+      .gte('date', format(startDate, 'yyyy-MM-dd'));
     const rows = (data || []) as PomoSession[];
     setSessions(rows);
 
-    const days = eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() });
-    setWeekData(
-      days.map((d) => {
-        const ds = format(d, 'yyyy-MM-dd');
-        const dayRows = rows.filter((r) => r.date === ds);
-        const sum = (cat: Category) =>
-          dayRows.filter((r) => r.priority === cat).reduce((a, r) => a + r.duration_seconds, 0) / 3600;
-        const trackedHrs = dayRows.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
-        // Waste = unaccounted time during waking hours (assume 16h waking window)
-        const wasteHrs = Math.max(0, 16 - trackedHrs);
-        return {
-          day: format(d, 'EEE'),
-          high: +sum('high').toFixed(2),
-          medium: +sum('medium').toFixed(2),
-          low: +sum('low').toFixed(2),
-          break: +sum('break').toFixed(2),
-          waste: +wasteHrs.toFixed(2),
-        };
-      })
-    );
+    const sumCat = (subset: PomoSession[], cat: Category) =>
+      subset.filter((r) => r.priority === cat).reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+
+    if (mode === 'day') {
+      const days = eachDayOfInterval({ start: startDate, end: today });
+      setWeekData(
+        days.map((d) => {
+          const ds = format(d, 'yyyy-MM-dd');
+          const subset = rows.filter((r) => r.date === ds);
+          const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+          const waste = Math.max(0, 16 - tracked);
+          return {
+            label: format(d, 'MMM dd'),
+            high: +sumCat(subset, 'high').toFixed(2),
+            medium: +sumCat(subset, 'medium').toFixed(2),
+            low: +sumCat(subset, 'low').toFixed(2),
+            break: +sumCat(subset, 'break').toFixed(2),
+            waste: +waste.toFixed(2),
+          };
+        })
+      );
+    } else {
+      const weeks = eachWeekOfInterval({ start: startDate, end: today });
+      setWeekData(
+        weeks.map((wkStart) => {
+          const wkEnd = endOfWeek(wkStart);
+          const subset = rows.filter((r) => {
+            const d = new Date(r.date);
+            return d >= wkStart && d <= wkEnd;
+          });
+          const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+          const days = Math.min(7, Math.ceil((Math.min(wkEnd.getTime(), today.getTime()) - wkStart.getTime()) / (24 * 3600 * 1000)) + 1);
+          const waste = Math.max(0, 16 * days - tracked);
+          return {
+            label: format(wkStart, 'MMM dd'),
+            high: +sumCat(subset, 'high').toFixed(2),
+            medium: +sumCat(subset, 'medium').toFixed(2),
+            low: +sumCat(subset, 'low').toFixed(2),
+            break: +sumCat(subset, 'break').toFixed(2),
+            waste: +waste.toFixed(2),
+          };
+        })
+      );
+    }
   };
 
   useEffect(() => {
     fetchSessions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, chartPeriod]);
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Timer ticking
   useEffect(() => {
@@ -396,31 +430,10 @@ export default function Pomodoro() {
           </CardContent>
         </Card>
 
-        {/* Day ring + calendar */}
+        {/* Day ring */}
         <Card>
-          <CardHeader className="flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>24h Timeline</CardTitle>
-            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
-                  {format(viewDate, 'MMM dd')}
-                  <ChevronDown className={`ml-1 h-4 w-4 transition-transform ${calendarOpen ? 'rotate-180' : ''}`} />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={viewDate}
-                  onSelect={(d) => {
-                    if (d) {
-                      setViewDate(d);
-                      setCalendarOpen(false);
-                    }
-                  }}
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
           </CardHeader>
           <CardContent>
             <DayRing sessions={sessions} dateStr={viewDateStr} />
@@ -436,27 +449,51 @@ export default function Pomodoro() {
         </Card>
       </div>
 
-      {/* Weekly chart */}
+      {/* Time analytics chart */}
       <Card className="mt-4 sm:mt-6">
-        <CardHeader>
-          <CardTitle>Last 7 Days</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle>
+              {chartPeriod === '7d' ? 'Last 7 Days'
+                : chartPeriod === '1m' ? 'Last 1 Month'
+                : chartPeriod === '3m' ? 'Last 3 Months'
+                : 'Last 6 Months'}
+            </CardTitle>
+            <Select value={chartPeriod} onValueChange={(v) => setChartPeriod(v as typeof chartPeriod)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">7 Days</SelectItem>
+                <SelectItem value="1m">1 Month</SelectItem>
+                <SelectItem value="3m">3 Months (weekly)</SelectItem>
+                <SelectItem value="6m">6 Months (weekly)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weekData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} label={{ value: 'hrs', angle: -90, position: 'insideLeft', fontSize: 11 }} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="high" stackId="a" fill={CATEGORY_COLOR.high} />
-                <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} />
-                <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} />
-                <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} />
-                <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" />
-              </BarChart>
-            </ResponsiveContainer>
+        <CardContent className="px-2 sm:px-6">
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: `${Math.max(600, weekData.length * 60)}px` }} className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weekData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-35} textAnchor="end" height={50} />
+                  <YAxis tick={{ fontSize: 11 }} label={{ value: 'hrs', angle: -90, position: 'insideLeft', fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    formatter={(v: number, name: string) => [`${Number(v).toFixed(2)}h`, name]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="high" stackId="a" fill={CATEGORY_COLOR.high} />
+                  <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} />
+                  <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} />
+                  <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} />
+                  <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </CardContent>
       </Card>

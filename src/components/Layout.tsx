@@ -65,6 +65,7 @@ export function Layout() {
                 icon={item.icon}
                 label={item.label}
                 isActive={location.pathname === item.href}
+                textOnly
               />
             ))}
           </nav>
