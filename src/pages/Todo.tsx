@@ -504,10 +504,10 @@ export default function Todo() {
       </div>
 
       {/* Tasks by Priority */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-4 sm:mt-6">
         {(['high', 'medium', 'low'] as const).map((priority) => (
           <Card key={priority} className="h-fit">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 px-3 pt-3">
               <CardTitle className={`text-sm ${getPriorityColor(priority)} capitalize flex items-center gap-2`}>
                 {getPriorityEmoji(priority)} {priority} Priority
                 <span className="text-xs bg-muted px-2 py-1 rounded">
@@ -518,7 +518,7 @@ export default function Todo() {
                 {taskCounts[priority]}/{PRIORITY_LIMITS[priority]}
               </p>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-1.5 px-2 pb-3">
               {tasks.filter(task => task.priority === priority).length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-sm text-muted-foreground">No {priority} priority tasks yet</p>
@@ -529,73 +529,88 @@ export default function Todo() {
               ) : (
                 tasks
                   .filter(task => task.priority === priority)
-                  .map((task) => (
-                    <div key={task.id} className="flex items-center gap-2 p-2 rounded-lg border">
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
-                      />
-                      {editingTaskId === task.id ? (
-                        <Input
-                          autoFocus
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          onBlur={saveTaskTitle}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveTaskTitle();
-                            if (e.key === 'Escape') setEditingTaskId(null);
-                          }}
-                          className="flex-1 h-7 text-sm"
-                        />
-                      ) : (
-                        <span className={`flex-1 text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                          {task.title}
-                        </span>
-                      )}
-                      {editingTaskId === task.id ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={saveTaskTitle}
-                          title="Save"
-                          className="h-6 w-6 p-0 text-primary hover:bg-transparent hover:text-primary"
+                  .map((task) => {
+                    const isOpen = openActionsId === task.id;
+                    return (
+                      <div key={task.id} className="rounded-lg border px-2 py-1.5">
+                        <div className="flex items-center gap-2">
+                          {editingTaskId === task.id ? (
+                            <Input
+                              autoFocus
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onBlur={saveTaskTitle}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveTaskTitle();
+                                if (e.key === 'Escape') setEditingTaskId(null);
+                              }}
+                              className="flex-1 h-7 text-sm"
+                            />
+                          ) : (
+                            <span className={`flex-1 text-sm break-words ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                              {task.title}
+                            </span>
+                          )}
+                          <Checkbox
+                            checked={task.completed}
+                            onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
+                            className="ml-auto"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setOpenActionsId(isOpen ? null : task.id)}
+                            className="p-1 text-muted-foreground"
+                            aria-label="Toggle actions"
+                          >
+                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                        </div>
+                        <div
+                          className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-1.5' : 'grid-rows-[0fr] opacity-0'}`}
                         >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => startEditTask(task)}
-                            title="Edit"
-                            className="h-6 w-6 p-0 text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyTaskToNextDay(task)}
-                            title="Copy to next day"
-                            className="h-6 w-6 p-0 text-primary hover:bg-transparent hover:text-primary"
-                          >
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteTask(task.id)}
-                            title="Delete"
-                            className="h-6 w-6 p-0 text-destructive hover:bg-transparent hover:text-destructive"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  ))
+                          <div className="overflow-hidden">
+                            <div className="flex items-center gap-3 pl-1 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => startEditTask(task)}
+                                className="text-base"
+                                title="Edit"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => copyTaskToNextDay(task)}
+                                className="text-base"
+                                title="Move to next day"
+                              >
+                                ➡️
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteTask(task.id)}
+                                className="text-base"
+                                title="Delete"
+                              >
+                                ❌
+                              </button>
+                              {editingTaskId === task.id && (
+                                <button
+                                  type="button"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={saveTaskTitle}
+                                  className="text-primary"
+                                  title="Save"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
               )}
             </CardContent>
           </Card>
@@ -628,7 +643,7 @@ export default function Todo() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={progressData} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
                     <XAxis
-                      dataKey="day"
+                      dataKey="date"
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 11 }}
@@ -643,12 +658,18 @@ export default function Todo() {
                       tickLine={false}
                       tick={{ fontSize: 11 }}
                     />
+                    <Tooltip
+                      contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(v: number) => [`${v}%`, 'Completed']}
+                    />
                     <Line
                       type="monotone"
                       dataKey="percentage"
                       stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}
+                      activeDot={{ r: 5 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
