@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { format, subDays, eachDayOfInterval } from 'date-fns';
+import { format, subDays, subMonths, eachDayOfInterval, eachWeekOfInterval, endOfWeek } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -159,9 +159,9 @@ export default function Pomodoro() {
   const tickRef = useRef<number | null>(null);
 
   const [viewDate, setViewDate] = useState<Date>(new Date());
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [sessions, setSessions] = useState<PomoSession[]>([]);
   const [weekData, setWeekData] = useState<any[]>([]);
+  const [chartPeriod, setChartPeriod] = useState<'7d' | '1m' | '3m' | '6m'>('7d');
 
   const total = mode === 'break' ? PRESETS[preset].break : PRESETS[preset].work;
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
@@ -179,44 +179,78 @@ export default function Pomodoro() {
       .then(({ data }) => setTasks(((data || []) as Task[])));
   }, [user]);
 
-  // Fetch sessions for viewed date + last 7 days for chart
+  // Fetch sessions and aggregate based on selected chart period
   const fetchSessions = async () => {
     if (!user) return;
-    const start = format(subDays(new Date(), 6), 'yyyy-MM-dd');
+    const today = new Date();
+    let startDate: Date;
+    let mode: 'day' | 'week';
+    switch (chartPeriod) {
+      case '7d': startDate = subDays(today, 6); mode = 'day'; break;
+      case '1m': startDate = subDays(today, 29); mode = 'day'; break;
+      case '3m': startDate = subMonths(today, 3); mode = 'week'; break;
+      case '6m': startDate = subMonths(today, 6); mode = 'week'; break;
+    }
     const { data } = await (supabase as any)
       .from('pomodoro_sessions')
       .select('*')
       .eq('user_id', user.id)
-      .gte('date', start);
+      .gte('date', format(startDate, 'yyyy-MM-dd'));
     const rows = (data || []) as PomoSession[];
     setSessions(rows);
 
-    const days = eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() });
-    setWeekData(
-      days.map((d) => {
-        const ds = format(d, 'yyyy-MM-dd');
-        const dayRows = rows.filter((r) => r.date === ds);
-        const sum = (cat: Category) =>
-          dayRows.filter((r) => r.priority === cat).reduce((a, r) => a + r.duration_seconds, 0) / 3600;
-        const trackedHrs = dayRows.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
-        // Waste = unaccounted time during waking hours (assume 16h waking window)
-        const wasteHrs = Math.max(0, 16 - trackedHrs);
-        return {
-          day: format(d, 'EEE'),
-          high: +sum('high').toFixed(2),
-          medium: +sum('medium').toFixed(2),
-          low: +sum('low').toFixed(2),
-          break: +sum('break').toFixed(2),
-          waste: +wasteHrs.toFixed(2),
-        };
-      })
-    );
+    const sumCat = (subset: PomoSession[], cat: Category) =>
+      subset.filter((r) => r.priority === cat).reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+
+    if (mode === 'day') {
+      const days = eachDayOfInterval({ start: startDate, end: today });
+      setWeekData(
+        days.map((d) => {
+          const ds = format(d, 'yyyy-MM-dd');
+          const subset = rows.filter((r) => r.date === ds);
+          const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+          const waste = Math.max(0, 16 - tracked);
+          return {
+            label: format(d, 'MMM dd'),
+            high: +sumCat(subset, 'high').toFixed(2),
+            medium: +sumCat(subset, 'medium').toFixed(2),
+            low: +sumCat(subset, 'low').toFixed(2),
+            break: +sumCat(subset, 'break').toFixed(2),
+            waste: +waste.toFixed(2),
+          };
+        })
+      );
+    } else {
+      const weeks = eachWeekOfInterval({ start: startDate, end: today });
+      setWeekData(
+        weeks.map((wkStart) => {
+          const wkEnd = endOfWeek(wkStart);
+          const subset = rows.filter((r) => {
+            const d = new Date(r.date);
+            return d >= wkStart && d <= wkEnd;
+          });
+          const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+          const days = Math.min(7, Math.ceil((Math.min(wkEnd.getTime(), today.getTime()) - wkStart.getTime()) / (24 * 3600 * 1000)) + 1);
+          const waste = Math.max(0, 16 * days - tracked);
+          return {
+            label: format(wkStart, 'MMM dd'),
+            high: +sumCat(subset, 'high').toFixed(2),
+            medium: +sumCat(subset, 'medium').toFixed(2),
+            low: +sumCat(subset, 'low').toFixed(2),
+            break: +sumCat(subset, 'break').toFixed(2),
+            waste: +waste.toFixed(2),
+          };
+        })
+      );
+    }
   };
 
   useEffect(() => {
     fetchSessions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, chartPeriod]);
+
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Timer ticking
   useEffect(() => {
