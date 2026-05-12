@@ -7,9 +7,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LogOut, ArrowRight, Pencil, X, Check, ChevronDown } from 'lucide-react';
+import { Plus, LogOut, Check, ChevronDown } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -45,6 +45,7 @@ export default function Todo() {
   const [period, setPeriod] = useState<'week' | 'month' | '3months' | '6months' | 'year'>('week');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [openActionsId, setOpenActionsId] = useState<string | null>(null);
 
   const taskCounts: TaskCounts = tasks.reduce(
     (acc, task) => {
@@ -171,7 +172,7 @@ export default function Todo() {
         const percentage = Math.min(Math.round((completed / 10) * 100), 100);
         return {
           date: format(day, 'MMM dd'),
-          day: format(day, 'EEE dd'),
+          day: format(day, 'MMM dd'),
           percentage,
         };
       });
