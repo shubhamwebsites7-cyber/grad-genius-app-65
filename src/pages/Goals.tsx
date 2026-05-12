@@ -196,8 +196,6 @@ export default function Goals() {
         goal.id === goalId ? { ...goal, ...updates } : goal
       ));
 
-      setEditingGoal(null);
-      
       toast({
         title: "Success",
         description: "Goal updated successfully",
@@ -346,7 +344,7 @@ export default function Goals() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>My Goals</CardTitle>
-              <DropdownMenu open={showGoalForm} onOpenChange={setShowGoalForm}>
+              <DropdownMenu open={showGoalForm} onOpenChange={(o) => (o ? setShowGoalForm(true) : cancelGoalForm())}>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
                     <Plus className="h-4 w-4" />
@@ -354,9 +352,9 @@ export default function Goals() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 p-4">
                   <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Add New Goal</h4>
+                    <h4 className="font-medium text-sm">{editingGoalId ? 'Edit Goal' : 'Add New Goal'}</h4>
                     <Input
-                      placeholder="Enter a new goal..."
+                      placeholder="Enter a goal..."
                       value={newGoal}
                       onChange={(e) => setNewGoal(e.target.value)}
                       onKeyPress={(e) => {
@@ -377,9 +375,9 @@ export default function Goals() {
                     </Select>
                     <div className="flex gap-2">
                       <Button onClick={addGoal} disabled={!newGoal.trim()} className="flex-1">
-                        Add
+                        {editingGoalId ? 'Save' : 'Add'}
                       </Button>
-                      <Button variant="ghost" onClick={() => setShowGoalForm(false)}>
+                      <Button variant="ghost" onClick={cancelGoalForm}>
                         Cancel
                       </Button>
                     </div>
@@ -416,46 +414,17 @@ export default function Goals() {
                               updateGoal(goal.id, { completed: checked as boolean })
                             }
                           />
-                          {editingGoal?.id === goal.id ? (
-                            <Input
-                              value={editingGoal.title}
-                              onChange={(e) => setEditingGoal({ ...editingGoal, title: e.target.value })}
-                              onBlur={() => updateGoal(goal.id, { title: editingGoal.title })}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  updateGoal(goal.id, { title: editingGoal.title });
-                                }
-                              }}
-                              className="flex-1"
-                              autoFocus
-                            />
-                          ) : (
-                            <span
-                              className={`flex-1 cursor-pointer ${
-                                goal.completed ? 'line-through text-muted-foreground' : ''
-                              }`}
-                              onClick={() => setEditingGoal(goal)}
-                            >
-                              {goal.title}
-                            </span>
-                          )}
-                          <Select
-                            value={goal.priority || 'medium'}
-                            onValueChange={(v) => updateGoal(goal.id, { priority: v as 'high' | 'medium' | 'low' })}
+                          <span
+                            className={`flex-1 ${
+                              goal.completed ? 'line-through text-muted-foreground' : ''
+                            }`}
                           >
-                            <SelectTrigger className="h-7 w-[90px] text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="high">High</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="low">Low</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            {goal.title}
+                          </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setEditingGoal(goal)}
+                            onClick={() => startEditGoal(goal)}
                             className="h-6 w-6 p-0"
                           >
                             <Edit className="h-3 w-3" />
