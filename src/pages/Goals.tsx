@@ -51,7 +51,7 @@ export default function Goals() {
   const [newGoalPriority, setNewGoalPriority] = useState<'high' | 'medium' | 'low'>('medium');
   const [newTip, setNewTip] = useState('');
   const [newTipDescription, setNewTipDescription] = useState('');
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editingTip, setEditingTip] = useState<Tip | null>(null);
   
   // Dropdown states
@@ -114,6 +114,24 @@ export default function Goals() {
 
     setLoading(true);
     try {
+      if (editingGoalId) {
+        const { error } = await supabase
+          .from('goal')
+          .update({ title: newGoal.trim(), priority: newGoalPriority })
+          .eq('id', editingGoalId);
+        if (error) throw error;
+        setGoals((prev) =>
+          prev.map((g) =>
+            g.id === editingGoalId ? { ...g, title: newGoal.trim(), priority: newGoalPriority } : g
+          )
+        );
+        setNewGoal('');
+        setNewGoalPriority('medium');
+        setEditingGoalId(null);
+        setShowGoalForm(false);
+        toast({ title: 'Success', description: 'Goal updated successfully' });
+        return;
+      }
       const { data, error } = await supabase
         .from('goal')
         .insert([{ 
@@ -149,6 +167,20 @@ export default function Goals() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const startEditGoal = (goal: Goal) => {
+    setEditingGoalId(goal.id);
+    setNewGoal(goal.title);
+    setNewGoalPriority(goal.priority || 'medium');
+    setShowGoalForm(true);
+  };
+
+  const cancelGoalForm = () => {
+    setShowGoalForm(false);
+    setEditingGoalId(null);
+    setNewGoal('');
+    setNewGoalPriority('medium');
   };
 
   const updateGoal = async (goalId: string, updates: Partial<Goal>) => {
