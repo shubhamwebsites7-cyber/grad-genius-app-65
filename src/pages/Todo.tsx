@@ -73,13 +73,7 @@ export default function Todo() {
   const orderedTasks = (['high', 'medium', 'low'] as const).flatMap((p) =>
     tasks.filter((t) => t.priority === p)
   );
-  const cellPriorityColor = (p: 'high' | 'medium' | 'low') =>
-    p === 'high' ? 'bg-red-500' : p === 'medium' ? 'bg-yellow-500' : 'bg-green-500';
-  const progressCells = Array.from({ length: 10 }).map((_, i) => {
-    const t = orderedTasks[i];
-    const filled = t && t.completed;
-    return { filled: !!filled, color: t ? cellPriorityColor(t.priority) : '' };
-  });
+  const progressPct = Math.min(100, (completedTasks / 10) * 100);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
@@ -441,24 +435,6 @@ export default function Todo() {
         </Button>
       </div>
 
-      {/* Progress Overview - smooth segmented bar */}
-      <Card className="mb-4 sm:mb-6">
-        <CardContent className="pt-4 sm:pt-6">
-          <div className="mb-3 text-sm sm:text-base font-medium">
-            {Math.min(completedTasks, 10)}/10 tasks &middot; {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
-          </div>
-          <div className="flex w-full h-3 rounded-full bg-muted overflow-hidden">
-            {progressCells.map((c, i) => (
-              <div
-                key={i}
-                className={`${c.filled ? c.color : 'bg-transparent'} transition-colors duration-500`}
-                style={{ width: '10%' }}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Add New Task - collapsible */}
         <Card className={`lg:col-span-2 overflow-hidden transition-all duration-300 ${showAddForm ? 'opacity-100 max-h-[600px]' : 'opacity-0 max-h-0 border-0 mb-0'}`}>
@@ -499,6 +475,23 @@ export default function Todo() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Progress Overview - smooth filling bar with wave */}
+      <Card className="mb-4 sm:mb-6 mt-4 sm:mt-6">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="mb-3 text-sm sm:text-base font-medium">
+            {Math.min(completedTasks, 10)}/10 tasks &middot; {Math.round(progressPct)}% completed
+          </div>
+          <div className="relative w-full h-3 rounded-full bg-muted overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-700 ease-out overflow-hidden"
+              style={{ width: `${progressPct}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[wave_1.6s_linear_infinite]" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tasks by Priority */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-4 sm:mt-6">
@@ -551,7 +544,7 @@ export default function Todo() {
                           <Checkbox
                             checked={task.completed}
                             onCheckedChange={(checked) => toggleTask(task.id, checked as boolean)}
-                            className="ml-auto"
+                            className="ml-auto rounded-none h-4 w-4"
                           />
                           <button
                             type="button"

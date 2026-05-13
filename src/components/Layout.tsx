@@ -7,7 +7,7 @@ import { usePWA } from '@/hooks/usePWA';
 import { NavigationLink } from '@/components/NavigationLink';
 import { toast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -49,8 +49,7 @@ export function Layout() {
   const Header = (
     <header className="sticky top-0 z-40 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="flex h-14 items-center justify-between px-3 sm:px-4 gap-2">
-        <div className="flex items-center gap-2">
-          {!isMobile && <SidebarTrigger />}
+      <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             GoalGrip
           </h1>
@@ -110,7 +109,6 @@ export function Layout() {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {Header}
           <main className="flex-1 pb-4">
             <Outlet />
           </main>
