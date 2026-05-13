@@ -566,30 +566,30 @@ export default function Todo() {
                           className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-1.5' : 'grid-rows-[0fr] opacity-0'}`}
                         >
                           <div className="overflow-hidden">
-                            <div className="flex items-center gap-3 pl-1 pt-1">
+                            <div className="flex items-center gap-2 justify-end pt-1">
                               <button
                                 type="button"
                                 onClick={() => startEditTask(task)}
-                                className="text-base"
+                                className="p-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
                                 title="Edit"
                               >
-                                ✏️
+                                <Pencil className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => copyTaskToNextDay(task)}
-                                className="text-base"
+                                className="p-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
                                 title="Move to next day"
                               >
-                                ➡️
+                                <ArrowRight className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => deleteTask(task.id)}
-                                className="text-base"
+                                className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                                 title="Delete"
                               >
-                                ❌
+                                <Trash2 className="h-3.5 w-3.5" />
                               </button>
                               {editingTaskId === task.id && (
                                 <button
