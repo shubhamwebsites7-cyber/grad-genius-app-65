@@ -447,25 +447,21 @@ export default function Todo() {
           <div className="mb-3 text-sm sm:text-base font-medium">
             {Math.min(completedTasks, 10)}/10 tasks &middot; {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
           </div>
-          <div className="relative w-full h-3 rounded-full bg-muted overflow-hidden">
-            <div className="absolute inset-y-0 left-0 flex h-full">
-              {progressCells
-                .filter((c) => c.filled)
-                .map((c, i) => (
-                  <div
-                    key={i}
-                    className={`${c.color} transition-all duration-500`}
-                    style={{ width: `10%` }}
-                  />
-                ))}
-            </div>
+          <div className="flex w-full h-3 rounded-full bg-muted overflow-hidden">
+            {progressCells.map((c, i) => (
+              <div
+                key={i}
+                className={`${c.filled ? c.color : 'bg-transparent'} transition-colors duration-500`}
+                style={{ width: '10%' }}
+              />
+            ))}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Add New Task */}
-        <Card className="lg:col-span-2">
+        {/* Add New Task - collapsible */}
+        <Card className={`lg:col-span-2 overflow-hidden transition-all duration-300 ${showAddForm ? 'opacity-100 max-h-[600px]' : 'opacity-0 max-h-0 border-0 mb-0'}`}>
           <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
