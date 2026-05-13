@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LogOut, Check, ChevronDown } from 'lucide-react';
+import { Plus, Check, ChevronDown, Pencil, ArrowRight, Trash2 } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +35,7 @@ const PRIORITY_LIMITS = {
 };
 
 export default function Todo() {
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState('');
@@ -46,6 +46,7 @@ export default function Todo() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const taskCounts: TaskCounts = tasks.reduce(
     (acc, task) => {
@@ -169,26 +170,25 @@ export default function Todo() {
         const dayStr = format(day, 'yyyy-MM-dd');
         const dayTasks = data.filter(task => task.date === dayStr);
         const completed = dayTasks.filter(task => task.completed).length;
-        const percentage = Math.min(Math.round((completed / 10) * 100), 100);
         return {
-          date: format(day, 'MMM dd'),
+          date: format(day, 'dd'),
           day: format(day, 'MMM dd'),
-          percentage,
+          completed: Math.min(completed, 10),
         };
       });
     }
     const weekStarts = eachWeekOfInterval({ start: startDate, end: endDate });
     return weekStarts.map(weekStart => {
       const weekEnd = endOfWeek(weekStart);
-      const completed = data.filter(t => {
+      const completedTotal = data.filter(t => {
         const d = new Date(t.date);
         return t.completed && d >= weekStart && d <= weekEnd;
       }).length;
-      const percentage = Math.min(Math.round((completed / 70) * 100), 100);
+      const avg = Math.min(10, +(completedTotal / 7).toFixed(1));
       return {
-        date: format(weekStart, 'MMM dd'),
+        date: format(weekStart, 'dd'),
         day: format(weekStart, 'MMM dd'),
-        percentage,
+        completed: avg,
       };
     });
   };
