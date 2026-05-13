@@ -407,7 +407,7 @@ export default function Todo() {
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto pb-20">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6 gap-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">My ToDo</h1>
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -434,9 +434,10 @@ export default function Todo() {
             </PopoverContent>
           </Popover>
         </div>
-        <Button variant="ghost" onClick={() => signOut()} size="sm">
-          <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Sign Out</span>
+        <Button onClick={() => setShowAddForm((v) => !v)} size="sm" className="gap-1">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Add New Todo</span>
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAddForm ? 'rotate-180' : ''}`} />
         </Button>
       </div>
 
