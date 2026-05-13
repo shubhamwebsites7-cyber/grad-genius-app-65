@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Plus, Edit, Trash2, LogOut } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -41,7 +41,7 @@ interface Tip {
 
 export default function Goals() {
   console.log("Goals component is rendering - updates are working!");
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tips, setTips] = useState<Tip[]>([]);
   const [loading, setLoading] = useState(false);
@@ -332,15 +332,11 @@ export default function Goals() {
           <h1 className="text-2xl sm:text-3xl font-bold">Goals & Lifestyle</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">Track your goals, tips, and daily streaks</p>
         </div>
-        <Button variant="ghost" onClick={() => signOut()} size="sm">
-          <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Sign Out</span>
-        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 items-stretch">
         {/* Goals Section */}
-        <Card>
+        <Card className="flex flex-col h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>My Goals</CardTitle>
@@ -386,8 +382,8 @@ export default function Goals() {
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4 max-h-[32rem] overflow-y-auto">
+          <CardContent className="flex-1 min-h-0">
+            <div className="space-y-4 h-full max-h-[32rem] overflow-y-auto pr-1">
               {(['high', 'medium', 'low'] as const).map((level) => {
                 const levelGoals = goals.filter((g) => (g.priority || 'medium') === level);
                 const styles = {
@@ -453,7 +449,7 @@ export default function Goals() {
         </Card>
 
         {/* Tips Section */}
-        <Card>
+        <Card className="flex flex-col h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Health & Lifestyle Tips</CardTitle>
@@ -490,8 +486,8 @@ export default function Goals() {
               </DropdownMenu>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+          <CardContent className="flex-1 min-h-0">
+            <div className="space-y-3 h-full max-h-[32rem] overflow-y-auto pr-1">
               {tips.map((tip) => (
                 <div key={tip.id} className="p-3 rounded-lg border">
                   {editingTip?.id === tip.id ? (
