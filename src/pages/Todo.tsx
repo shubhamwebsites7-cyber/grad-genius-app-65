@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, LogOut, Check, ChevronDown } from 'lucide-react';
+import { Plus, Check, ChevronDown, Pencil, ArrowRight, Trash2 } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +35,7 @@ const PRIORITY_LIMITS = {
 };
 
 export default function Todo() {
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState('');
@@ -46,6 +46,7 @@ export default function Todo() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [openActionsId, setOpenActionsId] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const taskCounts: TaskCounts = tasks.reduce(
     (acc, task) => {
@@ -169,26 +170,25 @@ export default function Todo() {
         const dayStr = format(day, 'yyyy-MM-dd');
         const dayTasks = data.filter(task => task.date === dayStr);
         const completed = dayTasks.filter(task => task.completed).length;
-        const percentage = Math.min(Math.round((completed / 10) * 100), 100);
         return {
-          date: format(day, 'MMM dd'),
+          date: format(day, 'dd'),
           day: format(day, 'MMM dd'),
-          percentage,
+          completed: Math.min(completed, 10),
         };
       });
     }
     const weekStarts = eachWeekOfInterval({ start: startDate, end: endDate });
     return weekStarts.map(weekStart => {
       const weekEnd = endOfWeek(weekStart);
-      const completed = data.filter(t => {
+      const completedTotal = data.filter(t => {
         const d = new Date(t.date);
         return t.completed && d >= weekStart && d <= weekEnd;
       }).length;
-      const percentage = Math.min(Math.round((completed / 70) * 100), 100);
+      const avg = Math.min(10, +(completedTotal / 7).toFixed(1));
       return {
-        date: format(weekStart, 'MMM dd'),
+        date: format(weekStart, 'dd'),
         day: format(weekStart, 'MMM dd'),
-        percentage,
+        completed: avg,
       };
     });
   };
@@ -407,7 +407,7 @@ export default function Todo() {
   return (
     <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto pb-20">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
+      <div className="flex justify-between items-center mb-4 sm:mb-6 gap-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">My ToDo</h1>
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -434,9 +434,10 @@ export default function Todo() {
             </PopoverContent>
           </Popover>
         </div>
-        <Button variant="ghost" onClick={() => signOut()} size="sm">
-          <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Sign Out</span>
+        <Button onClick={() => setShowAddForm((v) => !v)} size="sm" className="gap-1">
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Add New Todo</span>
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAddForm ? 'rotate-180' : ''}`} />
         </Button>
       </div>
 
@@ -446,25 +447,21 @@ export default function Todo() {
           <div className="mb-3 text-sm sm:text-base font-medium">
             {Math.min(completedTasks, 10)}/10 tasks &middot; {Math.round((Math.min(completedTasks, 10) / 10) * 100)}% completed
           </div>
-          <div className="relative w-full h-3 rounded-full bg-muted overflow-hidden">
-            <div className="absolute inset-y-0 left-0 flex h-full">
-              {progressCells
-                .filter((c) => c.filled)
-                .map((c, i) => (
-                  <div
-                    key={i}
-                    className={`${c.color} transition-all duration-500`}
-                    style={{ width: `10%` }}
-                  />
-                ))}
-            </div>
+          <div className="flex w-full h-3 rounded-full bg-muted overflow-hidden">
+            {progressCells.map((c, i) => (
+              <div
+                key={i}
+                className={`${c.filled ? c.color : 'bg-transparent'} transition-colors duration-500`}
+                style={{ width: '10%' }}
+              />
+            ))}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Add New Task */}
-        <Card className="lg:col-span-2">
+        {/* Add New Task - collapsible */}
+        <Card className={`lg:col-span-2 overflow-hidden transition-all duration-300 ${showAddForm ? 'opacity-100 max-h-[600px]' : 'opacity-0 max-h-0 border-0 mb-0'}`}>
           <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -569,30 +566,30 @@ export default function Todo() {
                           className={`grid transition-all duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-1.5' : 'grid-rows-[0fr] opacity-0'}`}
                         >
                           <div className="overflow-hidden">
-                            <div className="flex items-center gap-3 pl-1 pt-1">
+                            <div className="flex items-center gap-2 justify-end pt-1">
                               <button
                                 type="button"
                                 onClick={() => startEditTask(task)}
-                                className="text-base"
+                                className="p-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
                                 title="Edit"
                               >
-                                ✏️
+                                <Pencil className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => copyTaskToNextDay(task)}
-                                className="text-base"
+                                className="p-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
                                 title="Move to next day"
                               >
-                                ➡️
+                                <ArrowRight className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => deleteTask(task.id)}
-                                className="text-base"
+                                className="p-1.5 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                                 title="Delete"
                               >
-                                ❌
+                                <Trash2 className="h-3.5 w-3.5" />
                               </button>
                               {editingTaskId === task.id && (
                                 <button
@@ -637,7 +634,7 @@ export default function Todo() {
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:px-6">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto [&_.recharts-wrapper_*]:outline-none [&_.recharts-surface]:outline-none focus:outline-none">
             <div style={{ minWidth: `${Math.max(500, progressData.length * 60)}px` }}>
               <ChartContainer className="h-56 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -647,13 +644,12 @@ export default function Todo() {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 11 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={50}
+                      height={40}
                       interval={0}
                     />
                     <YAxis
-                      domain={[0, 100]}
+                      domain={[0, 10]}
+                      ticks={[0, 2, 4, 6, 8, 10]}
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 11 }}
@@ -661,11 +657,11 @@ export default function Todo() {
                     <Tooltip
                       contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(v: number) => [`${v}%`, 'Completed']}
+                      formatter={(v: number) => [`${v}/10`, 'Completed']}
                     />
                     <Line
                       type="monotone"
-                      dataKey="percentage"
+                      dataKey="completed"
                       stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}

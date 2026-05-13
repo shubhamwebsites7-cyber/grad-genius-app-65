@@ -211,7 +211,7 @@ export default function Pomodoro() {
           const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
           const waste = Math.max(0, 16 - tracked);
           return {
-            label: format(d, 'MMM dd'),
+            label: format(d, 'dd'),
             high: +sumCat(subset, 'high').toFixed(2),
             medium: +sumCat(subset, 'medium').toFixed(2),
             low: +sumCat(subset, 'low').toFixed(2),
@@ -233,7 +233,7 @@ export default function Pomodoro() {
           const days = Math.min(7, Math.ceil((Math.min(wkEnd.getTime(), today.getTime()) - wkStart.getTime()) / (24 * 3600 * 1000)) + 1);
           const waste = Math.max(0, 16 * days - tracked);
           return {
-            label: format(wkStart, 'MMM dd'),
+            label: format(wkStart, 'dd'),
             high: +sumCat(subset, 'high').toFixed(2),
             medium: +sumCat(subset, 'medium').toFixed(2),
             low: +sumCat(subset, 'low').toFixed(2),
@@ -473,24 +473,29 @@ export default function Pomodoro() {
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:px-6">
-          <div className="overflow-x-auto">
-            <div style={{ minWidth: `${Math.max(600, weekData.length * 60)}px` }} className="h-72">
+          <div className="overflow-x-auto [&_.recharts-wrapper_*]:outline-none [&_.recharts-surface]:outline-none">
+            <div style={{ minWidth: `${Math.max(500, weekData.length * 38)}px` }} className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={weekData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                <BarChart data={weekData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barCategoryGap="35%">
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-35} textAnchor="end" height={50} />
-                  <YAxis tick={{ fontSize: 11 }} label={{ value: 'hrs', angle: -90, position: 'insideLeft', fontSize: 11 }} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} height={30} />
+                  <YAxis
+                    domain={[0, 24]}
+                    ticks={[0, 4, 8, 12, 16, 20, 24]}
+                    tick={{ fontSize: 11 }}
+                    label={{ value: 'hrs', angle: -90, position: 'insideLeft', fontSize: 11 }}
+                  />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                     labelStyle={{ color: 'hsl(var(--foreground))' }}
                     formatter={(v: number, name: string) => [`${Number(v).toFixed(2)}h`, name]}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="high" stackId="a" fill={CATEGORY_COLOR.high} />
-                  <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} />
-                  <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} />
-                  <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} />
-                  <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" />
+                  <Bar dataKey="high" stackId="a" fill={CATEGORY_COLOR.high} maxBarSize={24} />
+                  <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} maxBarSize={24} />
+                  <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} maxBarSize={24} />
+                  <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} maxBarSize={24} />
+                  <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" maxBarSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
