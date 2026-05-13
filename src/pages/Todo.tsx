@@ -634,7 +634,7 @@ export default function Todo() {
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:px-6">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto [&_.recharts-wrapper_*]:outline-none [&_.recharts-surface]:outline-none focus:outline-none">
             <div style={{ minWidth: `${Math.max(500, progressData.length * 60)}px` }}>
               <ChartContainer className="h-56 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -644,13 +644,12 @@ export default function Todo() {
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 11 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={50}
+                      height={40}
                       interval={0}
                     />
                     <YAxis
-                      domain={[0, 100]}
+                      domain={[0, 10]}
+                      ticks={[0, 2, 4, 6, 8, 10]}
                       axisLine={false}
                       tickLine={false}
                       tick={{ fontSize: 11 }}
@@ -658,11 +657,11 @@ export default function Todo() {
                     <Tooltip
                       contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(v: number) => [`${v}%`, 'Completed']}
+                      formatter={(v: number) => [`${v}/10`, 'Completed']}
                     />
                     <Line
                       type="monotone"
-                      dataKey="percentage"
+                      dataKey="completed"
                       stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 3 }}
