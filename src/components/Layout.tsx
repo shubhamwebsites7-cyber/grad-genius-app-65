@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Utensils, Weight, Download, CheckSquare, Target, Dumbbell, Timer } from 'lucide-react';
+import { Utensils, Weight, Download, CheckSquare, Target, Dumbbell, Timer, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -44,6 +44,7 @@ export function Layout() {
     { href: '/dashboard/goals', icon: Target, label: 'Goals' },
     { href: '/dashboard/exercise', icon: Dumbbell, label: 'Exercise' },
     { href: '/dashboard/pomodoro', icon: Timer, label: 'Pomodoro' },
+    { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
   ];
 
   const Header = (

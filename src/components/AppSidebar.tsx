@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Utensils, Weight, CheckSquare, Target, Dumbbell, Timer, LogOut, Download, PanelLeft } from 'lucide-react';
+import { Utensils, Weight, CheckSquare, Target, Dumbbell, Timer, LogOut, Download, PanelLeft, BarChart3 } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,7 @@ const items = [
   { title: 'Goals', url: '/dashboard/goals', icon: Target },
   { title: 'Exercise', url: '/dashboard/exercise', icon: Dumbbell },
   { title: 'Pomodoro', url: '/dashboard/pomodoro', icon: Timer },
+  { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
 ];
 
 export function AppSidebar() {
