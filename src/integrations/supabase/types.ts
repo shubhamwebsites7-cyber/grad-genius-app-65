@@ -80,6 +80,39 @@ export type Database = {
         }
         Relationships: []
       }
+      focus_ratings: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          interval_minutes: number
+          rating: number
+          suggested_break: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          interval_minutes?: number
+          rating: number
+          suggested_break?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          interval_minutes?: number
+          rating?: number
+          suggested_break?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goal: {
         Row: {
           completed: boolean
