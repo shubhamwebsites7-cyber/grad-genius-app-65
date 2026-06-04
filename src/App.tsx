@@ -14,6 +14,7 @@ import Todo from "./pages/Todo";
 import Goals from "./pages/Goals";
 import Exercise from "./pages/Exercise";
 import Pomodoro from "./pages/Pomodoro";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="goals" element={<Goals />} />
             <Route path="exercise" element={<Exercise />} />
             <Route path="pomodoro" element={<Pomodoro />} />
+            <Route path="analytics" element={<Analytics />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
