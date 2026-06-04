@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip, CartesianGrid } from 'recharts';
+import { FocusAccountability } from '@/components/FocusAccountability';
 
 type Priority = 'high' | 'medium' | 'low';
 type Category = Priority | 'break';
@@ -161,7 +162,7 @@ export default function Pomodoro() {
   const [viewDate, setViewDate] = useState<Date>(new Date());
   const [sessions, setSessions] = useState<PomoSession[]>([]);
   const [weekData, setWeekData] = useState<any[]>([]);
-  const [chartPeriod, setChartPeriod] = useState<'7d' | '1m' | '3m' | '6m'>('7d');
+  const [chartPeriod, setChartPeriod] = useState<'7d' | '1m' | '3m' | '6m' | '1y'>('7d');
 
   const total = mode === 'break' ? PRESETS[preset].break : PRESETS[preset].work;
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
@@ -190,6 +191,7 @@ export default function Pomodoro() {
       case '1m': startDate = subDays(today, 29); mode = 'day'; break;
       case '3m': startDate = subMonths(today, 3); mode = 'week'; break;
       case '6m': startDate = subMonths(today, 6); mode = 'week'; break;
+      case '1y': startDate = subMonths(today, 12); mode = 'week'; break;
     }
     const { data } = await (supabase as any)
       .from('pomodoro_sessions')
@@ -457,7 +459,8 @@ export default function Pomodoro() {
               {chartPeriod === '7d' ? 'Last 7 Days'
                 : chartPeriod === '1m' ? 'Last 1 Month'
                 : chartPeriod === '3m' ? 'Last 3 Months'
-                : 'Last 6 Months'}
+                : chartPeriod === '6m' ? 'Last 6 Months'
+                : 'Last 1 Year'}
             </CardTitle>
             <Select value={chartPeriod} onValueChange={(v) => setChartPeriod(v as typeof chartPeriod)}>
               <SelectTrigger className="w-[140px]">
@@ -468,6 +471,7 @@ export default function Pomodoro() {
                 <SelectItem value="1m">1 Month</SelectItem>
                 <SelectItem value="3m">3 Months (weekly)</SelectItem>
                 <SelectItem value="6m">6 Months (weekly)</SelectItem>
+                <SelectItem value="1y">1 Year (weekly)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -502,6 +506,8 @@ export default function Pomodoro() {
           </div>
         </CardContent>
       </Card>
+
+      <FocusAccountability running={running && mode === 'work'} />
     </div>
   );
 }
