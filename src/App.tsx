@@ -8,13 +8,11 @@ import { ProtectedRoute } from "./pages/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
 import Privacy from "./pages/Privacy";
-import CalendarView from "./pages/CalendarView";
-import Weight from "./pages/Weight";
 import Todo from "./pages/Todo";
 import Goals from "./pages/Goals";
-import Exercise from "./pages/Exercise";
 import Pomodoro from "./pages/Pomodoro";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,14 +32,12 @@ const App = () => (
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<CalendarView />} />
-            <Route path="calories" element={<CalendarView />} />
-            <Route path="weight" element={<Weight />} />
+            <Route index element={<Todo />} />
             <Route path="todo" element={<Todo />} />
             <Route path="goals" element={<Goals />} />
-            <Route path="exercise" element={<Exercise />} />
             <Route path="pomodoro" element={<Pomodoro />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
