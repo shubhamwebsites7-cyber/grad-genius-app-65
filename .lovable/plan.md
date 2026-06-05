@@ -1,47 +1,106 @@
-## Scope
+## Goal
+Slim the app to **Todo, Goals, Pomodoro, Analytics** only, remove Exercise/Weight/Calories and the entire Focus Accountability/Rating system, add a rule-based Smart Notification system with settings and PWA push support, and prepare the project for Android TWA + Play Store while keeping the current UI untouched.
 
-Five changes across the app:
+---
 
-### 1. Todo page — top progress bar
-- Add a 10-task progress bar at the top of `/dashboard/todo` showing `completed / 10`.
-- Bar is segmented into 10 cells; each filled cell colored by that task's priority (red=high, yellow=medium, green=low). Empty cells use muted color.
-- Order: high → medium → low (matching existing list order).
+## 1. Feature Audit (current state)
 
-### 2. Todo page — calendar arrow dropdown
-- Replace the always-visible date picker with a small chevron/arrow button next to the date label.
-- Click toggles a smooth animated dropdown containing the existing `Calendar` (shadcn) for picking another day.
+**Existing & keeping**
+- Todo: daily tasks, calendar, H/M/L priorities, progress bar, weekly→1Y analytics
+- Goals: long-term goals, priorities, tips ("Health & Lifestyle Tips" → will be renamed/repurposed as "Things To Remember")
+- Pomodoro: 25/5, 45/15, task selection, start/pause/reset, 24h ring, weekly→1Y analytics
+- Analytics: productivity score, KPIs, trends
+- PWA: manifest + `public/sw.js` (basic cache), install button, assetlinks.json (TWA-ready stub)
 
-### 3. New Pomodoro page (`/dashboard/pomodoro`)
-- Add nav item "Pomodoro" (Timer icon) to `Layout` navigation.
-- Page contents:
-  - **Task selector**: scrollable dropdown of today's tasks (max ~10). Shows priority dot.
-  - **Quick complete**: checkmark button next to selected task to mark it done (updates `tasks.completed`).
-  - **Preset selector**: `25/5` (default) or `45/15`.
-  - **Circular timer**: SVG circular progress, green stroke during work, red during break, animated countdown (mm:ss in center), Start / Pause / Reset.
-  - **Calendar dropdown**: pick any day to view that day's pomodoro data.
-  - **24h daily timeline**: circular ring representing 24h. Each completed pomodoro / break renders as a colored arc by category (high=red, medium=yellow, low=green, break=blue, waste=muted gray for unaccounted time).
-  - **Weekly column chart**: stacked bars for last 7 days; segments are total hours of high / medium / low / break / waste.
-- New `pomodoro_sessions` table: `id, user_id, task_id (nullable), priority (high/medium/low/break), started_at, ended_at, duration_seconds, date`. RLS: user owns rows.
+**To remove**
+- Pages: `Exercise.tsx`, `Weight.tsx`, `CalendarView.tsx` (calories tracker — dashboard index, will be replaced by Todo as the default landing)
+- Components: `FocusAccountability.tsx`
+- Supabase tables: `exercise_completions`, `weights`, `calories`, `focus_ratings`
+- SQL files for removed modules
+- Routes and nav entries for removed pages
+- Dead imports/icons
 
-### 4. Layout navigation — desktop in top navbar, mobile stays bottom
-- In `Layout.tsx`, render the nav items inline in the header on `md+` (hidden on mobile) and hide the bottom footer nav on `md+` (visible only on mobile).
-- Add Pomodoro item to the same list.
+**Missing / partial**
+- "Things To Remember" section in Goals (currently only tips list)
+- Smart rule-based notifications + settings UI
+- Web Push (currently only basic cache SW, no `Notification` / `showNotification` scheduling)
+- `notification_settings` table
+- MySQL scripts for removed modules need deletion; `notification_settings.sql` needs creation
 
-### 5. Types & data
-- Migration creates `pomodoro_sessions` with RLS + updated_at trigger.
-- Pomodoro page reads/writes via supabase client; aggregates client-side for circular + bar charts.
+---
 
-## Technical notes
+## 2. Removal Plan
 
-- Circular timer + 24h ring built with plain SVG (no new deps); column chart uses existing `recharts`.
-- Use `framer-motion` (already common) only if available; otherwise CSS transitions for the calendar dropdown.
-- Colors come from semantic tokens / existing priority classes — no hex in components.
-- Active timer state lives in the page component (not persisted across reload); a session row is inserted only when a work/break interval completes.
+Delete files:
+- `src/pages/Exercise.tsx`, `src/pages/Weight.tsx`, `src/pages/CalendarView.tsx`
+- `src/components/FocusAccountability.tsx`
+- `database/mysql/` — remove any Exercise/Weight/Calories SQL (none exist yet for those, but verify)
+- Drop unused Supabase tables via migration: `exercise_completions`, `weights`, `calories`, `focus_ratings`
 
-## Files
+Update:
+- `src/App.tsx` — remove routes for `calories`, `weight`, `exercise`; make `Todo` the dashboard index
+- `src/components/AppSidebar.tsx` + `Layout.tsx` — remove nav items for Calories/Weight/Exercise; remove FocusAccountability usage in `Pomodoro.tsx`
+- `src/pages/Pomodoro.tsx` — strip `<FocusAccountability />` mount and any focus-rating references
 
-- `supabase/migrations/<new>.sql` — `pomodoro_sessions` + RLS + trigger.
-- `src/pages/Pomodoro.tsx` — new page.
-- `src/App.tsx` — add `/dashboard/pomodoro` route.
-- `src/components/Layout.tsx` — desktop top nav + mobile bottom nav, add Pomodoro item.
-- `src/pages/Todo.tsx` — top 10-cell progress bar + calendar arrow dropdown.
+---
+
+## 3. New: Smart Notification System (no AI)
+
+Files:
+- `src/lib/notifications/rules.ts` — pure functions taking `{name, todos, goals, pomodoro}` → list of `{id, title, body, category}`
+- `src/lib/notifications/scheduler.ts` — schedules via `setTimeout` + `navigator.serviceWorker.ready.showNotification`; morning reminder fires at 08:00 local; inactivity check every 2h; pomodoro complete already triggered from Pomodoro page
+- `src/hooks/useNotifications.tsx` — permission request, registration, settings hookup
+- `src/pages/Settings.tsx` — Notification Settings page (toggles: Enable All, Morning, Todo, Pomodoro, Motivational)
+- Settings persisted in `localStorage` + synced to Supabase `notification_settings` table when authenticated
+
+Categories map 1:1 to user toggles. Each rule checks its toggle before firing.
+
+---
+
+## 4. PWA / Push
+
+- Extend `public/sw.js`:
+  - `push` event → `self.registration.showNotification(...)`
+  - `notificationclick` → focus or open `/dashboard/todo`
+- Keep existing cache logic and dynamic version
+- Add `src/lib/notifications/permission.ts` helper
+- No external push server — use local scheduled notifications via SW `showNotification` (works for Website + installed PWA + Desktop PWA). Document that true server push would need VAPID; out of scope.
+
+---
+
+## 5. TWA Readiness
+
+- Verify `public/.well-known/assetlinks.json` exists (it does)
+- Ensure `manifest.json` has: `id`, `start_url: "/dashboard/todo"`, `scope: "/"`, `display: "standalone"`, `theme_color`, `background_color`, maskable icons (already present — audit and patch if missing fields)
+- Add `<meta name="mobile-web-app-capable">` etc. in `index.html` if absent
+- No Android code
+
+---
+
+## 6. Database Changes
+
+Supabase migration:
+- `DROP TABLE` for `exercise_completions`, `weights`, `calories`, `focus_ratings` (with policy cleanup)
+- `CREATE TABLE public.notification_settings` (user_id PK, enable_all, morning, todo, pomodoro, motivational booleans, timestamps) + GRANTs + RLS
+
+MySQL (`database/mysql/`):
+- Delete `focus_ratings.sql`
+- Add `notification_settings.sql`
+- Update `install.sql` and `README.md`
+- Keep: `users.sql`, `todos.sql`, `goals.sql`, `pomodoro_sessions.sql`, `subscriptions.sql`, `analytics.sql`
+
+---
+
+## 7. Reports (delivered in final message)
+
+After implementation, the closing message will include:
+Feature Audit · Removed · Missing→Implemented · Navigation · Routes · DB · SQL · Notifications · PWA · TWA · Dependency Cleanup · Folder Structure.
+
+---
+
+## Confirmation needed
+1. OK to **drop the Supabase tables** `exercise_completions`, `weights`, `calories`, `focus_ratings` (data is lost permanently)?
+2. New default landing route after removing Calories dashboard → **`/dashboard/todo`** — OK?
+3. Add a new **`/dashboard/settings`** route for notification toggles — OK?
+
+Reply "go" (with any changes to the three questions) and I'll execute the full plan.
