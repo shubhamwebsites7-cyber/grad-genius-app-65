@@ -14,105 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      calories: {
-        Row: {
-          afternoon: number | null
-          created_at: string
-          daily_goal: number | null
-          date: string
-          dinner: number | null
-          evening: number | null
-          id: string
-          morning: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          afternoon?: number | null
-          created_at?: string
-          daily_goal?: number | null
-          date: string
-          dinner?: number | null
-          evening?: number | null
-          id?: string
-          morning?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          afternoon?: number | null
-          created_at?: string
-          daily_goal?: number | null
-          date?: string
-          dinner?: number | null
-          evening?: number | null
-          id?: string
-          morning?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      exercise_completions: {
-        Row: {
-          completion_status: string
-          created_at: string
-          date: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completion_status: string
-          created_at?: string
-          date: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completion_status?: string
-          created_at?: string
-          date?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      focus_ratings: {
-        Row: {
-          created_at: string
-          date: string
-          id: string
-          interval_minutes: number
-          rating: number
-          suggested_break: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          date?: string
-          id?: string
-          interval_minutes?: number
-          rating: number
-          suggested_break?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          id?: string
-          interval_minutes?: number
-          rating?: number
-          suggested_break?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       goal: {
         Row: {
           completed: boolean
@@ -170,6 +71,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weight_goal?: number | null
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          enable_all: boolean
+          morning: boolean
+          motivational: boolean
+          pomodoro: boolean
+          todo: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enable_all?: boolean
+          morning?: boolean
+          motivational?: boolean
+          pomodoro?: boolean
+          todo?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enable_all?: boolean
+          morning?: boolean
+          motivational?: boolean
+          pomodoro?: boolean
+          todo?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -296,33 +230,6 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      weights: {
-        Row: {
-          created_at: string
-          date: string
-          id: string
-          updated_at: string
-          user_id: string
-          weight: number
-        }
-        Insert: {
-          created_at?: string
-          date: string
-          id?: string
-          updated_at?: string
-          user_id: string
-          weight: number
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-          weight?: number
         }
         Relationships: []
       }

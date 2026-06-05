@@ -26,16 +26,14 @@ export default function Analytics() {
       const start = subDays(today, 29);
       const startStr = format(start, 'yyyy-MM-dd');
 
-      const [tasksRes, sessionsRes, ratingsRes, goalsRes] = await Promise.all([
+      const [tasksRes, sessionsRes, goalsRes] = await Promise.all([
         supabase.from('tasks').select('date, completed').eq('user_id', user.id).gte('date', startStr),
         (supabase as any).from('pomodoro_sessions').select('date, duration_seconds, priority').eq('user_id', user.id).gte('date', startStr),
-        (supabase as any).from('focus_ratings').select('date, rating').eq('user_id', user.id).gte('date', startStr),
         supabase.from('goal').select('completed').eq('user_id', user.id),
       ]);
 
       const tasks = tasksRes.data || [];
       const sessions = sessionsRes.data || [];
-      const ratings = ratingsRes.data || [];
 
       const dayList = eachDayOfInterval({ start, end: today });
       const built: Daily[] = dayList.map((d) => {
@@ -46,21 +44,17 @@ export default function Analytics() {
           .filter((s: any) => s.date === ds && s.priority !== 'break')
           .reduce((a: number, s: any) => a + s.duration_seconds, 0);
         const focusH = focusSec / 3600;
-        const rDay = ratings.filter((r: any) => r.date === ds);
-        const avgR = rDay.length ? rDay.reduce((a: number, r: any) => a + r.rating, 0) / rDay.length : 0;
-
-        // Productivity score: 50% tasks (out of 10) + 40% focus (cap 8h) + 10% rating
+        // Productivity score: 60% tasks (out of 10) + 40% focus (cap 8h)
         const taskPct = Math.min(1, completed / 10);
         const focusPct = Math.min(1, focusH / 8);
-        const ratingPct = avgR ? avgR / 10 : 0;
-        const score = Math.round((taskPct * 50 + focusPct * 40 + ratingPct * 10));
+        const score = Math.round((taskPct * 60 + focusPct * 40));
 
         return {
           date: ds,
           label: format(d, 'dd'),
           tasksCompleted: completed,
           focusHours: +focusH.toFixed(2),
-          avgFocusRating: +avgR.toFixed(1),
+          avgFocusRating: 0,
           productivity: score,
           consistent: completed > 0 || focusH > 0 ? 1 : 0,
         };
@@ -131,20 +125,6 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Average focus rating (self-reported)</CardTitle></CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={days}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                <Line type="monotone" dataKey="avgFocusRating" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

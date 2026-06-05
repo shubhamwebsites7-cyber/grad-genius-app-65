@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Utensils, Weight, CheckSquare, Target, Dumbbell, Timer, LogOut, Download, PanelLeft, BarChart3 } from 'lucide-react';
+import { CheckSquare, Target, Timer, LogOut, Download, PanelLeft, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -20,13 +20,11 @@ import { usePWA } from '@/hooks/usePWA';
 import { toast } from '@/hooks/use-toast';
 
 const items = [
-  { title: 'Calories', url: '/dashboard', icon: Utensils },
-  { title: 'Weight', url: '/dashboard/weight', icon: Weight },
   { title: 'Todo', url: '/dashboard/todo', icon: CheckSquare },
   { title: 'Goals', url: '/dashboard/goals', icon: Target },
-  { title: 'Exercise', url: '/dashboard/exercise', icon: Dumbbell },
   { title: 'Pomodoro', url: '/dashboard/pomodoro', icon: Timer },
   { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+  { title: 'Settings', url: '/dashboard/settings', icon: SettingsIcon },
 ];
 
 export function AppSidebar() {

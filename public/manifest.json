@@ -1,8 +1,8 @@
 {
-  "name": "GoalGrip - Health & Productivity Tracker",
+  "name": "GoalGrip - Productivity Tracker",
   "short_name": "GoalGrip",
-  "description": "Your all-in-one health & productivity companion. Track calories, weight, tasks, goals and exercise habits.",
-  "start_url": "/dashboard",
+  "description": "Plan tasks, track goals, run Pomodoro sessions, and watch your productivity trends — all in one focused app.",
+  "start_url": "/dashboard/todo",
   "id": "/dashboard",
   "display": "standalone",
   "background_color": "#f5fafa",
@@ -45,7 +45,7 @@
       "label": "GoalGrip Dashboard"
     }
   ],
-  "categories": ["health", "fitness", "lifestyle", "productivity"],
+  "categories": ["productivity", "lifestyle"],
   "lang": "en",
   "dir": "ltr"
 }

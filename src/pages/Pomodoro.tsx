@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip, CartesianGrid } from 'recharts';
-import { FocusAccountability } from '@/components/FocusAccountability';
+import { notifyPomodoroComplete } from '@/lib/notifications/scheduler';
 
 type Priority = 'high' | 'medium' | 'low';
 type Category = Priority | 'break';
@@ -303,6 +303,7 @@ export default function Pomodoro() {
       setMode('break');
       setRemaining(PRESETS[preset].break);
       toast({ title: 'Focus complete', description: 'Time for a break!' });
+      notifyPomodoroComplete();
     } else {
       setMode('idle');
       setRemaining(PRESETS[preset].work);
@@ -507,7 +508,6 @@ export default function Pomodoro() {
         </CardContent>
       </Card>
 
-      <FocusAccountability running={running && mode === 'work'} />
     </div>
   );
 }

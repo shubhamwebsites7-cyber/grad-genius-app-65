@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Utensils, Weight, Download, CheckSquare, Target, Dumbbell, Timer, BarChart3 } from 'lucide-react';
+import { Download, CheckSquare, Target, Timer, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,12 +10,14 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSmartNotifications } from '@/hooks/useSmartNotifications';
 
 export function Layout() {
   const { user, signOut } = useAuth();
   const { canInstall, installApp } = usePWA();
   const location = useLocation();
   const isMobile = useIsMobile();
+  useSmartNotifications();
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,13 +40,11 @@ export function Layout() {
   };
 
   const navigationItems = [
-    { href: '/dashboard', icon: Utensils, label: 'Calories' },
-    { href: '/dashboard/weight', icon: Weight, label: 'Weight' },
     { href: '/dashboard/todo', icon: CheckSquare, label: 'Todo' },
     { href: '/dashboard/goals', icon: Target, label: 'Goals' },
-    { href: '/dashboard/exercise', icon: Dumbbell, label: 'Exercise' },
     { href: '/dashboard/pomodoro', icon: Timer, label: 'Pomodoro' },
     { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+    { href: '/dashboard/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 
   const Header = (
