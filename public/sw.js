@@ -110,3 +110,37 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// Push notifications
+self.addEventListener('push', (event) => {
+  let payload = { title: 'GoalGrip', body: 'You have a new notification', url: '/dashboard/todo' };
+  if (event.data) {
+    try { payload = { ...payload, ...event.data.json() }; }
+    catch { payload.body = event.data.text(); }
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
+      tag: payload.tag || 'goalgrip',
+      data: { url: payload.url },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/dashboard/todo';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+    })
+  );
+});

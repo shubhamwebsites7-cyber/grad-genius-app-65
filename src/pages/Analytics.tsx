@@ -125,20 +125,6 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Average focus rating (self-reported)</CardTitle></CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={days}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                <Line type="monotone" dataKey="avgFocusRating" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

@@ -10,12 +10,14 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSmartNotifications } from '@/hooks/useSmartNotifications';
 
 export function Layout() {
   const { user, signOut } = useAuth();
   const { canInstall, installApp } = usePWA();
   const location = useLocation();
   const isMobile = useIsMobile();
+  useSmartNotifications();
 
   const handleSignOut = async () => {
     await signOut();

@@ -7,7 +7,7 @@ SOURCE database/mysql/users.sql;
 SOURCE database/mysql/todos.sql;
 SOURCE database/mysql/goals.sql;
 SOURCE database/mysql/pomodoro_sessions.sql;
-SOURCE database/mysql/focus_ratings.sql;
+SOURCE database/mysql/notification_settings.sql;
 SOURCE database/mysql/subscriptions.sql;
 SOURCE database/mysql/analytics.sql;
 
