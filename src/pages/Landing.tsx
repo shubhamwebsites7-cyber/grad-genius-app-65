@@ -2,11 +2,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Utensils, 
-  Weight, 
   CheckSquare, 
   Target, 
-  Dumbbell, 
+  Timer,
+  BarChart3,
   Flame,
   TrendingUp,
   Calendar,
@@ -23,39 +22,33 @@ import { useState } from 'react';
 
 const features = [
   {
-    icon: Utensils,
-    title: 'Calorie Tracking',
-    description: 'Track your daily meals across morning, afternoon, dinner, and evening with customizable calorie goals.',
-    color: 'text-orange-500'
-  },
-  {
-    icon: Weight,
-    title: 'Weight Monitoring',
-    description: 'Log your weight daily and visualize your progress with beautiful interactive charts.',
-    color: 'text-blue-500'
-  },
-  {
     icon: CheckSquare,
     title: 'Smart To-Do List',
-    description: 'Manage tasks with priority levels (High, Medium, Low) and smart limits to stay focused.',
+    description: 'Manage tasks with priority levels (High, Medium, Low) and stay focused on what matters today.',
     color: 'text-green-500'
   },
   {
     icon: Target,
-    title: 'Goals & Lifestyle Tips',
-    description: 'Set personal goals, track completion, and save health & lifestyle tips for motivation.',
+    title: 'Goals & Things to Remember',
+    description: 'Set long-term goals, capture daily reminders, and track completion over time.',
     color: 'text-purple-500'
   },
   {
-    icon: Dumbbell,
-    title: 'Exercise Tracking',
-    description: 'Track your workouts, maintain streaks, and build consistent exercise habits.',
+    icon: Timer,
+    title: 'Pomodoro Focus',
+    description: 'Run 25/5 or 45/15 focus sessions, attach tasks, and visualize your full day on a 24h ring.',
     color: 'text-red-500'
+  },
+  {
+    icon: BarChart3,
+    title: 'Productivity Analytics',
+    description: 'Daily, weekly, and long-term trends with a single productivity score.',
+    color: 'text-blue-500'
   },
   {
     icon: Flame,
     title: 'Streak System',
-    description: 'Build and maintain streaks for consistent progress. Never break the chain!',
+    description: 'Build and maintain consistency streaks across tasks and focus time.',
     color: 'text-amber-500'
   }
 ];
@@ -270,19 +263,6 @@ export default function Landing() {
               <Card className="relative bg-card border-0 shadow-2xl">
                 <CardContent className="p-8">
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                          <Utensils className="h-5 w-5 text-orange-500" />
-                        </div>
-                        <div>
-                          <div className="font-medium">Today's Calories</div>
-                          <div className="text-sm text-muted-foreground">1,850 / 2,200 kcal</div>
-                        </div>
-                      </div>
-                      <div className="text-2xl font-bold text-primary">84%</div>
-                    </div>
-
                     <div className="flex items-center justify-between p-4 bg-muted rounded-xl">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
