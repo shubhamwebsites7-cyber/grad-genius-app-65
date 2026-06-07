@@ -93,7 +93,7 @@ function CircularTimer({
           </g>
         );
       })}
-      <text x="50%" y="48%" textAnchor="middle" className="fill-foreground" fontSize="30" fontWeight="700" fontVariantNumeric="tabular-nums">
+      <text x="50%" y="48%" textAnchor="middle" className="fill-foreground" fontSize="30" fontWeight="700" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {fmtMs(remainingMs)}
       </text>
       <text x="50%" y="60%" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
@@ -219,15 +219,12 @@ export default function Pomodoro() {
         days.map((d) => {
           const ds = format(d, 'yyyy-MM-dd');
           const subset = rows.filter((r) => r.date === ds);
-          const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
-          const waste = Math.max(0, 16 - tracked);
           return {
             label: format(d, 'dd'),
             high: +sumCat(subset, 'high').toFixed(2),
             medium: +sumCat(subset, 'medium').toFixed(2),
             low: +sumCat(subset, 'low').toFixed(2),
             break: +sumCat(subset, 'break').toFixed(2),
-            waste: +waste.toFixed(2),
           };
         })
       );
@@ -240,16 +237,12 @@ export default function Pomodoro() {
             const d = new Date(r.date);
             return d >= wkStart && d <= wkEnd;
           });
-          const tracked = subset.reduce((a, r) => a + r.duration_seconds, 0) / 3600;
-          const days = Math.min(7, Math.ceil((Math.min(wkEnd.getTime(), today.getTime()) - wkStart.getTime()) / (24 * 3600 * 1000)) + 1);
-          const waste = Math.max(0, 16 * days - tracked);
           return {
             label: format(wkStart, 'dd'),
             high: +sumCat(subset, 'high').toFixed(2),
             medium: +sumCat(subset, 'medium').toFixed(2),
             low: +sumCat(subset, 'low').toFixed(2),
             break: +sumCat(subset, 'break').toFixed(2),
-            waste: +waste.toFixed(2),
           };
         })
       );
@@ -514,7 +507,6 @@ export default function Pomodoro() {
                   <Bar dataKey="medium" stackId="a" fill={CATEGORY_COLOR.medium} maxBarSize={24} />
                   <Bar dataKey="low" stackId="a" fill={CATEGORY_COLOR.low} maxBarSize={24} />
                   <Bar dataKey="break" stackId="a" fill={CATEGORY_COLOR.break} maxBarSize={24} />
-                  <Bar dataKey="waste" stackId="a" fill="hsl(var(--muted-foreground) / 0.3)" maxBarSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
