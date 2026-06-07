@@ -56,41 +56,48 @@ const fmtMs = (ms: number) => {
 };
 
 function CircularTimer({
-  total,
-  remaining,
+  totalMs,
+  remainingMs,
   mode,
 }: {
-  total: number;
-  remaining: number;
+  totalMs: number;
+  remainingMs: number;
   mode: 'work' | 'break' | 'idle';
 }) {
   const size = 240;
-  const stroke = 14;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const progress = total > 0 ? 1 - remaining / total : 0;
-  const dash = c * progress;
-  const color = mode === 'break' ? '#ef4444' : '#22c55e';
+  const stroke = 10;
+  const rings = [
+    { r: (size - stroke) / 2, color: mode === 'break' ? '#ef4444' : '#22c55e', progress: totalMs > 0 ? 1 - remainingMs / totalMs : 0 },
+    { r: (size - stroke) / 2 - (stroke + 4), color: '#3b82f6', progress: 1 - ((remainingMs % 60000) / 60000) },
+    { r: (size - stroke) / 2 - 2 * (stroke + 4), color: '#a855f7', progress: 1 - ((remainingMs % 1000) / 1000) },
+  ];
   return (
     <svg width={size} height={size} className="mx-auto">
-      <circle cx={size / 2} cy={size / 2} r={r} stroke="hsl(var(--muted))" strokeWidth={stroke} fill="none" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        stroke={color}
-        strokeWidth={stroke}
-        fill="none"
-        strokeDasharray={`${dash} ${c - dash}`}
-        strokeDashoffset={c / 4}
-        strokeLinecap="round"
-        style={{ transition: 'stroke-dasharray 0.5s linear' }}
-      />
-      <text x="50%" y="48%" textAnchor="middle" className="fill-foreground" fontSize="38" fontWeight="700">
-        {fmt(remaining)}
+      {rings.map((ring, i) => {
+        const c = 2 * Math.PI * ring.r;
+        const dash = c * ring.progress;
+        return (
+          <g key={i}>
+            <circle cx={size / 2} cy={size / 2} r={ring.r} stroke="hsl(var(--muted))" strokeWidth={stroke} fill="none" />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={ring.r}
+              stroke={ring.color}
+              strokeWidth={stroke}
+              fill="none"
+              strokeDasharray={`${dash} ${c - dash}`}
+              strokeDashoffset={c / 4}
+              strokeLinecap="round"
+            />
+          </g>
+        );
+      })}
+      <text x="50%" y="48%" textAnchor="middle" className="fill-foreground" fontSize="30" fontWeight="700" fontVariantNumeric="tabular-nums">
+        {fmtMs(remainingMs)}
       </text>
-      <text x="50%" y="62%" textAnchor="middle" className="fill-muted-foreground" fontSize="14">
-        {mode === 'break' ? 'Break' : mode === 'work' ? 'Focus' : 'Ready'}
+      <text x="50%" y="60%" textAnchor="middle" className="fill-muted-foreground" fontSize="12">
+        {mode === 'break' ? 'Break' : mode === 'work' ? 'Focus' : 'Ready'} · mm:ss.cs
       </text>
     </svg>
   );
@@ -156,7 +163,7 @@ export default function Pomodoro() {
   const [preset, setPreset] = useState<PresetKey>('classic');
   const [mode, setMode] = useState<'work' | 'break' | 'idle'>('idle');
   const [running, setRunning] = useState(false);
-  const [remaining, setRemaining] = useState(PRESETS.classic.work);
+  const [remainingMs, setRemainingMs] = useState(PRESETS.classic.work * 1000);
   const intervalStartRef = useRef<number | null>(null);
   const tickRef = useRef<number | null>(null);
 
@@ -166,6 +173,7 @@ export default function Pomodoro() {
   const [chartPeriod, setChartPeriod] = useState<'7d' | '1m' | '3m' | '6m' | '1y'>('7d');
 
   const total = mode === 'break' ? PRESETS[preset].break : PRESETS[preset].work;
+  const totalMs = total * 1000;
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) || null;
 
   // Fetch today's tasks
@@ -261,15 +269,20 @@ export default function Pomodoro() {
       if (tickRef.current) window.clearInterval(tickRef.current);
       return;
     }
+    let last = performance.now();
     tickRef.current = window.setInterval(() => {
-      setRemaining((r) => {
-        if (r <= 1) {
+      const now = performance.now();
+      const delta = now - last;
+      last = now;
+      setRemainingMs((r) => {
+        const next = r - delta;
+        if (next <= 0) {
           handleIntervalComplete();
           return 0;
         }
-        return r - 1;
+        return next;
       });
-    }, 1000);
+    }, 50);
     return () => {
       if (tickRef.current) window.clearInterval(tickRef.current);
     };
@@ -302,12 +315,12 @@ export default function Pomodoro() {
     await recordSession(cat, dur);
     if (finishedMode === 'work') {
       setMode('break');
-      setRemaining(PRESETS[preset].break);
+      setRemainingMs(PRESETS[preset].break * 1000);
       toast({ title: 'Focus complete', description: 'Time for a break!' });
       notifyPomodoroComplete();
     } else {
       setMode('idle');
-      setRemaining(PRESETS[preset].work);
+      setRemainingMs(PRESETS[preset].work * 1000);
       toast({ title: 'Break done', description: 'Ready for next pomodoro.' });
     }
   };
@@ -319,7 +332,7 @@ export default function Pomodoro() {
         return;
       }
       setMode('work');
-      setRemaining(PRESETS[preset].work);
+      setRemainingMs(PRESETS[preset].work * 1000);
     }
     intervalStartRef.current = Date.now();
     setRunning(true);
@@ -328,11 +341,11 @@ export default function Pomodoro() {
   const reset = () => {
     setRunning(false);
     setMode('idle');
-    setRemaining(PRESETS[preset].work);
+    setRemainingMs(PRESETS[preset].work * 1000);
   };
 
   useEffect(() => {
-    if (mode === 'idle') setRemaining(PRESETS[preset].work);
+    if (mode === 'idle') setRemainingMs(PRESETS[preset].work * 1000);
   }, [preset, mode]);
 
   const completeSelectedTask = async () => {
@@ -415,7 +428,7 @@ export default function Pomodoro() {
               </Select>
             </div>
 
-            <CircularTimer total={total} remaining={remaining} mode={mode} />
+            <CircularTimer totalMs={totalMs} remainingMs={remainingMs} mode={mode} />
 
             <div className="flex gap-2 justify-center">
               {!running ? (
