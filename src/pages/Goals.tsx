@@ -329,8 +329,8 @@ export default function Goals() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Goals & Lifestyle</h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Track your goals, tips, and daily streaks</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Goals & Notes</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Plan ahead, capture learnings, build the habit</p>
         </div>
       </div>
 
@@ -338,8 +338,11 @@ export default function Goals() {
         {/* Goals Section */}
         <Card className="flex flex-col h-full">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>My Goals</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <CardTitle>Next 3 Month Goals</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">What you want to achieve in the coming quarter</p>
+              </div>
               <DropdownMenu open={showGoalForm} onOpenChange={(o) => (o ? setShowGoalForm(true) : cancelGoalForm())}>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
@@ -451,8 +454,11 @@ export default function Goals() {
         {/* Tips Section */}
         <Card className="flex flex-col h-full">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Health & Lifestyle Tips</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <CardTitle>Personal Notes</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">Tips &amp; tricks to remember in daily life — your learnings</p>
+              </div>
               <DropdownMenu open={showTipForm} onOpenChange={setShowTipForm}>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
