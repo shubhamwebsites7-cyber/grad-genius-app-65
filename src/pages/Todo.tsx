@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Check, ChevronDown, Pencil, ArrowRight, Trash2 } from 'lucide-react';
+import { Plus, Check, ChevronDown, Pencil, ArrowRight, Trash2, CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart-simple';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { supabase } from '@/integrations/supabase/client';
@@ -404,33 +404,51 @@ export default function Todo() {
       <div className="flex justify-between items-center mb-4 sm:mb-6 gap-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">My ToDo</h1>
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger asChild>
-              <button className="text-muted-foreground mt-1 text-sm sm:text-base inline-flex items-center gap-1 hover:text-foreground transition-colors">
-                {format(selectedDate, 'MMMM do, yyyy')}
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${calendarOpen ? 'rotate-180' : ''}`}
+          <div className="mt-1 flex items-center gap-1 text-sm sm:text-base text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+              aria-label="Previous day"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[10rem] text-center">{format(selectedDate, 'MMMM do, yyyy')}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+              aria-label="Next day"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Open calendar">
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto p-0 animate-in fade-in-0 zoom-in-95">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                      setCalendarOpen(false);
+                    }
+                  }}
+                  className="p-3 pointer-events-auto"
                 />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-auto p-0 animate-in fade-in-0 zoom-in-95">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(date);
-                    setCalendarOpen(false);
-                  }
-                }}
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
         <Button onClick={() => setShowAddForm((v) => !v)} size="sm" className="gap-1">
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Add New Todo</span>
+          <span>Add New Task</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAddForm ? 'rotate-180' : ''}`} />
         </Button>
       </div>
