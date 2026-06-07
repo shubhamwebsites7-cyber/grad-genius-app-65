@@ -1,144 +1,97 @@
-import { useEffect, useMemo, useState } from 'react';
-import { format, subDays, eachDayOfInterval } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import avatar1 from '@/assets/avatar-1.jpg';
+import avatar2 from '@/assets/avatar-2.jpg';
+import avatar3 from '@/assets/avatar-3.jpg';
+import avatar4 from '@/assets/avatar-4.jpg';
+import avatar5 from '@/assets/avatar-5.jpg';
+import avatar6 from '@/assets/avatar-6.jpg';
+import avatar7 from '@/assets/avatar-7.jpg';
+import avatar8 from '@/assets/avatar-8.jpg';
+import avatar9 from '@/assets/avatar-9.jpg';
+import avatar10 from '@/assets/avatar-10.jpg';
 
-interface Daily {
-  date: string;
-  label: string;
-  tasksCompleted: number;
-  focusHours: number;
-  avgFocusRating: number;
-  productivity: number;
-  consistent: number;
-}
+const AVATARS = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6, avatar7, avatar8, avatar9, avatar10];
+const STAGE_LABELS = [
+  'Rusty Beginner',
+  'Waking Up',
+  'Shedding Rust',
+  'Half Human',
+  'Almost There',
+  'Real Student',
+  'Confident Learner',
+  'Sharp Achiever',
+  'Top Performer',
+  'Graduation Champion',
+];
 
 export default function Analytics() {
   const { user } = useAuth();
-  const [days, setDays] = useState<Daily[]>([]);
+  const [completed, setCompleted] = useState(0);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      const today = new Date();
-      const start = subDays(today, 29);
-      const startStr = format(start, 'yyyy-MM-dd');
-
-      const [tasksRes, sessionsRes, goalsRes] = await Promise.all([
-        supabase.from('tasks').select('date, completed').eq('user_id', user.id).gte('date', startStr),
-        (supabase as any).from('pomodoro_sessions').select('date, duration_seconds, priority').eq('user_id', user.id).gte('date', startStr),
-        supabase.from('goal').select('completed').eq('user_id', user.id),
-      ]);
-
-      const tasks = tasksRes.data || [];
-      const sessions = sessionsRes.data || [];
-
-      const dayList = eachDayOfInterval({ start, end: today });
-      const built: Daily[] = dayList.map((d) => {
-        const ds = format(d, 'yyyy-MM-dd');
-        const tDay = tasks.filter((t: any) => t.date === ds);
-        const completed = tDay.filter((t: any) => t.completed).length;
-        const focusSec = sessions
-          .filter((s: any) => s.date === ds && s.priority !== 'break')
-          .reduce((a: number, s: any) => a + s.duration_seconds, 0);
-        const focusH = focusSec / 3600;
-        // Productivity score: 60% tasks (out of 10) + 40% focus (cap 8h)
-        const taskPct = Math.min(1, completed / 10);
-        const focusPct = Math.min(1, focusH / 8);
-        const score = Math.round((taskPct * 60 + focusPct * 40));
-
-        return {
-          date: ds,
-          label: format(d, 'dd'),
-          tasksCompleted: completed,
-          focusHours: +focusH.toFixed(2),
-          avgFocusRating: 0,
-          productivity: score,
-          consistent: completed > 0 || focusH > 0 ? 1 : 0,
-        };
+    const today = format(new Date(), 'yyyy-MM-dd');
+    supabase
+      .from('tasks')
+      .select('completed')
+      .eq('user_id', user.id)
+      .eq('date', today)
+      .then(({ data }) => {
+        const rows = data || [];
+        setTotal(rows.length);
+        setCompleted(rows.filter((t: any) => t.completed).length);
       });
-      setDays(built);
-    })();
   }, [user]);
 
-  const kpis = useMemo(() => {
-    if (!days.length) return { today: 0, avg: 0, streak: 0, totalFocus: 0, totalTasks: 0 };
-    const today = days[days.length - 1];
-    const avg = Math.round(days.reduce((a, d) => a + d.productivity, 0) / days.length);
-    let streak = 0;
-    for (let i = days.length - 1; i >= 0; i--) {
-      if (days[i].consistent) streak++;
-      else break;
-    }
-    const totalFocus = +days.reduce((a, d) => a + d.focusHours, 0).toFixed(1);
-    const totalTasks = days.reduce((a, d) => a + d.tasksCompleted, 0);
-    return { today: today.productivity, avg, streak, totalFocus, totalTasks };
-  }, [days]);
+  const stage = Math.min(9, completed);
+  const avatar = AVATARS[stage];
+  const label = STAGE_LABELS[stage];
+  const pct = Math.round((completed / 10) * 100);
 
   return (
-    <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto pb-20">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground text-sm">Productivity, focus, and consistency — last 30 days</p>
+    <div className="min-h-screen bg-background p-2 sm:p-4 max-w-3xl mx-auto pb-20">
+      <div className="mb-4 sm:mb-6 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold">My Avatar Journey</h1>
+        <p className="text-muted-foreground text-sm">Complete tasks to evolve your student avatar</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4 sm:mb-6">
-        <Kpi label="Today" value={`${kpis.today}`} suffix="/100" />
-        <Kpi label="30-day avg" value={`${kpis.avg}`} suffix="/100" />
-        <Kpi label="Streak" value={`${kpis.streak}`} suffix="d" />
-        <Kpi label="Focus" value={`${kpis.totalFocus}`} suffix="h" />
-        <Kpi label="Tasks done" value={`${kpis.totalTasks}`} suffix="" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card>
-          <CardHeader><CardTitle>Daily productivity score</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={days}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                <Line type="monotone" dataKey="productivity" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Focus hours vs tasks completed</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={days}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="focusHours" fill="hsl(var(--primary))" maxBarSize={20} />
-                <Bar dataKey="tasksCompleted" fill="hsl(var(--accent))" maxBarSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-      </div>
+      <Card className="overflow-hidden">
+        <CardContent className="p-4 sm:p-6 flex flex-col items-center gap-4">
+          <div className="relative w-full max-w-md aspect-square rounded-xl overflow-hidden bg-muted">
+            <img
+              key={stage}
+              src={avatar}
+              alt={`Student avatar stage ${stage + 1}: ${label}`}
+              width={1024}
+              height={1024}
+              className="w-full h-full object-cover animate-fade-in"
+              loading="lazy"
+            />
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold">{label}</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              {completed} / 10 tasks completed today · Stage {stage + 1} of 10
+            </div>
+          </div>
+          <div className="w-full max-w-md">
+            <div className="relative w-full h-3 rounded-full bg-muted overflow-hidden">
+              <div
+                className="absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${Math.min(100, pct)}%` }}
+              />
+            </div>
+            <div className="text-xs text-muted-foreground text-center mt-2">
+              {pct}% to peak form — keep going!
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
-}
-
-function Kpi({ label, value, suffix }: { label: string; value: string; suffix: string }) {
-  return (
-    <Card>
-      <CardContent className="p-3 sm:p-4">
-        <div className="text-xs text-muted-foreground">{label}</div>
-        <div className="text-xl sm:text-2xl font-bold mt-1">
-          {value}<span className="text-sm font-normal text-muted-foreground">{suffix}</span>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
