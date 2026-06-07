@@ -40,18 +40,19 @@ const PRESETS = {
 } as const;
 type PresetKey = keyof typeof PRESETS;
 
-const CATEGORY_COLOR: Record<Category | 'waste', string> = {
+const CATEGORY_COLOR: Record<Category, string> = {
   high: '#ef4444',
   medium: '#eab308',
   low: '#22c55e',
   break: '#3b82f6',
-  waste: 'hsl(var(--muted))',
 };
 
-const fmt = (s: number) => {
-  const m = Math.floor(s / 60).toString().padStart(2, '0');
-  const ss = (s % 60).toString().padStart(2, '0');
-  return `${m}:${ss}`;
+const fmtMs = (ms: number) => {
+  const totalMs = Math.max(0, ms);
+  const m = Math.floor(totalMs / 60000).toString().padStart(2, '0');
+  const s = Math.floor((totalMs % 60000) / 1000).toString().padStart(2, '0');
+  const cs = Math.floor((totalMs % 1000) / 10).toString().padStart(2, '0');
+  return `${m}:${s}.${cs}`;
 };
 
 function CircularTimer({
