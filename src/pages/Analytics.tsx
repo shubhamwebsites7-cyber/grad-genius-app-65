@@ -95,7 +95,7 @@ export default function Analytics() {
               />
             </div>
             <div className="text-xs text-muted-foreground text-center mt-2">
-              {pct}% of today's reel — keep going!
+              {pct}% of today's power — keep going!
             </div>
           </div>
         </CardContent>
