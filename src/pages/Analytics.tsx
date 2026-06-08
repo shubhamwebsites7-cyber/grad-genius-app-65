@@ -57,12 +57,12 @@ export default function Analytics() {
     <div className="min-h-screen bg-background p-2 sm:p-4 max-w-3xl mx-auto pb-20">
       <div className="mb-4 sm:mb-6 text-center">
         <h1 className="text-2xl sm:text-3xl font-bold">My Journey</h1>
-        <p className="text-muted-foreground text-sm">Your reel unlocks one second for every task you complete today</p>
+        <p className="text-muted-foreground text-sm">Complete tasks to unlock your full power.</p>
       </div>
 
       <Card className="overflow-hidden">
         <CardContent className="p-4 sm:p-6 flex flex-col items-center gap-4">
-          <div className="relative w-full max-w-md aspect-square rounded-xl overflow-hidden bg-muted">
+          <div className="relative w-full max-w-sm aspect-[9/16] rounded-xl overflow-hidden bg-muted">
             <video
               ref={videoRef}
               src={journeyVideo.url}
@@ -82,7 +82,7 @@ export default function Analytics() {
             )}
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold">{completed} / {TOTAL_SECONDS} seconds unlocked</div>
+            <div className="text-xl font-bold">{completed}/{TOTAL_SECONDS} Power Unlocked</div>
             <div className="text-sm text-muted-foreground mt-1">
               {completed} task{completed === 1 ? '' : 's'} completed today
             </div>
@@ -95,7 +95,7 @@ export default function Analytics() {
               />
             </div>
             <div className="text-xs text-muted-foreground text-center mt-2">
-              {pct}% of today's reel — keep going!
+              {pct}% of today's power — keep going!
             </div>
           </div>
         </CardContent>
