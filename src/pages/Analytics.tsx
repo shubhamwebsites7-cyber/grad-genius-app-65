@@ -82,7 +82,7 @@ export default function Analytics() {
             )}
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold">{completed} / {TOTAL_SECONDS} seconds unlocked</div>
+            <div className="text-xl font-bold">{completed}/{TOTAL_SECONDS} Power Unlocked</div>
             <div className="text-sm text-muted-foreground mt-1">
               {completed} task{completed === 1 ? '' : 's'} completed today
             </div>
