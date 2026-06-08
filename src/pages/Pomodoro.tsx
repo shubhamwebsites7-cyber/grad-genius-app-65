@@ -69,7 +69,6 @@ function CircularTimer({
   const rings = [
     { r: (size - stroke) / 2, color: mode === 'break' ? '#ef4444' : '#22c55e', progress: totalMs > 0 ? 1 - remainingMs / totalMs : 0 },
     { r: (size - stroke) / 2 - (stroke + 4), color: '#3b82f6', progress: 1 - ((remainingMs % 60000) / 60000) },
-    { r: (size - stroke) / 2 - 2 * (stroke + 4), color: '#a855f7', progress: 1 - ((remainingMs % 1000) / 1000) },
   ];
   return (
     <svg width={size} height={size} className="mx-auto">

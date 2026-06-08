@@ -41,9 +41,9 @@ export function Layout() {
 
   const navigationItems = [
     { href: '/dashboard/todo', icon: CheckSquare, label: 'Todo' },
-    { href: '/dashboard/goals', icon: Target, label: 'Goals' },
     { href: '/dashboard/pomodoro', icon: Timer, label: 'Pomodoro' },
-    { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+    { href: '/dashboard/analytics', icon: BarChart3, label: 'Journey' },
+    { href: '/dashboard/goals', icon: Target, label: 'Goals' },
     { href: '/dashboard/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 

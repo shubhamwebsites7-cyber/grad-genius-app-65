@@ -402,32 +402,34 @@ export default function Todo() {
     <div className="min-h-screen bg-background p-2 sm:p-4 max-w-6xl mx-auto pb-20">
       {/* Header */}
       <div className="flex justify-between items-center mb-4 sm:mb-6 gap-2">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold">My ToDo</h1>
-          <div className="mt-1 flex items-center gap-1 text-sm sm:text-base text-muted-foreground">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setSelectedDate(addDays(selectedDate, -1))}
-              aria-label="Previous day"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="min-w-[10rem] text-center">{format(selectedDate, 'MMMM do, yyyy')}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-              aria-label="Next day"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="mt-1 flex items-center gap-1 text-xs sm:text-sm">
+            <div className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1 py-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setSelectedDate(addDays(selectedDate, -1))}
+                aria-label="Previous day"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <span className="px-1 text-center tabular-nums text-foreground">{format(selectedDate, 'MMM do, yyyy')}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => setSelectedDate(addDays(selectedDate, 1))}
+                aria-label="Next day"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Open calendar">
-                  <CalendarIcon className="h-4 w-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md bg-muted hover:bg-muted/80" aria-label="Open calendar">
+                  <CalendarIcon className="h-3.5 w-3.5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="start" className="w-auto p-0 animate-in fade-in-0 zoom-in-95">
@@ -446,9 +448,10 @@ export default function Todo() {
             </Popover>
           </div>
         </div>
-        <Button onClick={() => setShowAddForm((v) => !v)} size="sm" className="gap-1">
+        <Button onClick={() => setShowAddForm((v) => !v)} size="sm" className="gap-1 shrink-0">
           <Plus className="h-4 w-4" />
-          <span>Add New Task</span>
+          <span className="sm:hidden">Add</span>
+          <span className="hidden sm:inline">Add New Task</span>
           <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showAddForm ? 'rotate-180' : ''}`} />
         </Button>
       </div>
