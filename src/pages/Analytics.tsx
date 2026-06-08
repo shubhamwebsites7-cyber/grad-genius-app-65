@@ -62,7 +62,7 @@ export default function Analytics() {
 
       <Card className="overflow-hidden">
         <CardContent className="p-4 sm:p-6 flex flex-col items-center gap-4">
-          <div className="relative w-full max-w-md aspect-square rounded-xl overflow-hidden bg-muted">
+          <div className="relative w-full max-w-sm aspect-[9/16] rounded-xl overflow-hidden bg-muted">
             <video
               ref={videoRef}
               src={journeyVideo.url}
