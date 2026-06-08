@@ -21,9 +21,9 @@ import { toast } from '@/hooks/use-toast';
 
 const items = [
   { title: 'Todo', url: '/dashboard/todo', icon: CheckSquare },
-  { title: 'Goals', url: '/dashboard/goals', icon: Target },
   { title: 'Pomodoro', url: '/dashboard/pomodoro', icon: Timer },
-  { title: 'Analytics', url: '/dashboard/analytics', icon: BarChart3 },
+  { title: 'Journey', url: '/dashboard/analytics', icon: BarChart3 },
+  { title: 'Goals', url: '/dashboard/goals', icon: Target },
   { title: 'Settings', url: '/dashboard/settings', icon: SettingsIcon },
 ];
 
