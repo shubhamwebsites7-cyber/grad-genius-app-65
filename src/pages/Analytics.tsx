@@ -57,7 +57,7 @@ export default function Analytics() {
     <div className="min-h-screen bg-background p-2 sm:p-4 max-w-3xl mx-auto pb-20">
       <div className="mb-4 sm:mb-6 text-center">
         <h1 className="text-2xl sm:text-3xl font-bold">My Journey</h1>
-        <p className="text-muted-foreground text-sm">Your reel unlocks one second for every task you complete today</p>
+        <p className="text-muted-foreground text-sm">Complete tasks to unlock your full power.</p>
       </div>
 
       <Card className="overflow-hidden">
