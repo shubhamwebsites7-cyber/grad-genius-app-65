@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
+import { Bell, User } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +22,39 @@ export default function Settings() {
   const [permission, setPermission] = useState<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name,email')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      setProfileName(data?.name ?? '');
+      setProfileEmail(data?.email ?? user.email ?? '');
+    })();
+  }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(
+        { user_id: user.id, name: profileName.trim(), email: profileEmail.trim() },
+        { onConflict: 'user_id' }
+      );
+    setSavingProfile(false);
+    if (error) {
+      toast({ title: 'Error', description: 'Could not save profile', variant: 'destructive' });
+    } else {
+      toast({ title: 'Profile updated', description: 'Your changes have been saved.' });
+    }
+  };
 
   // Load remote settings
   useEffect(() => {
@@ -74,8 +109,42 @@ export default function Settings() {
     <div className="min-h-screen bg-background p-2 sm:p-4 max-w-3xl mx-auto pb-20">
       <div className="mb-4 sm:mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground text-sm">Manage your notification preferences</p>
+        <p className="text-muted-foreground text-sm">Manage your profile and notification preferences</p>
       </div>
+
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Profile</CardTitle>
+          <CardDescription>Update your display name and email</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-name">Name</Label>
+            <Input
+              id="profile-name"
+              placeholder="Your name"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-email">Email</Label>
+            <Input
+              id="profile-email"
+              type="email"
+              placeholder="you@example.com"
+              value={profileEmail}
+              onChange={(e) => setProfileEmail(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Changing this updates your profile only — your login email is managed by your auth provider.
+            </p>
+          </div>
+          <Button onClick={saveProfile} disabled={savingProfile}>
+            {savingProfile ? 'Saving…' : 'Save profile'}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card className="mb-4 sm:mb-6">
         <CardHeader>
