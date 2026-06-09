@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Play, Pause, RotateCcw, ChevronDown, Timer as TimerIcon, Check } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronDown, ChevronLeft, ChevronRight, CalendarIcon, Timer as TimerIcon, Check } from 'lucide-react';
+import { addDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -168,6 +169,7 @@ export default function Pomodoro() {
 
   const [viewDate, setViewDate] = useState<Date>(new Date());
   const [sessions, setSessions] = useState<PomoSession[]>([]);
+  const [daySessions, setDaySessions] = useState<PomoSession[]>([]);
   const [weekData, setWeekData] = useState<any[]>([]);
   const [chartPeriod, setChartPeriod] = useState<'7d' | '1m' | '3m' | '6m' | '1y'>('7d');
 
@@ -254,6 +256,18 @@ export default function Pomodoro() {
   }, [user, chartPeriod]);
 
   const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Fetch sessions for the 24h timeline of the selected viewDate
+  useEffect(() => {
+    if (!user) return;
+    const ds = format(viewDate, 'yyyy-MM-dd');
+    (supabase as any)
+      .from('pomodoro_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('date', ds)
+      .then(({ data }: any) => setDaySessions((data || []) as PomoSession[]));
+  }, [user, viewDate, sessions]);
 
   // Timer ticking
   useEffect(() => {
@@ -441,11 +455,37 @@ export default function Pomodoro() {
 
         {/* Day ring */}
         <Card>
-          <CardHeader>
-            <CardTitle>24h Timeline</CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <CardTitle>24h Timeline</CardTitle>
+              <div className="inline-flex items-center gap-0.5 rounded-md bg-muted px-1 py-0.5 text-xs">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewDate(addDays(viewDate, -1))} aria-label="Previous day">
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <span className="px-1 tabular-nums whitespace-nowrap">{format(viewDate, 'MMM do, yyyy')}</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewDate(addDays(viewDate, 1))} aria-label="Next day">
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Open calendar">
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="center" sideOffset={6} className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={viewDate}
+                      onSelect={(d) => { if (d) { setViewDate(d); setCalendarOpen(false); } }}
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <DayRing sessions={sessions} dateStr={viewDateStr} />
+            <DayRing sessions={daySessions} dateStr={viewDateStr} />
             <div className="flex flex-wrap gap-3 justify-center mt-4 text-xs">
               {(['high', 'medium', 'low', 'break'] as const).map((c) => (
                 <span key={c} className="flex items-center gap-1.5 capitalize">
