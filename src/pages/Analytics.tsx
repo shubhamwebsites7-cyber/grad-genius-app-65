@@ -7,6 +7,20 @@ import journeyVideo from '@/assets/avatar-journey.mp4.asset.json';
 
 const TOTAL_SECONDS = 10;
 
+// Lovable serves assets under /__l5e/... which exists on the lovable preview
+// and the *.lovable.app published origin, but NOT on external hosts (e.g. Vercel).
+// Resolve to an absolute Lovable URL when running anywhere else.
+const resolveAssetUrl = (url: string) => {
+  if (!url) return url;
+  if (/^https?:\/\//.test(url)) return url;
+  if (typeof window === 'undefined') return url;
+  const host = window.location.hostname;
+  const onLovable = host.endsWith('.lovable.app') || host.endsWith('.lovable.dev') || host.includes('lovable');
+  if (onLovable) return url;
+  return `https://goalgrip.lovable.app${url}`;
+};
+const VIDEO_URL = resolveAssetUrl(journeyVideo.url);
+
 export default function Analytics() {
   const { user } = useAuth();
   const [completed, setCompleted] = useState(0);
@@ -65,7 +79,8 @@ export default function Analytics() {
           <div className="relative w-full max-w-sm aspect-[9/16] rounded-xl overflow-hidden bg-muted">
             <video
               ref={videoRef}
-              src={journeyVideo.url}
+              src={VIDEO_URL}
+              crossOrigin="anonymous"
               className="w-full h-full object-cover"
               muted
               playsInline
