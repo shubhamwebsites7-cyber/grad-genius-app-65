@@ -628,7 +628,7 @@ export default function Todo() {
 
       {/* Progress Chart */}
       <Card className="mt-4 sm:mt-6">
-        <CardHeader className="pb-3 sm:pb-4">
+        <CardHeader className="pb-2 px-3 pt-3 sm:pb-4 sm:px-6 sm:pt-6">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-lg sm:text-xl">Progress Overview</CardTitle>
             <Select value={period} onValueChange={(v) => setPeriod(v as typeof period)}>
@@ -645,7 +645,7 @@ export default function Todo() {
             </Select>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="px-1 pb-2 sm:px-2 sm:pb-4">
           <div className="overflow-x-auto [&_.recharts-wrapper_*]:outline-none [&_.recharts-surface]:outline-none focus:outline-none">
             <div
               style={
@@ -656,7 +656,7 @@ export default function Todo() {
             >
               <ChartContainer className="h-56 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={progressData} margin={{ top: 10, right: 12, left: 0, bottom: 20 }}>
+                  <LineChart data={progressData} margin={{ top: 10, right: 8, left: -20, bottom: 10 }}>
                     <XAxis
                       dataKey="date"
                       axisLine={false}
