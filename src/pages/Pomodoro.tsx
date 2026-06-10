@@ -138,10 +138,36 @@ function DayRing({ sessions, dateStr }: { sessions: PomoSession[]; dateStr: stri
       {arcs.map((a, i) => (
         <path key={i} d={arcPath(a.start, a.end)} stroke={a.color} strokeWidth={stroke} fill="none" strokeLinecap="butt" />
       ))}
-      {[0, 6, 12, 18].map((h) => {
-        const p = polar(h / 24);
+      {/* Minute dots */}
+      {Array.from({ length: 1440 }).map((_, m) => {
+        const p = polar(m / 1440);
+        const isHour = m % 60 === 0;
         return (
-          <text key={h} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" fontSize="11" className="fill-muted-foreground">
+          <circle
+            key={m}
+            cx={p.x}
+            cy={p.y}
+            r={isHour ? 1.2 : 0.4}
+            className={isHour ? 'fill-foreground/60' : 'fill-muted-foreground/40'}
+          />
+        );
+      })}
+      {/* Hour numbers 0-23, placed inside the ring */}
+      {Array.from({ length: 24 }).map((_, h) => {
+        const a = -Math.PI / 2 + (h / 24) * 2 * Math.PI;
+        const tr = r - stroke / 2 - 10;
+        const x = cx + tr * Math.cos(a);
+        const y = cy + tr * Math.sin(a);
+        return (
+          <text
+            key={h}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="8"
+            className="fill-muted-foreground"
+          >
             {h}
           </text>
         );
