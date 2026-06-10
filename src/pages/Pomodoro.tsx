@@ -219,60 +219,69 @@ export default function Pomodoro() {
   // Fetch sessions and aggregate based on selected chart period
   const fetchSessions = async () => {
     if (!user) return;
-    const today = new Date();
-    let startDate: Date;
-    let mode: 'day' | 'week';
-    switch (chartPeriod) {
-      case '7d': startDate = subDays(today, 6); mode = 'day'; break;
-      case '1m': startDate = subDays(today, 29); mode = 'day'; break;
-      case '3m': startDate = subMonths(today, 3); mode = 'week'; break;
-      case '6m': startDate = subMonths(today, 6); mode = 'week'; break;
-      case '1y': startDate = subMonths(today, 12); mode = 'week'; break;
-    }
-    const { data } = await (supabase as any)
-      .from('pomodoro_sessions')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('date', format(startDate, 'yyyy-MM-dd'));
-    const rows = (data || []) as PomoSession[];
-    setSessions(rows);
+    try {
+      const today = new Date();
+      let startDate: Date;
+      let groupMode: 'day' | 'week';
+      switch (chartPeriod) {
+        case '7d': startDate = subDays(today, 6); groupMode = 'day'; break;
+        case '1m': startDate = subDays(today, 29); groupMode = 'day'; break;
+        case '3m': startDate = subMonths(today, 3); groupMode = 'week'; break;
+        case '6m': startDate = subMonths(today, 6); groupMode = 'week'; break;
+        case '1y': startDate = subMonths(today, 12); groupMode = 'week'; break;
+        default: startDate = subDays(today, 6); groupMode = 'day';
+      }
+      const { data, error } = await (supabase as any)
+        .from('pomodoro_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .limit(5000);
+      if (error) throw error;
+      const rows = (data || []) as PomoSession[];
+      setSessions(rows);
 
-    const sumCat = (subset: PomoSession[], cat: Category) =>
-      subset.filter((r) => r.priority === cat).reduce((a, r) => a + r.duration_seconds, 0) / 3600;
+      const sumCat = (subset: PomoSession[], cat: Category) =>
+        subset.filter((r) => r.priority === cat).reduce((a, r) => a + r.duration_seconds, 0) / 3600;
 
-    if (mode === 'day') {
-      const days = eachDayOfInterval({ start: startDate, end: today });
-      setWeekData(
-        days.map((d) => {
-          const ds = format(d, 'yyyy-MM-dd');
-          const subset = rows.filter((r) => r.date === ds);
-          return {
-            label: format(d, 'dd'),
-            high: +sumCat(subset, 'high').toFixed(2),
-            medium: +sumCat(subset, 'medium').toFixed(2),
-            low: +sumCat(subset, 'low').toFixed(2),
-            break: +sumCat(subset, 'break').toFixed(2),
-          };
-        })
-      );
-    } else {
-      const weeks = eachWeekOfInterval({ start: startDate, end: today });
-      setWeekData(
-        weeks.map((wkStart) => {
-          const wkEnd = endOfWeek(wkStart);
-          const subset = rows.filter((r) => {
-            const d = new Date(r.date);
-            return d >= wkStart && d <= wkEnd;
-          });
-          return {
-            label: format(wkStart, 'dd'),
-            high: +sumCat(subset, 'high').toFixed(2),
-            medium: +sumCat(subset, 'medium').toFixed(2),
-            low: +sumCat(subset, 'low').toFixed(2),
-            break: +sumCat(subset, 'break').toFixed(2),
-          };
-        })
-      );
+      if (groupMode === 'day') {
+        const days = eachDayOfInterval({ start: startDate, end: today });
+        setWeekData(
+          days.map((d) => {
+            const ds = format(d, 'yyyy-MM-dd');
+            const subset = rows.filter((r) => r.date === ds);
+            return {
+              label: format(d, 'dd'),
+              high: +sumCat(subset, 'high').toFixed(2),
+              medium: +sumCat(subset, 'medium').toFixed(2),
+              low: +sumCat(subset, 'low').toFixed(2),
+              break: +sumCat(subset, 'break').toFixed(2),
+            };
+          })
+        );
+      } else {
+        const weeks = eachWeekOfInterval({ start: startDate, end: today });
+        setWeekData(
+          weeks.map((wkStart, idx) => {
+            const wkEnd = endOfWeek(wkStart);
+            const subset = rows.filter((r) => {
+              const d = new Date(r.date);
+              return d >= wkStart && d <= wkEnd;
+            });
+            return {
+              label: `${format(wkStart, 'MMM')} ${format(wkStart, 'dd')}`,
+              key: `${idx}-${format(wkStart, 'yyyy-MM-dd')}`,
+              high: +sumCat(subset, 'high').toFixed(2),
+              medium: +sumCat(subset, 'medium').toFixed(2),
+              low: +sumCat(subset, 'low').toFixed(2),
+              break: +sumCat(subset, 'break').toFixed(2),
+            };
+          })
+        );
+      }
+    } catch (e) {
+      console.error('fetchSessions error', e);
+      setWeekData([]);
     }
   };
 
