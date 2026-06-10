@@ -115,10 +115,13 @@ function DayRing({ sessions, dateStr }: { sessions: PomoSession[]; dateStr: stri
   const arcs = sessions
     .filter((s) => s.date === dateStr)
     .map((s) => {
-      const start = Math.max(0, new Date(s.started_at).getTime() - dayStart) / dayMs;
-      const end = Math.min(1, new Date(s.ended_at).getTime() - dayStart) / dayMs;
+      const rawStart = (new Date(s.started_at).getTime() - dayStart) / dayMs;
+      const rawEnd = (new Date(s.ended_at).getTime() - dayStart) / dayMs;
+      const start = Math.min(1, Math.max(0, rawStart));
+      const end = Math.min(1, Math.max(0, rawEnd));
       return { start, end, color: CATEGORY_COLOR[s.priority] };
-    });
+    })
+    .filter((a) => a.end > a.start);
 
   const polar = (frac: number) => {
     const a = -Math.PI / 2 + frac * 2 * Math.PI;
@@ -173,7 +176,7 @@ function DayRing({ sessions, dateStr }: { sessions: PomoSession[]; dateStr: stri
         );
       })}
       <text x="50%" y="48%" textAnchor="middle" className="fill-foreground" fontSize="22" fontWeight="700">
-        {Math.round(arcs.reduce((acc, a) => acc + (a.end - a.start) * 24 * 60, 0))}m
+        {Math.max(0, Math.round(arcs.reduce((acc, a) => acc + (a.end - a.start) * 24 * 60, 0)))}m
       </text>
       <text x="50%" y="58%" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
         tracked today
