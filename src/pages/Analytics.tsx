@@ -76,12 +76,12 @@ export default function Analytics() {
 
       <Card className="overflow-hidden">
         <CardContent className="p-4 sm:p-6 flex flex-col items-center gap-4">
-          <div className="relative w-full max-w-sm aspect-[9/16] rounded-xl overflow-hidden bg-muted">
+          <div className="relative mx-auto w-full max-w-[260px] aspect-[3/4] rounded-xl overflow-hidden bg-muted">
             <video
               ref={videoRef}
               src={VIDEO_URL}
               crossOrigin="anonymous"
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               muted
               playsInline
               autoPlay

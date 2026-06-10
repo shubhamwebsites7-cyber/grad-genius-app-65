@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Bell, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -112,6 +113,13 @@ export default function Settings() {
         <p className="text-muted-foreground text-sm">Manage your profile and notification preferences</p>
       </div>
 
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> Profile</TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile">
       <Card className="mb-4 sm:mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Profile</CardTitle>
@@ -145,7 +153,9 @@ export default function Settings() {
           </Button>
         </CardContent>
       </Card>
+        </TabsContent>
 
+        <TabsContent value="notifications">
       <Card className="mb-4 sm:mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> Browser permission</CardTitle>
@@ -187,6 +197,8 @@ export default function Settings() {
           ))}
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

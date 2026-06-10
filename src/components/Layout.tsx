@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Download, CheckSquare, Target, Timer, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,6 +17,7 @@ export function Layout() {
   const { canInstall, installApp } = usePWA();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   useSmartNotifications();
 
   const handleSignOut = async () => {
@@ -50,33 +51,78 @@ export function Layout() {
   const Header = (
     <header className="sticky top-0 z-40 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="flex h-14 items-center justify-between px-3 sm:px-4 gap-2">
-      <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            GoalGrip
-          </h1>
-        </div>
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <ThemeToggle />
-          {canInstall && (
-            <Button variant="ghost" size="sm" onClick={handleInstallClick} className="text-muted-foreground hover:text-foreground">
-              <Download className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Install App</span>
-            </Button>
-          )}
-          {user && (
-            <div className="flex items-center space-x-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {user.user_metadata?.name?.charAt(0) || user.email?.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
+        {isMobile ? (
+          <>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard/settings')}
+                  aria-label="Open settings"
+                  className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {user.user_metadata?.name?.charAt(0) || user.email?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              )}
+            </div>
+            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              GoalGrip
+            </h1>
+            <div className="flex items-center gap-1">
+              {canInstall && (
+                <Button variant="ghost" size="icon" onClick={handleInstallClick} aria-label="Install app">
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
-                <span className="hidden sm:inline">Sign out</span>
+                Sign out
               </Button>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                GoalGrip
+              </h1>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <ThemeToggle />
+              {canInstall && (
+                <Button variant="ghost" size="sm" onClick={handleInstallClick} className="text-muted-foreground hover:text-foreground">
+                  <Download className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Install App</span>
+                </Button>
+              )}
+              {user && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard/settings')}
+                    aria-label="Open settings"
+                    className="rounded-full focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {user.user_metadata?.name?.charAt(0) || user.email?.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                  <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
+                    <span className="hidden sm:inline">Sign out</span>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </header>
   );
