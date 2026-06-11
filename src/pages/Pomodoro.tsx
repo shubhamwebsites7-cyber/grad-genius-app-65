@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, Tooltip, CartesianGrid } from 'recharts';
 import { notifyPomodoroComplete } from '@/lib/notifications/scheduler';
+import { playFocusCompleteAlert, playBreakCompleteAlert } from '@/lib/notifications/alert';
 
 type Priority = 'high' | 'medium' | 'low';
 type Category = Priority | 'break';
@@ -361,11 +362,14 @@ export default function Pomodoro() {
       setMode('break');
       setRemainingMs(PRESETS[preset].break * 1000);
       toast({ title: 'Focus complete', description: 'Time for a break!' });
+      playFocusCompleteAlert();
       notifyPomodoroComplete();
     } else {
       setMode('idle');
       setRemainingMs(PRESETS[preset].work * 1000);
       toast({ title: 'Break done', description: 'Ready for next pomodoro.' });
+      playBreakCompleteAlert();
+      notifyPomodoroComplete();
     }
   };
 
