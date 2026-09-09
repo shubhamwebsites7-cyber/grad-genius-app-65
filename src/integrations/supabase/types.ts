@@ -238,7 +238,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: { p_period: string }
+        Returns: {
+          completed_count: number
+          display_name: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
