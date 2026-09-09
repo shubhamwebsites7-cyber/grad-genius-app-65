@@ -1,106 +1,59 @@
+# GoalGrip Journey Removal and User Leaderboard
+
 ## Goal
-Slim the app to **Todo, Goals, Pomodoro, Analytics** only, remove Exercise/Weight/Calories and the entire Focus Accountability/Rating system, add a rule-based Smart Notification system with settings and PWA push support, and prepare the project for Android TWA + Play Store while keeping the current UI untouched.
+Remove the My Journey page completely and add a signed-in leaderboard with Today, Weekly, and Monthly tabs. Preserve the existing visual language, navigation behavior, task/goal flows, and all other functionality.
 
----
+## Product changes
 
-## 1. Feature Audit (current state)
+1. **Remove My Journey**
+   - Remove the `/dashboard/analytics` route and its page from the dashboard.
+   - Remove Journey from desktop sidebar and mobile navigation.
+   - Remove Journey-only landing-page copy so the public description reflects Todo, Goals, Pomodoro, and Leaderboard.
+   - Do not remove Vercel Analytics/Speed Insights; those are app telemetry, not the Journey page.
 
-**Existing & keeping**
-- Todo: daily tasks, calendar, H/M/L priorities, progress bar, weekly→1Y analytics
-- Goals: long-term goals, priorities, tips ("Health & Lifestyle Tips" → will be renamed/repurposed as "Things To Remember")
-- Pomodoro: 25/5, 45/15, task selection, start/pause/reset, 24h ring, weekly→1Y analytics
-- Analytics: productivity score, KPIs, trends
-- PWA: manifest + `public/sw.js` (basic cache), install button, assetlinks.json (TWA-ready stub)
+2. **Add Leaderboard page**
+   - Add a protected `/dashboard/leaderboard` page in the same layout and styling system.
+   - Add one tab control with `Today`, `Weekly`, and `Monthly` views.
+   - Rank users from highest to lowest completed-task count for the selected period.
+   - Include every user with at least one completed task in that period, including the signed-in user.
+   - Display each user’s profile display name; use a neutral fallback label when a profile name is unavailable.
+   - Show rank, display name, and completed task count, with a clear empty state when no qualifying users exist.
+   - Add Leaderboard to both desktop sidebar and mobile bottom navigation where Journey currently appears.
 
-**To remove**
-- Pages: `Exercise.tsx`, `Weight.tsx`, `CalendarView.tsx` (calories tracker — dashboard index, will be replaced by Todo as the default landing)
-- Components: `FocusAccountability.tsx`
-- Supabase tables: `exercise_completions`, `weights`, `calories`, `focus_ratings`
-- SQL files for removed modules
-- Routes and nav entries for removed pages
-- Dead imports/icons
+3. **Preserve and verify user ownership**
+   - Keep task, goal, tip, Pomodoro, and profile mutations tied to the authenticated user ID already used by the app.
+   - Verify the existing RLS policies continue to permit each signed-in user to create and manage their own daily tasks, goals, and related personal data.
+   - Do not broaden task or goal row visibility to other users for the leaderboard.
 
-**Missing / partial**
-- "Things To Remember" section in Goals (currently only tips list)
-- Smart rule-based notifications + settings UI
-- Web Push (currently only basic cache SW, no `Notification` / `showNotification` scheduling)
-- `notification_settings` table
-- MySQL scripts for removed modules need deletion; `notification_settings.sql` needs creation
+## Database and security
 
----
+- Add a Supabase migration for a `get_leaderboard(period)` security-definer RPC that:
+  - accepts only `today`, `week`, or `month`;
+  - counts only completed rows in `public.tasks` for the matching date range;
+  - joins `public.profiles` internally to obtain display names;
+  - returns only display name and aggregate completed-task count (no user IDs, emails, titles, or task rows);
+  - returns users with at least one completed task, ordered by count descending and name ascending;
+  - uses a fixed `search_path` and grants execute only to authenticated users.
+- Keep RLS enabled on the underlying tables and do not add public/anonymous access.
+- Confirm grants and policy ordering in the migration before execution.
+- Add the corresponding MySQL-compatible leaderboard query/documentation for future Laravel + MySQL integration without changing the live frontend data source.
 
-## 2. Removal Plan
+## Files likely to change
 
-Delete files:
-- `src/pages/Exercise.tsx`, `src/pages/Weight.tsx`, `src/pages/CalendarView.tsx`
-- `src/components/FocusAccountability.tsx`
-- `database/mysql/` — remove any Exercise/Weight/Calories SQL (none exist yet for those, but verify)
-- Drop unused Supabase tables via migration: `exercise_completions`, `weights`, `calories`, `focus_ratings`
+- `src/App.tsx`
+- `src/components/Layout.tsx`
+- `src/components/AppSidebar.tsx`
+- `src/pages/Landing.tsx`
+- `src/pages/Leaderboard.tsx` (new)
+- `supabase/migrations/` (created by the migration tool)
+- `database/mysql/analytics.sql` and/or `database/README.md` for the future-backend query
+- Remove `src/pages/Analytics.tsx` after all references are removed.
 
-Update:
-- `src/App.tsx` — remove routes for `calories`, `weight`, `exercise`; make `Todo` the dashboard index
-- `src/components/AppSidebar.tsx` + `Layout.tsx` — remove nav items for Calories/Weight/Exercise; remove FocusAccountability usage in `Pomodoro.tsx`
-- `src/pages/Pomodoro.tsx` — strip `<FocusAccountability />` mount and any focus-rating references
+## Validation
 
----
-
-## 3. New: Smart Notification System (no AI)
-
-Files:
-- `src/lib/notifications/rules.ts` — pure functions taking `{name, todos, goals, pomodoro}` → list of `{id, title, body, category}`
-- `src/lib/notifications/scheduler.ts` — schedules via `setTimeout` + `navigator.serviceWorker.ready.showNotification`; morning reminder fires at 08:00 local; inactivity check every 2h; pomodoro complete already triggered from Pomodoro page
-- `src/hooks/useNotifications.tsx` — permission request, registration, settings hookup
-- `src/pages/Settings.tsx` — Notification Settings page (toggles: Enable All, Morning, Todo, Pomodoro, Motivational)
-- Settings persisted in `localStorage` + synced to Supabase `notification_settings` table when authenticated
-
-Categories map 1:1 to user toggles. Each rule checks its toggle before firing.
-
----
-
-## 4. PWA / Push
-
-- Extend `public/sw.js`:
-  - `push` event → `self.registration.showNotification(...)`
-  - `notificationclick` → focus or open `/dashboard/todo`
-- Keep existing cache logic and dynamic version
-- Add `src/lib/notifications/permission.ts` helper
-- No external push server — use local scheduled notifications via SW `showNotification` (works for Website + installed PWA + Desktop PWA). Document that true server push would need VAPID; out of scope.
-
----
-
-## 5. TWA Readiness
-
-- Verify `public/.well-known/assetlinks.json` exists (it does)
-- Ensure `manifest.json` has: `id`, `start_url: "/dashboard/todo"`, `scope: "/"`, `display: "standalone"`, `theme_color`, `background_color`, maskable icons (already present — audit and patch if missing fields)
-- Add `<meta name="mobile-web-app-capable">` etc. in `index.html` if absent
-- No Android code
-
----
-
-## 6. Database Changes
-
-Supabase migration:
-- `DROP TABLE` for `exercise_completions`, `weights`, `calories`, `focus_ratings` (with policy cleanup)
-- `CREATE TABLE public.notification_settings` (user_id PK, enable_all, morning, todo, pomodoro, motivational booleans, timestamps) + GRANTs + RLS
-
-MySQL (`database/mysql/`):
-- Delete `focus_ratings.sql`
-- Add `notification_settings.sql`
-- Update `install.sql` and `README.md`
-- Keep: `users.sql`, `todos.sql`, `goals.sql`, `pomodoro_sessions.sql`, `subscriptions.sql`, `analytics.sql`
-
----
-
-## 7. Reports (delivered in final message)
-
-After implementation, the closing message will include:
-Feature Audit · Removed · Missing→Implemented · Navigation · Routes · DB · SQL · Notifications · PWA · TWA · Dependency Cleanup · Folder Structure.
-
----
-
-## Confirmation needed
-1. OK to **drop the Supabase tables** `exercise_completions`, `weights`, `calories`, `focus_ratings` (data is lost permanently)?
-2. New default landing route after removing Calories dashboard → **`/dashboard/todo`** — OK?
-3. Add a new **`/dashboard/settings`** route for notification toggles — OK?
-
-Reply "go" (with any changes to the three questions) and I'll execute the full plan.
+- Confirm no dashboard route or navigation item points to Journey/Analytics.
+- Confirm signed-out users are redirected by the existing protected dashboard route.
+- Confirm a signed-in user can still create a task and goal under their own account.
+- Confirm leaderboard tabs call the RPC and sort counts correctly.
+- Confirm a user with no completed task is omitted, while users with at least one completed task are included.
+- Verify desktop and mobile navigation retain their current structure and responsive behavior.
