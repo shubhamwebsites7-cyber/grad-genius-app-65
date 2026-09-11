@@ -11,7 +11,8 @@ import Privacy from "./pages/Privacy";
 import Todo from "./pages/Todo";
 import Goals from "./pages/Goals";
 import Pomodoro from "./pages/Pomodoro";
-import Analytics from "./pages/Analytics";
+import Leaderboard from "./pages/Leaderboard";
+import AdminTasks from "./pages/AdminTasks";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -36,7 +37,8 @@ const App = () => (
             <Route path="todo" element={<Todo />} />
             <Route path="goals" element={<Goals />} />
             <Route path="pomodoro" element={<Pomodoro />} />
-            <Route path="analytics" element={<Analytics />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="admin-tasks" element={<AdminTasks />} />
             <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />

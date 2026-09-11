@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { CheckSquare, Target, Timer, LogOut, Download, PanelLeft, BarChart3, Settings as SettingsIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CheckSquare, Target, Timer, LogOut, Download, PanelLeft, Trophy, ShieldCheck, Settings as SettingsIcon } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -18,11 +19,12 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { usePWA } from '@/hooks/usePWA';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const items = [
   { title: 'Todo', url: '/dashboard/todo', icon: CheckSquare },
   { title: 'Pomodoro', url: '/dashboard/pomodoro', icon: Timer },
-  { title: 'Journey', url: '/dashboard/analytics', icon: BarChart3 },
+  { title: 'Leaderboard', url: '/dashboard/leaderboard', icon: Trophy },
   { title: 'Goals', url: '/dashboard/goals', icon: Target },
   { title: 'Settings', url: '/dashboard/settings', icon: SettingsIcon },
 ];
@@ -33,6 +35,25 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const { user, signOut } = useAuth();
   const { canInstall, installApp } = usePWA();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    (supabase as any)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle()
+      .then(({ data }: { data: { role: string } | null }) => setIsAdmin(Boolean(data)));
+  }, [user]);
+
+  const visibleItems = isAdmin
+    ? [...items.slice(0, 4), { title: 'Admin tasks', url: '/dashboard/admin-tasks', icon: ShieldCheck }, items[4]]
+    : items;
 
   const isActive = (url: string) =>
     url === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(url);
@@ -64,7 +85,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink to={item.url} end={item.url === '/dashboard'} className="flex items-center gap-2">

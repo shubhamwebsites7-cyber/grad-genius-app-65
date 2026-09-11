@@ -6,7 +6,7 @@ import {
   Target, 
   Timer,
   BarChart3,
-  Sparkles,
+  Trophy,
   Shield,
   Smartphone,
   ArrowRight,
@@ -28,9 +28,9 @@ const features = [
     description: 'Run 25/5 or 45/15 sessions, attach a task, and see your full day on a 24-hour timeline.',
   },
   {
-    icon: Sparkles,
-    title: 'My Journey',
-    description: 'Unlock your daily power as you complete tasks. A simple, motivating view of your progress.',
+    icon: Trophy,
+    title: 'Leaderboard',
+    description: 'See completed-task rankings across today, this week, and this month.',
   },
   {
     icon: Target,
@@ -125,7 +125,7 @@ export default function Landing() {
 
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
             GoalGrip is a clean, distraction-free workspace for your to-dos, pomodoro sessions,
-            goals, and daily journey — built for the web, installable as an app.
+            goals, and leaderboard — built for the web, installable as an app.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -183,7 +183,7 @@ export default function Landing() {
           {[
             { icon: Smartphone, title: 'Install as an app', desc: 'Works on the web, installs as a PWA, and ships to Android via TWA.' },
             { icon: Shield, title: 'Secure & private', desc: 'Email + password authentication, encrypted cloud sync, your data only.' },
-            { icon: BarChart3, title: 'Real progress', desc: 'Honest charts and a daily journey view — see what actually moved.' },
+            { icon: BarChart3, title: 'Real progress', desc: 'Honest charts and rankings — see what actually moved.' },
           ].map((b, i) => (
             <div key={i} className="flex gap-4">
               <div className="shrink-0 w-10 h-10 rounded-lg bg-background border flex items-center justify-center">
