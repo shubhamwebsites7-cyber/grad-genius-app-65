@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.goalgrip.twa",
+      "package_name": "com.examtrakr.android",
       "sha256_cert_fingerprints": [
-        "YOUR_SHA256_FINGERPRINT_HERE"
+        "F7:B7:49:2B:EF:7D:1F:C9:02:AA:FF:80:DC:D5:44:31:5E:0F:08:50:0E:3A:75:2B:90:68:71:8C:2A:5C:ED:D2"
       ]
     }
   }

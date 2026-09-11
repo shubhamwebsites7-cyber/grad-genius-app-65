@@ -14,219 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      goal: {
-        Row: {
-          completed: boolean
-          created_at: string
-          id: string
-          priority: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean
-          created_at?: string
-          id?: string
-          priority?: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          id?: string
-          priority?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      goals: {
-        Row: {
-          completed: boolean | null
-          created_at: string
-          id: string
-          title: string | null
-          updated_at: string
-          user_id: string
-          weight_goal: number | null
-        }
-        Insert: {
-          completed?: boolean | null
-          created_at?: string
-          id?: string
-          title?: string | null
-          updated_at?: string
-          user_id: string
-          weight_goal?: number | null
-        }
-        Update: {
-          completed?: boolean | null
-          created_at?: string
-          id?: string
-          title?: string | null
-          updated_at?: string
-          user_id?: string
-          weight_goal?: number | null
-        }
-        Relationships: []
-      }
-      notification_settings: {
-        Row: {
-          created_at: string
-          enable_all: boolean
-          morning: boolean
-          motivational: boolean
-          pomodoro: boolean
-          todo: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          enable_all?: boolean
-          morning?: boolean
-          motivational?: boolean
-          pomodoro?: boolean
-          todo?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          enable_all?: boolean
-          morning?: boolean
-          motivational?: boolean
-          pomodoro?: boolean
-          todo?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      pomodoro_sessions: {
-        Row: {
-          created_at: string
-          date: string
-          duration_seconds: number
-          ended_at: string
-          id: string
-          priority: string
-          started_at: string
-          task_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          date?: string
-          duration_seconds: number
-          ended_at: string
-          id?: string
-          priority: string
-          started_at: string
-          task_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          duration_seconds?: number
-          ended_at?: string
-          id?: string
-          priority?: string
-          started_at?: string
-          task_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
+          full_name: string | null
           id: string
-          name: string | null
-          updated_at: string
-          user_id: string
         }
         Insert: {
           created_at?: string
-          email: string
-          id?: string
-          name?: string | null
-          updated_at?: string
-          user_id: string
+          email?: string | null
+          full_name?: string | null
+          id: string
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
+          full_name?: string | null
           id?: string
-          name?: string | null
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
-      tasks: {
+      todos: {
         Row: {
-          completed: boolean
           created_at: string
-          date: string
+          due_date: string | null
           id: string
+          is_completed: boolean
+          notes: string | null
           priority: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          completed?: boolean
           created_at?: string
-          date?: string
+          due_date?: string | null
           id?: string
-          priority: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          date?: string
-          id?: string
+          is_completed?: boolean
+          notes?: string | null
           priority?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tips: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          description?: string | null
+          due_date?: string | null
           id?: string
+          is_completed?: boolean
+          notes?: string | null
+          priority?: string
           title?: string
           updated_at?: string
           user_id?: string
@@ -235,16 +73,19 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -256,13 +97,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_leaderboard: {
-        Args: { p_period: string }
-        Returns: {
-          completed_count: number
-          display_name: string
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -272,7 +106,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -400,7 +234,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "user"],
     },
   },
 } as const

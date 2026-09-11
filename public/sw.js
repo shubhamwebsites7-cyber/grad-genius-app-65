@@ -1,146 +1,153 @@
-const CACHE_VERSION = 'v3-' + new Date().getTime();
-const CACHE_NAME = 'goalgrip-' + CACHE_VERSION;
-const STATIC_ASSETS = [
+const CACHE_NAME = 'examtrakr-v7';
+const urlsToCache = [
   '/',
-  '/dashboard',
   '/manifest.json',
-  '/pwa-192x192.png',
-  '/pwa-512x512.png',
-  '/pwa-maskable-192x192.png',
-  '/pwa-maskable-512x512.png'
+  '/icon-192.png',
+  '/icon-512.png',
+  '/examtrakr.png',
+  '/favicon.png'
 ];
 
-// Install Service Worker - force immediate activation
+const OFFLINE_PAGE = '/offline.html';
+
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(STATIC_ASSETS);
+        console.log('[SW] Opened cache');
+        return cache.addAll(urlsToCache.map(url => new Request(url, {cache: 'reload'})))
+          .catch(err => {
+            console.log('[SW] Cache addAll error:', err);
+          });
       })
   );
+  self.skipWaiting();
 });
 
-// Activate event - take control immediately
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    Promise.all([
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== CACHE_NAME && (cacheName.startsWith('goalgrip-') || cacheName.startsWith('trackmycalories-'))) {
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      self.clients.claim()
-    ])
-  );
-});
+// Helper function to check if URL should be cached
+function shouldCache(url, request) {
+  // Never cache Supabase API calls
+  if (url.hostname.includes('supabase')) {
+    return false;
+  }
+  
+  // Never cache authenticated routes that load dynamic data
+  const authRoutes = ['/dashboard', '/profile', '/admin', '/exam/', '/resources/'];
+  if (authRoutes.some(route => url.pathname.startsWith(route))) {
+    return false;
+  }
+  
+  // Never cache API endpoints
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) {
+    return false;
+  }
+  
+  // Never cache requests with authentication headers
+  if (request.headers.get('authorization') || request.headers.get('apikey')) {
+    return false;
+  }
+  
+  // Never cache JavaScript modules from assets (they can have MIME type issues)
+  if (url.pathname.includes('/assets/') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.mjs'))) {
+    return false;
+  }
+  
+  // Never cache main entry point files
+  if (url.pathname.includes('index-') && url.pathname.endsWith('.js')) {
+    return false;
+  }
+  
+  // Never cache vendor files
+  if (url.pathname.includes('vendor-') && url.pathname.endsWith('.js')) {
+    return false;
+  }
+  
+  return true;
+}
 
-// Fetch event - Network first for HTML, cache for assets
+// Fetch event - NETWORK FIRST strategy for HTML/JS, cache for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
+  
+  // Skip non-GET requests entirely — let the browser handle them natively
+  // CRITICAL: Supabase auth uses POST, wrapping in respondWith() can break login
+  if (request.method !== 'GET') {
+    return;
+  }
+  
+  // Let ALL external requests (including Supabase) pass through to browser default fetch
+  // CRITICAL: Do NOT call event.respondWith() for Supabase — it causes auth failures
+  if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Network first for HTML/navigation requests
-  if (request.mode === 'navigate' || (request.headers.get('accept') && request.headers.get('accept').includes('text/html'))) {
+  // Check if this request should be cached
+  const canCache = shouldCache(url, request);
+
+  // Network-first strategy for HTML and JS files
+  if (request.destination === 'document' || 
+      request.destination === 'script' || 
+      url.pathname.endsWith('.js') || 
+      url.pathname.endsWith('.html') ||
+      url.pathname === '/') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          // Only cache if allowed and response is successful
+          if (canCache && response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
           return response;
         })
         .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            return cachedResponse || caches.match('/dashboard');
-          });
+          // Fallback to cache only if network fails and caching was allowed
+          if (canCache) {
+            return caches.match(request);
+          }
+          // For non-cacheable requests, return a network error
+          return new Response('Network error', { status: 408 });
         })
     );
-    return;
-  }
-
-  // Cache first for static assets
-  if (request.destination === 'image' || request.destination === 'font' || 
-      url.pathname.match(/\.(png|jpg|jpeg|svg|gif|woff|woff2|ttf|eot|ico)$/)) {
+  } else if (canCache) {
+    // Cache-first for images, fonts, and other static assets (only if cacheable)
     event.respondWith(
       caches.match(request)
         .then((response) => {
-          return response || fetch(request).then((fetchResponse) => {
-            return caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, fetchResponse.clone());
-              return fetchResponse;
-            });
+          return response || fetch(request).then((response) => {
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseToCache);
+              });
+            }
+            return response;
           });
         })
     );
-    return;
-  }
-
-  // Network first for everything else
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (url.origin === location.origin && !url.pathname.includes('/rest/')) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(request);
-      })
-  );
-});
-
-// Listen for messages
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  } else {
+    // For non-cacheable requests, always fetch from network
+    event.respondWith(fetch(request));
   }
 });
 
-// Push notifications
-self.addEventListener('push', (event) => {
-  let payload = { title: 'GoalGrip', body: 'You have a new notification', url: '/dashboard/todo' };
-  if (event.data) {
-    try { payload = { ...payload, ...event.data.json() }; }
-    catch { payload.body = event.data.text(); }
-  }
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
-      tag: payload.tag || 'goalgrip',
-      data: { url: payload.url },
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
     })
   );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/dashboard/todo';
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
-      for (const client of clients) {
-        if ('focus' in client) {
-          client.navigate(url);
-          return client.focus();
-        }
-      }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
-    })
-  );
+  self.clients.claim();
 });

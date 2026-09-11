@@ -1,1 +1,19 @@
-project_id = "jzindaoigqrryvssgmwf"
+project_id = "bjndsotwbzmuqwdikdaq"
+
+[functions.create-cashfree-order]
+verify_jwt = true
+
+[functions.cashfree-webhook]
+verify_jwt = false
+
+[functions.complete-payment]
+verify_jwt = true
+
+[functions.verify-google-play-purchase]
+verify_jwt = true
+
+[functions.submit-deletion-request]
+verify_jwt = false
+
+[functions.get-resources]
+verify_jwt = false

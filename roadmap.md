@@ -1,7 +1,6 @@
-# GoalGrip continuation roadmap
-- [ ] Remove Journey page and references
-- [ ] Add signed-in leaderboard
-- [ ] Add server-enforced admin daily task monitor
-- [ ] Update MySQL documentation
-- [ ] Validate build and runtime
-- [ ] Complete all pending work automatically without confirmation prompts
+# Roadmap
+
+- [x] Create Lovable Cloud database (profiles, user_roles, todos) with RLS + admin role for shubhamchoudhary7225@gmail.com
+- [x] Enable email/password sign-in
+- [x] Build todo app pages (auth, todos, admin) wired to the database
+- [ ] Import code from https://github.com/shubhamwebsites7-cyber/grad-genius-app-65 — blocked: repo is private (needs public access or GitHub connection)

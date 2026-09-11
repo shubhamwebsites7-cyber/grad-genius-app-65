@@ -1,73 +1,74 @@
-# Welcome to your Lovable project
+# 📚 ExamTrakr
 
-## Project info
+A modern exam tracking and management platform to help students organize their study schedule and track exam progress.
 
-**URL**: https://lovable.dev/projects/a3696057-f850-4d34-8203-3a62a9111367
+## ✨ Features
 
-## How can I edit this code?
+- 🔐 **Secure Authentication** - Email/password login with Supabase
+- 📊 **Exam Management** - Track exams, subjects, and study progress
+- 💳 **Subscription Plans** - Premium features with integrated payment system
+- 👤 **User Profiles** - Manage personal information and preferences
+- 📱 **Responsive Design** - Works seamlessly on all devices
+- 🎨 **Modern UI** - Built with shadcn/ui and Tailwind CSS
 
-There are several ways of editing your application.
+## 🚀 Tech Stack
 
-**Use Lovable**
+- **Frontend:** React 18 + TypeScript + Vite
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Backend:** Supabase (Auth, Database, Storage)
+- **Payment:** Cashfree Integration
+- **Deployment:** Vercel
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a3696057-f850-4d34-8203-3a62a9111367) and start prompting.
+## 🛠️ Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ and npm
+- Supabase account
+- Cashfree account (for payments)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository
+```bash
+git clone https://github.com/examtrakr/examtrakr.git
+cd examtrakr
+```
 
-Follow these steps:
+2. Install dependencies
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Set up environment variables
+```bash
+# Create .env file with:
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_CASHFREE_APP_ID=your_cashfree_app_id
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Run development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. Open [http://localhost:5173](http://localhost:5173)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📦 Build
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🌐 Live Demo
 
-## What technologies are used for this project?
+Visit [examtrakr.com](https://www.examtrakr.com)
 
-This project is built with:
+## 📄 License
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+MIT License - feel free to use this project for learning and development.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/a3696057-f850-4d34-8203-3a62a9111367) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Built with ❤️ for students everywhere

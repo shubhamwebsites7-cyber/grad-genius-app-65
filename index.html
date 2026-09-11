@@ -1,92 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QST4DWL1K5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QST4DWL1K5');
+    </script>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-    <title>GoalGrip - Productivity Tracker</title>
-    <meta name="description" content="GoalGrip is a focused productivity app. Plan tasks, set long-term goals, run Pomodoro sessions, and track your productivity trends." />
-    <meta name="author" content="GoalGrip" />
-    <meta name="keywords" content="todo list, goal setting, pomodoro timer, productivity tracker, focus app, time management" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamTrakr – Track Your Exam Progress & Study Smarter</title>
+    <meta name="description" content="Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!" />
+    <meta name="author" content="Examtrakr" />
+    <meta name="keywords" content="exam preparation, exam tracker, study progress tracker, subject wise progress, online exam preparation, competitive exams, smart study platform, exam progress tracking, best exam resources, study planner for students, jee preparation, neet preparation, banking exams india, ssc cgl preparation, upsc preparation, gre preparation, gmat preparation, sat preparation, lsat preparation, track study progress, student productivity, exam study tools, study smart app, learning progress tracker" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://examtrakr.com/" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://bjndsotwbzmuqwdikdaq.supabase.co" />
+    
+    <!-- Preload removed to avoid prod MIME issues with /src paths -->
+    <meta property="og:title" content="ExamTrakr – Track Your Exam Progress & Study Smarter" />
+    <meta property="og:description" content="Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://examtrakr.com/" />
+    <meta property="og:image" content="https://examtrakr.com/icon-512.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@examtrakr" />
+    <meta name="twitter:title" content="ExamTrakr – Track Your Exam Progress & Study Smarter" />
+    <meta name="twitter:description" content="Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!" />
+   <meta name="twitter:image" content="https://examtrakr.com/icon-512.png" />
 
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#0d9488" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="GoalGrip" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="application-name" content="GoalGrip" />
-    <meta name="msapplication-TileColor" content="#0d9488" />
-    <meta name="msapplication-config" content="/browserconfig.xml" />
     <link rel="manifest" href="/manifest.json" />
-    
-    <!-- App Icons -->
-    <link rel="icon" href="/pwa-192x192.png" type="image/png" />
-    <link rel="icon" href="/pwa-512x512.png" type="image/png" sizes="512x512" />
-    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png" />
-    <link rel="mask-icon" href="/pwa-maskable-512x512.png" color="#0d9488" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://goalgrip.lovable.app/" />
-    <meta property="og:site_name" content="GoalGrip" />
-    <meta property="og:title" content="GoalGrip - Productivity Tracker" />
-    <meta property="og:description" content="Plan tasks, track goals, run Pomodoro sessions, and watch your productivity trends." />
-    <meta property="og:image" content="https://goalgrip.lovable.app/pwa-512x512.png" />
-    <meta property="og:image:width" content="512" />
-    <meta property="og:image:height" content="512" />
-    <meta property="og:locale" content="en_US" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="GoalGrip - Productivity Tracker" />
-    <meta name="twitter:description" content="Plan tasks, track goals, run Pomodoro sessions, and watch your productivity trends." />
-    <meta name="twitter:image" content="https://goalgrip.lovable.app/pwa-512x512.png" />
-
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://goalgrip.lovable.app/" />
+    <meta name="theme-color" content="#0066ff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Examtrakr" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
   </head>
 
   <body>
     <div id="root"></div>
+    <script type="text/javascript">
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      })(window.location);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- PWA Service Worker -->
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <!-- Google Play Billing for TWA -->
+    <script src="https://www.gstatic.com/android/commerce/js/launch.js"></script>
     <script>
+      // Register Service Worker for PWA and caching
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('GoalGrip Service Worker registered successfully');
-              
-              // Check for updates every 60 seconds
-              setInterval(() => {
-                registration.update();
-              }, 60000);
-
-              // Handle service worker updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
+        window.addEventListener('load', async () => {
+          try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            
+            // Handle service worker updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('New GoalGrip version available! Reloading...');
-                    window.location.reload();
+                    // New service worker available - do NOT auto-reload
+                    // User will get the update on their next manual refresh
+                    console.log('New version available. It will be used on next page refresh.');
                   }
                 });
-              });
-            })
-            .catch((error) => {
-              console.log('Service Worker registration failed:', error);
+              }
             });
 
-          // Handle controller change (when new SW takes over)
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-              refreshing = true;
-              window.location.reload();
-            }
-          });
+          } catch (error) {
+            // Silently fail if service worker registration fails
+            console.log('Service worker registration failed:', error);
+          }
+        });
+
+        // Handle service worker messages
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data && event.data.type === 'CACHE_UPDATED') {
+            // Cache has been updated, could show a notification to user
+            console.log('Cache updated');
+          }
         });
       }
     </script>

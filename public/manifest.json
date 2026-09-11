@@ -1,51 +1,80 @@
 {
-  "name": "GoalGrip - Productivity Tracker",
-  "short_name": "GoalGrip",
-  "description": "Plan tasks, track goals, run Pomodoro sessions, and watch your productivity trends — all in one focused app.",
-  "start_url": "/dashboard/todo",
-  "id": "/dashboard",
-  "display": "standalone",
-  "background_color": "#f5fafa",
-  "theme_color": "#0d9488",
-  "orientation": "portrait-primary",
+  "name": "ExamTrakr – Track Your Exam Progress & Study Smarter",
+  "short_name": "ExamTrakr",
+  "description": "Track your exam prep smarter with ExamTrakr — monitor subject progress, access top-quality study resources, and stay exam-ready. Study less, achieve more!",
+  "start_url": "/",
   "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0066ff",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "en",
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/pwa-192x192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/pwa-512x512.png",
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/pwa-maskable-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/pwa-maskable-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
+  ],
+  "categories": [
+    "education",
+    "productivity"
   ],
   "screenshots": [
     {
-      "src": "/screenshots/screenshot-1.png",
-      "sizes": "1080x1920",
+      "src": "/screenshot-wide.png",
+      "sizes": "1897x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "ExamTrakr Dashboard"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "1080x2211",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "GoalGrip Dashboard"
+      "label": "ExamTrakr Mobile View"
     }
   ],
-  "categories": ["productivity", "lifestyle"],
-  "lang": "en",
-  "dir": "ltr"
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open your exam dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Exams",
+      "short_name": "Exams",
+      "description": "View all exams",
+      "url": "/exams",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
 }
