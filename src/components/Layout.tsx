@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Download, CheckSquare, Target, Timer, BarChart3, Settings as SettingsIcon, LogOut, LogIn } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Download, CheckSquare, Target, Timer, Trophy, ShieldCheck, Settings as SettingsIcon, LogOut, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +12,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSmartNotifications } from '@/hooks/useSmartNotifications';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +29,21 @@ export function Layout() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   useSmartNotifications();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    (supabase as any)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle()
+      .then(({ data }: { data: { role: string } | null }) => setIsAdmin(Boolean(data)));
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -51,9 +68,10 @@ export function Layout() {
   const navigationItems = [
     { href: '/dashboard/todo', icon: CheckSquare, label: 'Todo' },
     { href: '/dashboard/pomodoro', icon: Timer, label: 'Pomodoro' },
-    { href: '/dashboard/analytics', icon: BarChart3, label: 'Journey' },
+    { href: '/dashboard/leaderboard', icon: Trophy, label: 'Leaderboard' },
     { href: '/dashboard/goals', icon: Target, label: 'Goals' },
     { href: '/dashboard/settings', icon: SettingsIcon, label: 'Settings' },
+    ...(isAdmin ? [{ href: '/dashboard/admin-tasks', icon: ShieldCheck, label: 'Admin tasks' }] : []),
   ];
 
   const ProfileMenu = (
